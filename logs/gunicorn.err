@@ -1,0 +1,286 @@
+[2023-07-25 23:30:30 +0800] [7] [INFO] Starting gunicorn 21.2.0
+[2023-07-25 23:30:30 +0800] [7] [INFO] Listening at: http://0.0.0.0:8888 (7)
+[2023-07-25 23:30:30 +0800] [7] [INFO] Using worker: uvicorn.workers.UvicornWorker
+[2023-07-25 23:30:30 +0800] [8] [INFO] Booting worker with pid: 8
+[2023-07-25 23:30:30 +0800] [9] [INFO] Booting worker with pid: 9
+[2023-07-25 23:30:31 +0800] [9] [INFO] Started server process [9]
+[2023-07-25 23:30:31 +0800] [8] [INFO] Started server process [8]
+[2023-07-25 23:30:31 +0800] [9] [INFO] Waiting for application startup.
+[2023-07-25 23:30:31 +0800] [8] [INFO] Waiting for application startup.
+[2023-07-25 23:30:31 +0800] [9] [ERROR] Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1965, in _exec_single_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 921, in do_execute
+    cursor.execute(statement, parameters)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/mysql/aiomysql.py", line 98, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 125, in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 185, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/mysql/aiomysql.py", line 110, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/cursors.py", line 239, in execute
+    await self._query(query)
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/cursors.py", line 457, in _query
+    await conn.query(q)
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/connection.py", line 683, in _read_query_result
+    await result.read()
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+  File "/usr/local/lib/python3.11/site-packages/pymysql/protocol.py", line 221, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/usr/local/lib/python3.11/site-packages/pymysql/err.py", line 143, in raise_mysql_exception
+    raise errorclass(errno, errval)
+pymysql.err.OperationalError: (1050, "Table 'users' already exists")
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 677, in lifespan
+    async with self.lifespan_context(app) as maybe_state:
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 566, in __aenter__
+    await self._router.startup()
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 654, in startup
+    await handler()
+  File "/C137/app/register/register_db.py", line 50, in startup_event
+    await create_tables()
+  File "/C137/app/register/register_db.py", line 35, in create_tables
+    await conn.run_sync(Base.metadata.create_all)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/ext/asyncio/engine.py", line 872, in run_sync
+    return await greenlet_spawn(fn, self._proxied, *arg, **kw)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 190, in greenlet_spawn
+    result = context.throw(*sys.exc_info())
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/schema.py", line 5792, in create_all
+    bind._run_ddl_visitor(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2443, in _run_ddl_visitor
+    visitorcallable(self.dialect, self, **kwargs).traverse_single(element)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/visitors.py", line 670, in traverse_single
+    return meth(obj, **kw)
+           ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/ddl.py", line 922, in visit_metadata
+    self.traverse_single(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/visitors.py", line 670, in traverse_single
+    return meth(obj, **kw)
+           ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/ddl.py", line 960, in visit_table
+    )._invoke_with(self.connection)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/ddl.py", line 315, in _invoke_with
+    return bind.execute(self)
+           ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1412, in execute
+    return meth(
+           ^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/sql/ddl.py", line 181, in _execute_on_connection
+    return connection._execute_ddl(
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1524, in _execute_ddl
+    ret = self._execute_context(
+          ^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1844, in _execute_context
+    return self._exec_single_context(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1984, in _exec_single_context
+    self._handle_dbapi_exception(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 2339, in _handle_dbapi_exception
+    raise sqlalchemy_exception.with_traceback(exc_info[2]) from e
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/base.py", line 1965, in _exec_single_context
+    self.dialect.do_execute(
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/engine/default.py", line 921, in do_execute
+    cursor.execute(statement, parameters)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/mysql/aiomysql.py", line 98, in execute
+    return self.await_(self._execute_async(operation, parameters))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 125, in await_only
+    return current.driver.switch(awaitable)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/util/_concurrency_py3k.py", line 185, in greenlet_spawn
+    value = await result
+            ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/dialects/mysql/aiomysql.py", line 110, in _execute_async
+    result = await self._cursor.execute(operation, parameters)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/cursors.py", line 239, in execute
+    await self._query(query)
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/cursors.py", line 457, in _query
+    await conn.query(q)
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/connection.py", line 469, in query
+    await self._read_query_result(unbuffered=unbuffered)
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/connection.py", line 683, in _read_query_result
+    await result.read()
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/connection.py", line 1164, in read
+    first_packet = await self.connection._read_packet()
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/aiomysql/connection.py", line 652, in _read_packet
+    packet.raise_for_error()
+  File "/usr/local/lib/python3.11/site-packages/pymysql/protocol.py", line 221, in raise_for_error
+    err.raise_mysql_exception(self._data)
+  File "/usr/local/lib/python3.11/site-packages/pymysql/err.py", line 143, in raise_mysql_exception
+    raise errorclass(errno, errval)
+sqlalchemy.exc.OperationalError: (pymysql.err.OperationalError) (1050, "Table 'users' already exists")
+[SQL: 
+CREATE TABLE users (
+	id INTEGER NOT NULL AUTO_INCREMENT, 
+	account VARCHAR(64) NOT NULL COMMENT '登录账号', 
+	password VARCHAR(64) NOT NULL COMMENT '密码', 
+	nickname VARCHAR(64) NOT NULL COMMENT '昵称', 
+	email VARCHAR(64) COMMENT '邮箱', 
+	user_role ENUM('NORMAL_USER','ADMIN') COMMENT '用户权限, 1: 普通用户, 2: 管理员', 
+	department_id INTEGER COMMENT '部门id', 
+	valid BOOL COMMENT '账号可用状态', 
+	avatar TEXT COMMENT '头像', 
+	last_login DATETIME COMMENT '记录最后一次登录时间', 
+	create_user INTEGER COMMENT '创建人', 
+	update_user INTEGER COMMENT '更新人', 
+	created_at TIMESTAMP NULL COMMENT '创建时间' DEFAULT now(), 
+	updated_at TIMESTAMP NULL COMMENT '更新时间' DEFAULT now(), 
+	deleted_at BIGINT COMMENT '删除时间', 
+	PRIMARY KEY (id)
+)
+
+]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+
+[2023-07-25 23:30:31 +0800] [9] [ERROR] Application startup failed. Exiting.
+[2023-07-25 23:30:31 +0800] [9] [INFO] Worker exiting (pid: 9)
+[2023-07-25 23:30:31 +0800] [8] [INFO] Application startup complete.
+[2023-07-25 23:30:31 +0800] [7] [ERROR] Worker (pid:9) exited with code 3
+[2023-07-25 23:30:31 +0800] [8] [INFO] Shutting down
+[2023-07-25 23:30:31 +0800] [8] [INFO] Waiting for application shutdown.
+[2023-07-25 23:30:31 +0800] [8] [INFO] Application shutdown complete.
+[2023-07-25 23:30:31 +0800] [8] [INFO] Finished server process [8]
+[2023-07-25 23:30:31 +0800] [8] [INFO] Worker exiting (pid: 8)
+[2023-07-25 23:30:31 +0800] [7] [ERROR] Shutting down: Master
+[2023-07-25 23:30:31 +0800] [7] [ERROR] Reason: Worker failed to boot.
+[2023-07-25 23:30:33 +0800] [16] [INFO] Starting gunicorn 21.2.0
+[2023-07-25 23:30:33 +0800] [16] [INFO] Listening at: http://0.0.0.0:8888 (16)
+[2023-07-25 23:30:33 +0800] [16] [INFO] Using worker: uvicorn.workers.UvicornWorker
+[2023-07-25 23:30:33 +0800] [17] [INFO] Booting worker with pid: 17
+[2023-07-25 23:30:33 +0800] [18] [INFO] Booting worker with pid: 18
+[2023-07-25 23:30:33 +0800] [17] [INFO] Started server process [17]
+[2023-07-25 23:30:33 +0800] [17] [INFO] Waiting for application startup.
+[2023-07-25 23:30:33 +0800] [17] [INFO] Application startup complete.
+[2023-07-25 23:30:33 +0800] [18] [INFO] Started server process [18]
+[2023-07-25 23:30:33 +0800] [18] [INFO] Waiting for application startup.
+[2023-07-25 23:30:33 +0800] [18] [INFO] Application startup complete.
+[2023-07-25 23:31:14 +0800] [17] [ERROR] Exception in ASGI application
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
+    result = await app(  # type: ignore[func-returns-value]
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call__
+    return await self.app(scope, receive, send)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/fastapi/applications.py", line 289, in __call__
+    await super().__call__(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/applications.py", line 122, in __call__
+    await self.middleware_stack(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 184, in __call__
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/errors.py", line 162, in __call__
+    await self.app(scope, receive, _send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 79, in __call__
+    raise exc
+  File "/usr/local/lib/python3.11/site-packages/starlette/middleware/exceptions.py", line 68, in __call__
+    await self.app(scope, receive, sender)
+  File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 20, in __call__
+    raise e
+  File "/usr/local/lib/python3.11/site-packages/fastapi/middleware/asyncexitstack.py", line 17, in __call__
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 718, in __call__
+    await route.handle(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 276, in handle
+    await self.app(scope, receive, send)
+  File "/usr/local/lib/python3.11/site-packages/starlette/routing.py", line 66, in app
+    response = await func(request)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 273, in app
+    raw_response = await run_endpoint_function(
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/fastapi/routing.py", line 190, in run_endpoint_function
+    return await dependant.call(**values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/C137/app/router/auth/auth_router.py", line 21, in register_user
+    register_info = await AuthService.register_user(register_form)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/C137/app/services/auth/auth_service.py", line 22, in register_user
+    result = C137Response.orm_to_dict(user)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/C137/app/handler/response_handler.py", line 22, in orm_to_dict
+    val = getattr(obj, c.name)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/attributes.py", line 565, in __get__
+    return self.impl.get(state, dict_)  # type: ignore[no-any-return]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/attributes.py", line 1085, in get
+    value = self._fire_loader_callables(state, key, passive)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/attributes.py", line 1115, in _fire_loader_callables
+    return state._load_expired(state, passive)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/state.py", line 798, in _load_expired
+    self.manager.expired_attribute_loader(self, toload, passive)
+  File "/usr/local/lib/python3.11/site-packages/sqlalchemy/orm/loading.py", line 1550, in load_scalar_attributes
+    raise orm_exc.DetachedInstanceError(
+sqlalchemy.orm.exc.DetachedInstanceError: Instance <UserModel at 0xffffac3fc610> is not bound to a Session; attribute refresh operation cannot proceed (Background on this error at: https://sqlalche.me/e/20/bhk3)
+2023-07-25 23:31:30.080 | ERROR    | app.utils.logger:error:42 - ResponseValidationError: [
+  {
+    "type": "string_type",
+    "loc": [
+      "response",
+      "error_msg"
+    ],
+    "msg": "Input should be a valid string",
+    "input": 1,
+    "url": "https://errors.pydantic.dev/2.0.3/v/string_type"
+  }
+]
+[2023-07-25 23:31:38 +0800] [16] [INFO] Handling signal: term
+[2023-07-25 23:31:38 +0800] [17] [INFO] Shutting down
+[2023-07-25 23:31:38 +0800] [18] [INFO] Shutting down
+[2023-07-25 23:31:38 +0800] [18] [INFO] Waiting for application shutdown.
+[2023-07-25 23:31:38 +0800] [17] [INFO] Waiting for application shutdown.
+[2023-07-25 23:31:38 +0800] [18] [INFO] Application shutdown complete.
+[2023-07-25 23:31:38 +0800] [17] [INFO] Application shutdown complete.
+[2023-07-25 23:31:38 +0800] [18] [INFO] Finished server process [18]
+[2023-07-25 23:31:38 +0800] [17] [INFO] Finished server process [17]
+[2023-07-25 23:31:38 +0800] [17] [INFO] Worker exiting (pid: 17)
+[2023-07-25 23:31:38 +0800] [18] [INFO] Worker exiting (pid: 18)
+[2023-07-25 23:31:38 +0800] [16] [INFO] Shutting down: Master
+[2023-07-25 23:31:50 +0800] [7] [INFO] Starting gunicorn 21.2.0
+[2023-07-25 23:31:50 +0800] [7] [INFO] Listening at: http://0.0.0.0:8888 (7)
+[2023-07-25 23:31:50 +0800] [7] [INFO] Using worker: uvicorn.workers.UvicornWorker
+[2023-07-25 23:31:50 +0800] [8] [INFO] Booting worker with pid: 8
+[2023-07-25 23:31:51 +0800] [9] [INFO] Booting worker with pid: 9
+[2023-07-25 23:31:51 +0800] [8] [INFO] Started server process [8]
+[2023-07-25 23:31:51 +0800] [8] [INFO] Waiting for application startup.
+[2023-07-25 23:31:51 +0800] [8] [INFO] Application startup complete.
+[2023-07-25 23:31:51 +0800] [9] [INFO] Started server process [9]
+[2023-07-25 23:31:51 +0800] [9] [INFO] Waiting for application startup.
+[2023-07-25 23:31:51 +0800] [9] [INFO] Application startup complete.
+[2023-07-25 23:32:06 +0800] [9] [INFO] Worker reloading: /C137/main.py modified
+[2023-07-25 23:32:07 +0800] [8] [INFO] Worker reloading: /C137/main.py modified
+[2023-07-25 23:53:01 +0800] [7] [INFO] Handling signal: term
+[2023-07-25 23:53:01 +0800] [9] [INFO] Shutting down
+[2023-07-25 23:53:01 +0800] [8] [INFO] Shutting down
+[2023-07-25 23:53:01 +0800] [9] [INFO] Waiting for application shutdown.
+[2023-07-25 23:53:01 +0800] [9] [INFO] Application shutdown complete.
+[2023-07-25 23:53:01 +0800] [9] [INFO] Finished server process [9]
+[2023-07-25 23:53:01 +0800] [8] [INFO] Waiting for application shutdown.
+[2023-07-25 23:53:01 +0800] [8] [INFO] Application shutdown complete.
+[2023-07-25 23:53:01 +0800] [9] [INFO] Worker exiting (pid: 9)
+[2023-07-25 23:53:01 +0800] [8] [INFO] Finished server process [8]
+[2023-07-25 23:53:01 +0800] [8] [INFO] Worker exiting (pid: 8)
+[2023-07-25 23:53:01 +0800] [7] [INFO] Shutting down: Master

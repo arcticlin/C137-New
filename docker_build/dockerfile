@@ -1,0 +1,14 @@
+FROM python:3.11
+
+# 设置工作目录
+
+WORKDIR /C137
+
+COPY . /C137
+
+
+RUN python -m pip install -r /C137/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+EXPOSE 8888
+
+#CMD ["bash", "-c", "while true; do sleep 3600; done"]
+CMD ["supervisord", "-c", "/C137/docker_build/supervisor.conf"]

@@ -1,0 +1,33 @@
+# Python related
+*.pyc
+__pycache__/
+venv/
+*.egg-info/
+dist/
+build/
+*.pyo
+*.pyd
+*.pyc
+*.pyz
+*.pyw
+*.pywz
+*.py~
+
+# PyCharm related
+.idea/
+*.iml
+*.ipr
+*.iws
+/.idea/workspace.xml
+/.idea/tasks.xml
+/.idea/dictionaries
+/.idea/inspectionProfiles
+/.idea/scope
+/.idea/vcs.xml
+
+# FastAPI related
+/.vscode
+.env
+__hypothesis/
+/.mypy_cache/
+/.pytest_cache/
