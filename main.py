@@ -18,11 +18,6 @@ register_router(app)
 #     return {"code": 0, "message": "1", "data": {}, "error_msg": 1}
 
 
-@app.get("/hello/gogogo")
-async def say_hello(headers=Depends(FlyeleToken())):
-    return {"data": {"header": headers}}
-
-
 if __name__ == "__main__":
     import uvicorn
 
