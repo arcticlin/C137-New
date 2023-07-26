@@ -51,4 +51,4 @@ class AuthCrud:
                 session.add(user)
                 await session.flush()
                 session.expunge(user)
-                return user
+                # return user

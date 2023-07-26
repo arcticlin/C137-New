@@ -7,10 +7,8 @@ Description:
 """
 from fastapi import APIRouter, FastAPI
 
-from app.router.vip.vips_router import vip
-from app.router.statistics.statistics import statistics
+from app.router.auth.auth_router import auth
 
 
 def register_router(app: FastAPI):
-    app.include_router(vip, prefix="/vip", tags=["会员权益"])
-    app.include_router(statistics, prefix="/statistics", tags=["统计数据推送"])
+    app.include_router(auth, prefix="/auth", tags=["用户中心"])
