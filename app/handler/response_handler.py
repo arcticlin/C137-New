@@ -51,14 +51,16 @@ class C137Response:
                 else C137Response.orm_to_dict(data)
             )
             response.__setitem__("data", orm_translator)
-        else:
-            if isinstance(data, dict):
-                response.__setitem__("data", {})
-            elif isinstance(data, list):
-                response.__setitem__("data", [])
-            else:
-                response.__setitem__("data", None)
+        # else:
+        #     if isinstance(data, dict):
+        #         response.__setitem__("data", {})
+        #     elif isinstance(data, list):
+        #         response.__setitem__("data", [])
+        #     else:
+        #         response.__setitem__("data", None)
+        # if message is not None:
         response.__setitem__("message", message)
+        # if total is not None:
         response.__setitem__("total", total)
         return response
 

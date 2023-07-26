@@ -9,6 +9,7 @@ Description:
 from pydantic import BaseModel, Field
 from app.enums.enum_user import UserRoleEnum
 from app.schemas.response_schema import CommonResponse
+from typing import Optional
 
 
 class UserRegisterRequest(BaseModel):
@@ -28,4 +29,4 @@ class UserRegisterShow(BaseModel):
 
 
 class UserRegisterResponse(CommonResponse):
-    data: UserRegisterShow = None
+    data: Optional[UserRegisterShow] = None
