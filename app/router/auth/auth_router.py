@@ -18,10 +18,13 @@ auth = APIRouter()
     "/register",
     summary="注册账号",
     response_model=CommonResponse,
+    response_model_exclude_none=True,
 )
 async def register_user(register_form: UserRegisterRequest):
     """
     注册账号
     """
     await AuthService.register_user(register_form)
-    return C137Response.success(message="注册成功")
+    return C137Response.success(
+        code=100, message="", data={"a": 1, "b": None, "c": {"d": "e", "e": None}}
+    )

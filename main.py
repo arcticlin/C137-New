@@ -16,11 +16,6 @@ register_exception(app)
 register_router(app)
 
 
-# @app.get("/hello/{name}", response_model=CommonResponse)
-# async def say_hello(name: str):
-#     return {"code": 0, "message": "1", "data": {}, "error_msg": 1}
-
-
 if __name__ == "__main__":
     import uvicorn
 

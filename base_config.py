@@ -9,7 +9,9 @@ Description: FastAPI基本配置
 
 import os
 from typing import List
-from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# from pydantic_settings import SettingsConfigDict
+from pydantic import BaseSettings
 
 ROOT = os.path.dirname(__file__)
 
@@ -63,7 +65,12 @@ class BasicConfig(BaseSettings):
 
 
 class DevConfig(BasicConfig):
-    model_config = SettingsConfigDict(env_file=os.path.join(ROOT, "env_config", "dev.env"), env_file_encoding="utf-8")
+    # model_config = SettingsConfigDict(
+    #     env_file=os.path.join(ROOT, "env_config", "dev.env"), env_file_encoding="utf-8"
+    # )
+    class Config:
+        env_file = os.path.join(ROOT, "env_config", "dev.env")
+        env_file_encoding = "utf-8"
 
     REDIS_ON: bool = False
     title: str = "C137_Dev"
@@ -71,7 +78,13 @@ class DevConfig(BasicConfig):
 
 
 class DockerConfig(BasicConfig):
-    model_config = SettingsConfigDict(env_file=os.path.join(ROOT, "env_config", "dev.docker.env"), env_file_encoding="utf-8")
+    # model_config = SettingsConfigDict(
+    #     env_file=os.path.join(ROOT, "env_config", "dev.docker.env"),
+    #     env_file_encoding="utf-8",
+    # )
+    class Config:
+        env_file = os.path.join(ROOT, "env_config", "dev.env")
+        env_file_encoding = "utf-8"
 
     REDIS_ON: bool = False
     title: str = "C137_Docker"

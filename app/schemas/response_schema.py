@@ -5,7 +5,7 @@ Author: bot
 Created: 2023/7/25
 Description:
 """
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, Field
 from typing import Union, Dict, List, Optional
 
 
@@ -19,7 +19,5 @@ class CommonResponse(BaseModel):
     data: Optional[Union[Dict, List]] = Field(None, description="返回data")
 
     def dict(self, *args, **kwargs):
-        # if kwargs and kwargs.get("exclude_none") is not None:
-        #     kwargs["exclude_none"] = True
-        return super().model_dump(*args, **kwargs, exclude_none=True, exclude_unset=True)
-
+        kwargs["exclude_none"] = True
+        return BaseModel.dict(self, *args, **kwargs)

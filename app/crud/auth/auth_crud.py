@@ -47,7 +47,7 @@ class AuthCrud:
     async def register_user(register_form: UserRegisterRequest):
         async with async_session() as session:
             async with session.begin():
-                user = UserModel(**register_form.model_dump())
+                user = UserModel(**register_form.dict())
                 session.add(user)
                 await session.flush()
                 session.expunge(user)
