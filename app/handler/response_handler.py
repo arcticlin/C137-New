@@ -8,11 +8,12 @@
 import inspect
 from datetime import datetime
 from typing import Any, List, Union, Dict, Sequence
+from enum import Enum
 
 
 class C137Response:
     @staticmethod
-    def orm_to_dict(obj: Any) -> dict:
+    def orm_to_dict(obj: Any, *args) -> dict:
         """处理Sqlalchemy的Orm模型转Dict"""
         if getattr(obj, "__table__", None) is None:
             return obj
@@ -20,10 +21,13 @@ class C137Response:
         orm_data = dict()
         for c in obj.__table__.columns:
             val = getattr(obj, c.name)
-            if c.name == "password":
+            if c.name in args:
                 continue
+
             if isinstance(val, datetime):
                 orm_data.__setitem__(c.name, int(val.timestamp()))
+            elif isinstance(val, Enum):
+                orm_data.__setitem__(c.name, val.value)
             elif val is None:
                 continue
             else:

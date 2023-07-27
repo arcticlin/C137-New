@@ -5,6 +5,8 @@ Author: bot
 Created: 2023/7/25
 Description: 连接Sqlalchemy数据库
 """
+from datetime import datetime
+
 from sqlalchemy import Column, INT, BIGINT, func, event, TIMESTAMP
 
 from sqlalchemy.ext.asyncio import (

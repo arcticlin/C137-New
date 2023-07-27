@@ -9,7 +9,7 @@ from sqlalchemy import create_engine, DDL
 from base_config import Config
 from app.core.db_connector import async_engine, Base
 from fastapi import FastAPI
-from app.handler.redis import redis_client
+from app.handler.redis_handler import redis_client
 
 # Model
 from app.models.model_collect import *

@@ -1,4 +1,3 @@
-# coding=utf-8
 """
 File: user.py
 Author: bot
@@ -14,7 +13,7 @@ from app.enums.enum_user import UserRoleEnum
 class UserModel(Base, BaseMixin):
     __tablename__ = "users"
 
-    id = Column(INT, primary_key=True, autoincrement=True)
+    user_id = Column(INT, primary_key=True, autoincrement=True)
 
     account = Column(String(64), nullable=False, index=True, comment="登录账号")
     password = Column(String(64), nullable=False, comment="密码")
