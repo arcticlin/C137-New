@@ -54,6 +54,8 @@ class BaseMixin:
     @staticmethod
     def set_defaults(mapper, connection, target: "BaseMixin"):
         target.created_at = func.now()
+        target.deleted_at = 0
+        target.updated_at = func.now()
 
     @staticmethod
     def set_updated_at(mapper, connection, target: "BaseMixin"):

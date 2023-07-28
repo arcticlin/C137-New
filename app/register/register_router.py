@@ -8,7 +8,11 @@ Description:
 from fastapi import APIRouter, FastAPI
 
 from app.router.auth.auth_router import auth
+from app.router.project.project_router import project
+from app.router.admin.admin import admin
 
 
 def register_router(app: FastAPI):
     app.include_router(auth, prefix="/auth", tags=["用户中心"])
+    app.include_router(project, prefix="/project", tags=["项目"])
+    app.include_router(admin, prefix="/admin", tags=["管理员"])

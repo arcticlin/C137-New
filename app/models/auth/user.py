@@ -5,7 +5,7 @@ Created: 2023/7/25
 Description:
 """
 from app.core.db_connector import BaseMixin, Base
-from sqlalchemy import String, Column, INT, DATETIME, BOOLEAN, TEXT
+from sqlalchemy import String, Column, INT, DATETIME, BOOLEAN, TEXT, TIMESTAMP
 from sqlalchemy import Enum as SqlEnum
 from app.enums.enum_user import UserRoleEnum
 
@@ -31,7 +31,7 @@ class UserModel(Base, BaseMixin):
     valid = Column(BOOLEAN, default=True, comment="账号可用状态")
 
     avatar = Column(TEXT, nullable=True, comment="头像")
-    last_login = Column(DATETIME, comment="记录最后一次登录时间")
+    last_login = Column(TIMESTAMP, comment="记录最后一次登录时间")
 
     def __init__(
         self,
@@ -45,7 +45,10 @@ class UserModel(Base, BaseMixin):
     ):
         self.account = account
         self.password = password
-        self.nickname = nickname if nickname is not None else account
+        if nickname is None and "@" in account:
+            self.nickname = account.split("@")[0]
+        else:
+            self.nickname = account
         self.email = email
         self.user_role = user_role
         self.department_id = department_id

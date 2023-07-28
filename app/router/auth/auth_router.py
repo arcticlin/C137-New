@@ -5,16 +5,13 @@ Author: bot
 Created: 2023/7/26
 Description:
 """
-from fastapi import APIRouter
-from app.schemas.auth.user import (
-    UserRegisterRequest,
-    UserRegisterResponse,
-    UserLoginRequest,
-    UserLoginResponse,
-)
+from fastapi import APIRouter, Query, Header, Depends
+from app.schemas.auth.user import *
+
 from app.schemas.response_schema import CommonResponse
 from app.services.auth.auth_service import AuthService
 from app.handler.response_handler import C137Response
+from app.middleware.access_permission import Permission
 
 auth = APIRouter()
 
@@ -45,40 +42,36 @@ async def login_user(form: UserLoginRequest):
 
 
 @auth.post("/logout", summary="登出账号")
-async def logout_user():
-    pass
+async def logout_user(user_info: dict = Depends(Permission())):
+    await AuthService.user_logout(user_info["user_id"])
+    return C137Response.success(message="登出成功")
 
 
-@auth.get("/user_info/{user_id}", summary="获取用户信息")
-async def get_user_info(user_id: int):
-    pass
+@auth.get("/user_info/{user_id}", summary="获取用户信息", response_model=UserDetailResponse)
+async def get_user_info(user_id: int, user_info: dict = Depends(Permission())):
+    user_info = await AuthService.get_user_info_by_id(user_id)
+    return C137Response.success(data=user_info)
 
 
-@auth.post("/update_user_info", summary="更新用户信息")
-async def update_user_info():
-    pass
+@auth.post("/update_user_info", summary="更新用户信息", response_model=CommonResponse)
+async def update_user_info(data: UserUpdateRequest, user_info: dict = Depends(Permission())):
+    await AuthService.update_user_info(user_info["user_id"], data)
+    return C137Response.success(message="操作成功")
 
 
 @auth.post("/update_password", summary="更新用户密码")
-async def update_password():
-    pass
+async def update_password(data: UserModifyPasswordRequest, user_info: dict = Depends(Permission())):
+    await AuthService.update_user_password(user_info["user_id"], data)
+    return C137Response.success(message="操作成功")
 
 
 @auth.post("/reset_password", summary="重置用户密码")
-async def reset_password():
-    pass
+async def reset_password(data: UserResetPasswordRequest):
+    await AuthService.reset_password(data)
+    return C137Response.success(message="操作成功")
 
 
-@auth.post("/refresh_token", summary="刷新token")
-async def refresh_token():
-    pass
-
-
-@auth.put("/update_user_role", summary="更新用户权限")
-async def update_user_role():
-    pass
-
-
-@auth.put("/ban_user", summary="禁用用户")
-async def ban_user():
-    pass
+@auth.post("/refresh_token", summary="刷新token", response_model=UserLoginResponse)
+async def refresh_token(user_info: dict = Depends(Permission(refresh=True))):
+    new_token = await AuthService.refresh_token(user_info["user_id"], user_info["token"])
+    return C137Response.success(message="操作成功", data=new_token)

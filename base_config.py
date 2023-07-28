@@ -44,6 +44,7 @@ class BasicConfig(BaseSettings):
     EXPIRED_MIN: int = 60 * 24 * 7
     TOKEN_KEY: str
     TOKEN_SALT: str
+    TOKEN_STRONG_VERIFY: bool
 
     # Log 路径
     LOG_DIR: str = os.path.join(ROOT, "logs")
@@ -55,8 +56,7 @@ class BasicConfig(BaseSettings):
 
     # User权限
     U_MEMBER: int = 1
-    U_LEADER: int = 2
-    U_SUPERVISOR: int = 3
+    U_SUPERVISOR: int = 2
 
     # FastAPI基本信息
 
@@ -75,6 +75,7 @@ class DevConfig(BasicConfig):
     REDIS_ON: bool = False
     title: str = "C137_Dev"
     MYSQL_DROP_BEFORE_START: bool = False
+    TOKEN_STRONG_VERIFY = False
 
 
 class DockerConfig(BasicConfig):
@@ -89,6 +90,7 @@ class DockerConfig(BasicConfig):
     REDIS_ON: bool = False
     title: str = "C137_Docker"
     MYSQL_DROP_BEFORE_START: bool = False
+    TOKEN_STRONG_VERIFY = False
 
 
 get_env_from_sys = os.environ.get("c137_env", "dev")
@@ -100,8 +102,7 @@ else:
     Config = DevConfig()
 
 Config.SQLALCHEMY_URI = (
-    f"mysql+mysqlconnector://{Config.MYSQL_USER}:{Config.MYSQL_PWD}"
-    f"@{Config.MYSQL_HOST}:{Config.MYSQL_PORT}"
+    f"mysql+mysqlconnector://{Config.MYSQL_USER}:{Config.MYSQL_PWD}" f"@{Config.MYSQL_HOST}:{Config.MYSQL_PORT}"
 )
 
 # 给SQLALCHEMY_URI赋值
