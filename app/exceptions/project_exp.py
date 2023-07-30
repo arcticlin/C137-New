@@ -1,0 +1,5 @@
+
+
+PROJECT_NAME_EXISTS = (400, 40100, "项目名已存在")
+PROJECT_NOT_EXISTS = (400, 40101, "项目不存在")
+PROJECT_NOT_CREATOR = (400, 40102, "非项目创建者")

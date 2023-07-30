@@ -11,10 +11,10 @@ class ProjectModel(Base, BaseMixin):
     public = Column(Boolean, nullable=False, default=False, comment="是否公开")
     project_avatar = Column(String(128), nullable=True, comment="项目头像")
 
-    def __init__(self, project_name: str, create_user: int, project_desc: str = None, public: bool = False, avatar: str = None):
-        super().create_user = create_user
-        super().update_user = create_user
+    def __init__(self, project_name: str, create_user: int, project_desc: str = None, public: bool = False, project_avatar: str = None):
+        self.create_user = create_user
+        self.update_user = create_user
         self.project_name = project_name
         self.project_desc = project_desc
         self.public = public
-        self.project_avatar = avatar
+        self.project_avatar = project_avatar

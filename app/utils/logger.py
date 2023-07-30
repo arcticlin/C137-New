@@ -17,6 +17,21 @@ class Log:
             os.mkdir(Config.LOG_DIR)
         self.business = name
 
+    def d_info(self, who: int, do_what: str, to: int = None):
+        file_name, line, func, _, _ = inspect.getframeinfo(
+            inspect.currentframe().f_back
+        )
+        message = f"用户: {who} -> {do_what}"
+        if to is not None:
+            message = message + f" -> {to}"
+        logger.bind(
+            name="C137_Info.log",
+            func=func,
+            line=line,
+            business=self.business,
+            file_name=file_name,
+        ).debug(message)
+
     def info(self, message: str):
         file_name, line, func, _, _ = inspect.getframeinfo(
             inspect.currentframe().f_back
