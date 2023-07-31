@@ -9,7 +9,7 @@ Description:
 from pydantic import BaseModel, Field
 from app.enums.enum_user import UserRoleEnum
 from app.schemas.response_schema import CommonResponse
-from typing import Optional
+from typing import Optional, List
 
 
 class UserModelBase(BaseModel):
@@ -66,9 +66,22 @@ class UserLoginShow(UserModelBase):
     token: str = Field(None, description="token")
 
 
+class UserListShow(BaseModel):
+    user_id: int = Field(..., description="用户id")
+    nickname: str = Field(..., description="昵称")
+    email: str = Field(None, description="邮箱")
+    user_role: UserRoleEnum = Field(None, description="用户权限, 1: 普通用户, 2: 管理员")
+    department_id: int = Field(None, description="部门id")
+    avatar: str = Field(None, description="头像")
+
+
 class UserLoginResponse(CommonResponse):
     data: UserLoginShow
 
 
 class UserDetailResponse(CommonResponse):
     data: UserModelBase
+
+
+class UserListResponse(CommonResponse):
+    data: List[UserListShow]

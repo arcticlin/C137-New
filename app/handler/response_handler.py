@@ -36,8 +36,8 @@ class C137Response:
         return orm_data
 
     @staticmethod
-    def orm_with_list(obj: Sequence[Any]):
-        return [C137Response.orm_to_dict(x) for x in obj]
+    def orm_with_list(obj: Sequence[Any], *args):
+        return [C137Response.orm_to_dict(x, *args) for x in obj]
 
     @staticmethod
     def success(
@@ -50,9 +50,7 @@ class C137Response:
         response.__setitem__("code", code)
         if data is not None:
             orm_translator = (
-                C137Response.orm_with_list(data)
-                if isinstance(data, list)
-                else C137Response.orm_to_dict(data)
+                C137Response.orm_with_list(data) if isinstance(data, list) else C137Response.orm_to_dict(data)
             )
             response.__setitem__("data", orm_translator)
         # else:

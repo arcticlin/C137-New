@@ -12,3 +12,4 @@ from enum import Enum, unique
 class ProjectRoleEnum(Enum):
     MEMBER = 1
     CREATOR = 2
+    LEADER = 3

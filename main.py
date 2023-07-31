@@ -5,6 +5,7 @@ from app.register.register_router import register_router
 from base_config import Config
 from app.schemas.response_schema import CommonResponse
 from app.middleware.flyele_token import FlyeleToken
+from app.register.register_middleware import register_middleware
 
 app = FastAPI()
 
@@ -14,6 +15,7 @@ app.response_model_exclude_unset = True
 register_db(app)
 register_exception(app)
 register_router(app)
+register_middleware(app)
 
 
 if __name__ == "__main__":

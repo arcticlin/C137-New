@@ -7,6 +7,8 @@ Description:
 """
 from datetime import datetime
 
+from app.exceptions.commom_exception import CustomException
+from app.exceptions.project_exp import PROJECT_MEMBER_EXISTS
 from app.schemas.project.project_schema import AddProjectRequest, UpdateProjectRequest
 from app.utils.logger import Log
 from app.models.project.project import ProjectModel
@@ -29,11 +31,7 @@ class ProjectCrud:
     @staticmethod
     async def query_project(project_id: int):
         async with async_session() as session:
-            smtm = select(ProjectModel).where(
-                and_(
-                    ProjectModel.project_id == project_id, ProjectModel.deleted_at == 0
-                )
-            )
+            smtm = select(ProjectModel).where(and_(ProjectModel.project_id == project_id, ProjectModel.deleted_at == 0))
             execute = await session.execute(smtm)
             result = execute.scalars().first()
             return result
@@ -91,9 +89,7 @@ class ProjectCrud:
                 session.expunge(result)
 
     @staticmethod
-    async def update_project(
-        project_id: int, data: UpdateProjectRequest, operator: int
-    ):
+    async def update_project(project_id: int, data: UpdateProjectRequest, operator: int):
         ProjectCrud.log.d_info(operator, f"修改信息项目: {data.dict()}")
         async with async_session() as session:
             async with session.begin():
@@ -124,3 +120,46 @@ class ProjectCrud:
             execute_member = await session.execute(smtm)
             result = execute_member.scalars().all()
             return result
+
+    @staticmethod
+    async def member_role_in_project(user_id: int, project_id: int):
+        async with async_session() as session:
+            smtm = select(ProjectMemberModel).where(
+                and_(
+                    ProjectMemberModel.project_id == project_id,
+                    ProjectMemberModel.user_id == user_id,
+                    ProjectMemberModel.deleted_at == 0,
+                )
+            )
+            result = await session.execute(smtm)
+            user_role = result.scalars().first()
+            if user_role is None:
+                return None
+            return user_role.role
+
+    @staticmethod
+    async def add_project_member(
+        project_id: int, user_id: int, operator: int, role: ProjectRoleEnum = ProjectRoleEnum.MEMBER
+    ):
+        async with async_session() as session:
+            async with session.begin():
+                member = ProjectMemberModel(
+                    project_id=project_id,
+                    user_id=user_id,
+                    create_user=operator,
+                    role=role,
+                )
+                session.add(member)
+
+    @staticmethod
+    async def query_project_member(project_id: int):
+        async with async_session() as session:
+            smtm = await session.execute(
+                select(ProjectMemberModel).where(
+                    and_(
+                        ProjectMemberModel.project_id == project_id,
+                        ProjectMemberModel.deleted_at == 0,
+                    )
+                )
+            )
+            return smtm.scalars().all()

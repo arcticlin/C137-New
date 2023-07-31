@@ -117,3 +117,10 @@ class AuthCrud:
                 user.valid = valid
                 await session.flush()
                 session.expunge(user)
+
+    @staticmethod
+    async def get_all_user():
+        async with async_session() as session:
+            smtm = select(UserModel).where(and_(UserModel.deleted_at == 0))
+            result = await session.execute(smtm)
+            return result.scalars().all()
