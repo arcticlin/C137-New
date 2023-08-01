@@ -1,7 +1,9 @@
 from app.crud.project.project_crud import ProjectCrud
+from app.crud.project.project_directory_crud import PDirectoryCrud
 from app.enums.enum_project import ProjectRoleEnum
 from app.exceptions.commom_exception import CustomException
 from app.handler.response_handler import C137Response
+from app.schemas.project.pd_schema import AddPDirectoryRequest
 from app.schemas.project.project_schema import AddProjectRequest, UpdateProjectRequest, AddProjectMemberRequest
 from app.utils.logger import Log
 from app.exceptions.project_exp import *
@@ -57,3 +59,29 @@ class ProjectService:
             "project_info": C137Response.orm_to_dict(project_info),
             "project_member": orm_project_member,
         }
+
+    @staticmethod
+    async def get_project_dir(project_id: int, directory_id: int = None):
+        if directory_id is None or directory_id == 0:
+            result = await ProjectCrud.get_project_dir_root(project_id)
+        else:
+            result = await PDirectoryCrud.get_project_dir_and_case(directory_id)
+        tree = []
+        for item in result:
+            temp = C137Response.orm_to_dict(
+                item, "create_user", "update_user", "created_at", "updated_at", "deleted_at", "project_id"
+            )
+            count = await PDirectoryCrud.query_dir_has_child(item.directory_id)
+            temp.__setitem__("has_child", count != 0)
+            tree.append(temp)
+        return tree
+
+    @staticmethod
+    async def add_project_dir(project_id: int, data: AddPDirectoryRequest, creator: int):
+        if await PDirectoryCrud.pd_name_exists(project_id, data.name):
+            raise CustomException(PD_NAME_EXISTS)
+        await PDirectoryCrud.add_project_dir(project_id, data, creator)
+
+    @staticmethod
+    async def delete_project_dir(directory_id: int, operator: int):
+        pass

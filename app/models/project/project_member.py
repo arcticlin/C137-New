@@ -16,12 +16,12 @@ class ProjectMemberModel(Base, BaseMixin):
     __tablename__ = "project_member"
 
     id = Column(Integer, primary_key=True)
-    project_id = Column(Integer,ForeignKey("project.project_id"))
-    user_id = Column(Integer, ForeignKey("users.user_id"))
+    project_id = Column(Integer, ForeignKey("project.project_id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.user_id"), index=True)
     role = Column(SqlEnum(ProjectRoleEnum), nullable=False, comment="角色")
 
     users = relationship("UserModel", backref="project_member")
-    project_name = relationship("ProjectModel", backref="project_member")
+    project = relationship("ProjectModel", backref="project_member")
 
     def __init__(
         self,
@@ -34,3 +34,4 @@ class ProjectMemberModel(Base, BaseMixin):
         self.user_id = user_id
         self.role = role
         self.create_user = create_user
+        self.update_user = create_user

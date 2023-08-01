@@ -19,13 +19,9 @@ from sqlalchemy.ext.declarative import declarative_base
 from base_config import Config
 
 
-async_engine: AsyncEngine = create_async_engine(
-    Config.ASYNC_SQLALCHEMY_URI, pool_recycle=1500, future=True
-)
+async_engine: AsyncEngine = create_async_engine(Config.ASYNC_SQLALCHEMY_URI, pool_recycle=1500, future=True)
 
-async_session: async_sessionmaker = async_sessionmaker(
-    bind=async_engine, class_=AsyncSession, autoflush=True
-)
+async_session: async_sessionmaker = async_sessionmaker(bind=async_engine, class_=AsyncSession, autoflush=True)
 
 
 Base = declarative_base()

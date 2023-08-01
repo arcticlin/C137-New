@@ -8,3 +8,4 @@ Description:
 from app.models.auth.user import UserModel
 from app.models.project.project import ProjectModel
 from app.models.project.project_member import ProjectMemberModel
+from app.models.project.project_directory import PDirectoryModel

@@ -23,6 +23,8 @@ from app.crud.project.project_member_crud import ProjectMCrud
 from app.enums.enum_project import ProjectRoleEnum
 from app.models.project.project_member import ProjectMemberModel
 from app.handler.db_bulk import DatabaseBulk
+from app.models.project.project_directory import PDirectoryModel
+from app.crud.project.project_directory_crud import PDirectoryCrud
 
 
 class ProjectCrud:
@@ -163,3 +165,18 @@ class ProjectCrud:
                 )
             )
             return smtm.scalars().all()
+
+    @staticmethod
+    async def get_project_dir_root(project_id: int):
+        async with async_session() as session:
+            # 根目录
+            smtm = select(PDirectoryModel).where(
+                and_(
+                    PDirectoryModel.project_id == project_id,
+                    PDirectoryModel.deleted_at == 0,
+                    PDirectoryModel.parent_id == None,
+                )
+            )
+            execute = await session.execute(smtm)
+            result = execute.scalars().all()
+            return result

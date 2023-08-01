@@ -8,11 +8,12 @@ Description:
 from datetime import datetime
 from typing import Union
 
+from app.handler.response_handler import C137Response
 from app.utils.logger import Log
 from app.models.auth.user import UserModel
 from app.schemas.auth.user import UserRegisterRequest
 from app.core.db_connector import async_session
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, text, column, Integer, Unicode
 from app.handler.token_handler import UserToken
 from app.handler.db_bulk import DatabaseBulk
 from app.enums.enum_user import UserRoleEnum
@@ -123,4 +124,19 @@ class AuthCrud:
         async with async_session() as session:
             smtm = select(UserModel).where(and_(UserModel.deleted_at == 0))
             result = await session.execute(smtm)
+            smtm2 = text(
+                """
+                SELECT user_id, nickname FROM users WHERE deleted_at = 0
+            """
+            )
+            print("t", type(smtm2))
+            smtm2 = smtm2.columns(column("user_id", Integer), column("name", Unicode))
+            print("b", type(smtm2))
+
+            # orm_sql = select(UserModel).from_statement(smtm2)
+            result1 = await session.execute(smtm2)
+            for x in result1:
+                print(x)
+                print(C137Response.orm_to_dict(x))
+
             return result.scalars().all()
