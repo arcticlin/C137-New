@@ -18,7 +18,8 @@ if not os.path.exists(Config.LOG_DIR):
 if Config.ENV == "dev":
     # 需要输出到控制台
     logger.add(
-        sink=sys.stdout,
+        # sink=sys.stdout,
+        sink=sys.stderr,
         format="{time:YYYY-MM-DD HH:mm:ss} | {level} | {file}:{function}:{line} | {message}",
         level="DEBUG",
         backtrace=True if Config.ENV == "dev" else False,  # 替换为判断当前是否是开发环境的条件

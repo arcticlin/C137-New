@@ -21,11 +21,11 @@ class UserToken:
     def add_salt(password: str) -> str:
         # 密码加盐
         m = hashlib.md5()
-        UserToken.log.info(f"加密前: {password}")
+
         salty = f"{password}@{Config.TOKEN_SALT}".encode("utf-8")
 
         m.update(salty)
-        UserToken.log.info(f"加密后: {m.hexdigest()}")
+
         return m.hexdigest()
 
     @staticmethod

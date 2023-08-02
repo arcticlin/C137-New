@@ -1,0 +1,41 @@
+# coding=utf-8
+"""
+File: api_case_router.py
+Author: bot
+Created: 2023/8/2
+Description:
+"""
+
+from fastapi import APIRouter, Depends
+from app.handler.response_handler import C137Response
+from app.schemas.api_case.api_path_schema import *
+from app.schemas.api_case.api_headers_schema import *
+from app.schemas.api_case.api_case_schema import *
+from app.middleware.access_permission import Permission
+from app.crud.api_case.api_case_crud import ApiCaseCrud
+from app.services.api_case.api_case_services import ApiCaseServices
+
+
+case = APIRouter()
+
+
+@case.get("/{case_id}", summary="查询用例详情")
+async def get_api_case(case_id: int):
+    await ApiCaseCrud.get_case_dependencies(case_id)
+    return C137Response.success()
+
+
+@case.post("/add", summary="添加用例")
+async def add_api_case(data: AddApiCaseRequest, user=Depends(Permission())):
+    pass
+
+
+@case.delete("/delete", summary="删除用例")
+async def delete_api_case(data: DeleteApiCaseRequest, user=Depends(Permission())):
+    await ApiCaseServices.delete_case(data.case_id, user["user_id"])
+    return C137Response.success(message="删除成功")
+
+
+@case.put("/update", summary="更新用例")
+async def update_api_case(data: UpdateApiCaseRequest, user=Depends(Permission())):
+    pass
