@@ -10,7 +10,7 @@ from datetime import datetime
 from app.exceptions.commom_exception import CustomException
 from app.exceptions.project_exp import PROJECT_MEMBER_EXISTS
 from app.schemas.project.project_schema import AddProjectRequest, UpdateProjectRequest
-from app.utils.logger import Log
+from app.utils.new_logger import logger
 from app.models.project.project import ProjectModel
 from app.models.project.project_member import ProjectMemberModel
 
@@ -28,8 +28,6 @@ from app.crud.project.project_directory_crud import PDirectoryCrud
 
 
 class ProjectCrud:
-    log = Log("ProjectCrud")
-
     @staticmethod
     async def query_project(project_id: int):
         async with async_session() as session:
@@ -53,14 +51,14 @@ class ProjectCrud:
 
     @staticmethod
     async def add_project(data: AddProjectRequest, creator: int):
-        ProjectCrud.log.d_info(creator, f"创建项目: {data.project_name}")
+        logger.info(f"{creator}: 创建项目: {data.project_name}")
         async with async_session() as session:
             async with session.begin():
                 project = ProjectModel(**data.dict(), create_user=creator)
                 session.add(project)
                 await session.flush()
                 # 创建项目的同时添加进成员表中进行记录
-                ProjectCrud.log.d_info(creator, f"创建添加用户: {creator}进项目")
+                logger.info(f"{creator}: 创建添加用户: {creator}进项目")
                 add_member = ProjectMemberModel(
                     project_id=project.project_id,
                     role=ProjectRoleEnum.CREATOR,
@@ -73,7 +71,7 @@ class ProjectCrud:
 
     @staticmethod
     async def delete_project(project_id: int, operator: int):
-        ProjectCrud.log.d_info(operator, f"删除项目: {project_id}")
+        logger.info(f"{operator}: 删除项目: {project_id}")
         async with async_session() as session:
             async with session.begin():
                 smtm = await session.execute(
@@ -92,7 +90,7 @@ class ProjectCrud:
 
     @staticmethod
     async def update_project(project_id: int, data: UpdateProjectRequest, operator: int):
-        ProjectCrud.log.d_info(operator, f"修改信息项目: {data.dict()}")
+        logger.info(f"{operator}: 修改信息项目: {data.dict()}")
         async with async_session() as session:
             async with session.begin():
                 smtm = await session.execute(

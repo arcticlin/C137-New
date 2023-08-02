@@ -30,7 +30,7 @@ Base = declarative_base()
 # Mixin
 class BaseMixin:
     create_user = Column(INT, comment="创建人", index=True)
-    update_user = Column(INT, comment="更新人")
+    update_user = Column(INT, comment="更新人", index=True)
     created_at = Column(
         TIMESTAMP,
         default=func.now(),

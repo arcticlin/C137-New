@@ -15,3 +15,8 @@ class AddPDirectoryRequest(BaseModel):
 
 class DeletePDirectoryRequest(BaseModel):
     directory_id: int
+
+
+class UpdatePDirectoryRequest(BaseModel):
+    directory_id: int
+    name: str

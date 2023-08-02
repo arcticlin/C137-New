@@ -4,3 +4,5 @@ PROJECT_NOT_CREATOR = (400, 40102, "非项目创建者或管理员")
 PROJECT_MEMBER_EXISTS = (400, 40103, "该成员已在项目中")
 
 PD_NAME_EXISTS = (400, 40104, "目录名已存在")
+PD_NOT_EXISTS = (400, 40105, "目录不存在")
+PD_NOT_ALLOW = (400, 40106, "仅创建人或责任人可删除目录")

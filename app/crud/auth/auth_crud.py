@@ -9,7 +9,8 @@ from datetime import datetime
 from typing import Union
 
 from app.handler.response_handler import C137Response
-from app.utils.logger import Log
+
+from app.utils.new_logger import logger
 from app.models.auth.user import UserModel
 from app.schemas.auth.user import UserRegisterRequest
 from app.core.db_connector import async_session
@@ -20,8 +21,6 @@ from app.enums.enum_user import UserRoleEnum
 
 
 class AuthCrud:
-    log = Log("AuthCrud")
-
     @staticmethod
     async def get_user_by_account(account: str) -> Union[UserModel, None]:
         async with async_session() as session:
@@ -122,21 +121,10 @@ class AuthCrud:
     @staticmethod
     async def get_all_user():
         async with async_session() as session:
-            smtm = select(UserModel).where(and_(UserModel.deleted_at == 0))
-            result = await session.execute(smtm)
             smtm2 = text(
                 """
-                SELECT user_id, nickname FROM users WHERE deleted_at = 0
+                SELECT user_id, nickname, email, user_role, department_id, avatar FROM users WHERE deleted_at = 0 AND valid = 1
             """
             )
-            print("t", type(smtm2))
-            smtm2 = smtm2.columns(column("user_id", Integer), column("name", Unicode))
-            print("b", type(smtm2))
-
-            # orm_sql = select(UserModel).from_statement(smtm2)
-            result1 = await session.execute(smtm2)
-            for x in result1:
-                print(x)
-                print(C137Response.orm_to_dict(x))
-
-            return result.scalars().all()
+            orm_sql = await session.execute(smtm2)
+            return orm_sql

@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from app.middleware.request_middle import RequestMiddleware
 from app.middleware.whitelist_middleware import ip_whitelist_middleware
 from base_config import Config
 
@@ -26,3 +27,5 @@ def register_middleware(app: FastAPI) -> None:
             allow_headers=["*"],
         )
     # app.add_middleware(ip_whitelist_middleware)
+    if Config.MIDDLEWARE_ACCESS:
+        app.add_middleware(RequestMiddleware)

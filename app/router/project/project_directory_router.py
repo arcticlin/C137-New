@@ -10,6 +10,6 @@ from fastapi import APIRouter
 pd = APIRouter(prefix="/directory")
 
 
-@pd.get("/")
+@pd.delete("/delete")
 async def get_project_directory():
     pass

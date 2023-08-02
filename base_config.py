@@ -21,6 +21,8 @@ class BasicConfig(BaseSettings):
     SQLALCHEMY_URI: str = ""
     ASYNC_SQLALCHEMY_URI: str = ""
 
+    ENV: str
+
     # MYSQL 配置
     MYSQL_DROP_BEFORE_START: bool
     MYSQL_TRACK_MODIFICATION: bool = False
@@ -72,6 +74,7 @@ class DevConfig(BasicConfig):
         env_file = os.path.join(ROOT, "env_config", "dev.env")
         env_file_encoding = "utf-8"
 
+    ENV = "dev"
     REDIS_ON: bool = False
     title: str = "C137_Dev"
     MYSQL_DROP_BEFORE_START: bool = False
@@ -87,6 +90,7 @@ class DockerConfig(BasicConfig):
         env_file = os.path.join(ROOT, "env_config", "dev.env")
         env_file_encoding = "utf-8"
 
+    ENV = "docker"
     REDIS_ON: bool = False
     title: str = "C137_Docker"
     MYSQL_DROP_BEFORE_START: bool = False

@@ -9,7 +9,7 @@ import json, string, secrets
 
 from app.handler.token_handler import UserToken
 from app.schemas.admin.admin_schema import AdminResetCode
-from app.utils.logger import Log
+from app.utils.new_logger import logger
 from app.schemas.auth.user import (
     UserRegisterRequest,
     UserLoginRequest,

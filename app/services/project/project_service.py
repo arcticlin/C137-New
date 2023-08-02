@@ -5,13 +5,12 @@ from app.exceptions.commom_exception import CustomException
 from app.handler.response_handler import C137Response
 from app.schemas.project.pd_schema import AddPDirectoryRequest
 from app.schemas.project.project_schema import AddProjectRequest, UpdateProjectRequest, AddProjectMemberRequest
-from app.utils.logger import Log
+from app.utils.new_logger import logger
 from app.exceptions.project_exp import *
+from app.utils.sql_checker import SqlChecker
 
 
 class ProjectService:
-    log = Log("ProjectService")
-
     @staticmethod
     async def add_project(data: AddProjectRequest, creator: int):
         if await ProjectCrud.query_project_by_name(data.project_name):
@@ -83,5 +82,21 @@ class ProjectService:
         await PDirectoryCrud.add_project_dir(project_id, data, creator)
 
     @staticmethod
-    async def delete_project_dir(directory_id: int, operator: int):
-        pass
+    async def delete_project_dir(project_id: int, directory_id: int, operator: int):
+        check = await PDirectoryCrud.check_directory_permission(project_id, directory_id)
+        if check is None:
+            raise CustomException(PD_NOT_EXISTS)
+        check_d, check_u = check
+        if not SqlChecker().check_permission(operator, check_u):
+            raise CustomException(PD_NOT_ALLOW)
+        await PDirectoryCrud.delete_project_dir(directory_id, operator)
+
+    @staticmethod
+    async def update_project_dir_name(project_id: int, directory_id: int, name: str, operator: int):
+        check = await PDirectoryCrud.check_directory_permission(project_id, directory_id)
+        if check is None:
+            raise CustomException(PD_NOT_EXISTS)
+        check_d, check_u = check
+        if not SqlChecker().check_permission(operator, check_u):
+            raise CustomException(PD_NOT_ALLOW)
+        await PDirectoryCrud.update_project_dir_name(directory_id, name, operator)

@@ -13,12 +13,10 @@ from app.exceptions.auth_exp import *
 from app.exceptions.commom_exception import CustomException
 from typing import Dict
 from base_config import Config
-from app.utils.logger import Log
+from app.utils.new_logger import logger
 
 
 class UserToken:
-    log = Log("UserToken")
-
     @staticmethod
     def add_salt(password: str) -> str:
         # 密码加盐

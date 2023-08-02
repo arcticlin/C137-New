@@ -31,3 +31,4 @@ build/
 __hypothesis/
 /.mypy_cache/
 /.pytest_cache/
+./logs/
