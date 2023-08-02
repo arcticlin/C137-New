@@ -8,7 +8,7 @@ Description:
 from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.exceptions.commom_exception import CustomException
 from app.exceptions.case_exp import *
-
+from app.utils.new_logger import logger
 
 class ApiCaseServices:
     @staticmethod
@@ -16,6 +16,7 @@ class ApiCaseServices:
         check = await ApiCaseCrud.get_case_dependencies(case_id)
         if check is None:
             raise CustomException(CASE_NOT_EXISTS)
+        logger.debug("删除测试用例及其依赖: %s" % check)
         case_id, path_id, headers_id = check
         if path_id:
             path_id = [path_id] if "," not in path_id else path_id.split(",")

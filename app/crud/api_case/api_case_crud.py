@@ -75,22 +75,33 @@ class ApiCaseCrud:
             async with session.begin():
                 smtm_case = text(
                     """
-                    UPDATE api_case SET deleted_at = :deleted_at, update_user = :update_user WHERE case_id = :case_id;
+                    UPDATE api_case 
+                    SET deleted_at = :deleted_at, update_user = :update_user , updated_at = :updated_at
+                    WHERE case_id = :case_id;
                 """
                 )
                 smtm_path = text(
                     """
-                    UPDATE api_path SET deleted_at = :deleted_at, update_user = :update_user WHERE case_id = :case_id AND deleted_at != 0;
+                    UPDATE api_path 
+                    SET deleted_at = :deleted_at, update_user = :update_user , updated_at = :updated_at
+                    WHERE case_id = :case_id AND deleted_at = 0;
                     """
                 )
                 smtm_header = text(
                     """
-                    UPDATE api_headers SET deleted_at = :deleted_at, update_user = :update_user WHERE case_id = :case_id AND deleted_at != 0;
+                    UPDATE api_headers 
+                    SET deleted_at = :deleted_at, update_user = :update_user 
+                    WHERE case_id = :case_id AND deleted_at = 0;
                     """
                 )
                 await session.execute(
                     smtm_case,
-                    {"deleted_at": int(datetime.now().timestamp()), "update_user": operator, "case_id": case_id},
+                    {
+                        "deleted_at": int(datetime.now().timestamp()),
+                        "update_user": operator,
+                        "case_id": case_id,
+                        "updated_at": datetime.now()
+                    },
                 )
                 if path_id:
                     await session.execute(
@@ -99,6 +110,7 @@ class ApiCaseCrud:
                             "deleted_at": int(datetime.now().timestamp()),
                             "update_user": operator,
                             "case_id": case_id,
+                            "updated_at": datetime.now(),
                         },
                     )
                 if headers_id:
@@ -108,6 +120,7 @@ class ApiCaseCrud:
                             "deleted_at": int(datetime.now().timestamp()),
                             "update_user": operator,
                             "case_id": case_id,
+                            "updated_at": datetime.now(),
                         },
                     )
                 await session.commit()
