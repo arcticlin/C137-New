@@ -14,7 +14,7 @@ from base_config import Config
 if not os.path.exists(Config.LOG_DIR):
     os.mkdir(Config.LOG_DIR)
 
-logger.remove()
+
 
 if Config.ENV == "dev":
     # 需要输出到控制台

@@ -46,6 +46,7 @@ class C137Response:
         message: str = "操作成功",
         total: int = None,
     ):
+        print("c137-1", datetime.now())
         response = dict()
         response.__setitem__("code", code)
         if data is not None:
@@ -64,6 +65,7 @@ class C137Response:
         response.__setitem__("message", message)
         # if total is not None:
         response.__setitem__("total", total)
+        print("c137-2", datetime.now())
         return response
 
     @staticmethod

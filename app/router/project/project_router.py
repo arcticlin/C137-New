@@ -5,7 +5,7 @@ Author: bot
 Created: 2023/7/28
 Description:
 """
-
+from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query
 from app.crud.project.project_crud import ProjectCrud
@@ -89,5 +89,7 @@ async def get_dir_child(project_id: int, directory_id: int):
 
 @project.get("/{project_id}/directory/tree", summary="获取项目目录树")
 async def get_project_dir_tree(project_id: int):
+    print("router1", datetime.now())
     result = await ProjectService.get_project_directory_tree(project_id)
+    print("router2", datetime.now())
     return C137Response.success(data=result)

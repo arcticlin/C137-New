@@ -9,7 +9,7 @@ from datetime import datetime
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 
-from app.utils.logger import logger
+from app.utils.new_logger import logger
 
 
 class RequestMiddleware(BaseHTTPMiddleware):

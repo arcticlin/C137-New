@@ -214,8 +214,12 @@ class ProjectCrud:
     @staticmethod
     async def n_get_project_directory_tree(project_id: int):
         async with async_session() as session:
+            print("crud1", datetime.now())
             smtm = """
-                SELECT d.directory_id, d.name, d.parent_id, (SELECT CASE WHEN EXISTS(SELECT 1 FROM api_case AS ac WHERE ac.directory_id = d.directory_id AND ac.deleted_at = 0) THEN 1 ELSE 0 END) AS has_case
+                SELECT d.directory_id, d.name, d.parent_id, (SELECT COUNT(case_id) FROM api_case AS ac WHERE ac.directory_id = d.directory_id AND ac.deleted_at = 0) AS has_case
                 FROM directory AS d
                 WHERE project_id = :project_id
             """
+            execute = await session.execute(text(smtm), {"project_id": project_id})
+            print("curd2", datetime.now())
+            return execute.all()

@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 
 from app.crud.project.project_crud import ProjectCrud
 from app.crud.project.project_directory_crud import PDirectoryCrud
@@ -135,6 +136,18 @@ class ProjectService:
 
     @staticmethod
     async def get_project_directory_tree(project_id: int):
-        result = await ProjectCrud.get_project_directory_tree(project_id)
-        orm_result = C137Response.orm_with_list(result)
-        return ProjectCrud.another_build_directory_tree(orm_result)
+        print("Service1", datetime.now())
+        result = await ProjectCrud.n_get_project_directory_tree(project_id)
+        temp_data = []
+        for x in result:
+            directory_id, name, parent_id, has_case = x
+            temp_data.append(
+                {
+                    "directory_id": directory_id,
+                    "name": name,
+                    "parent_id": parent_id,
+                    "has_case": has_case,
+                }
+            )
+        print("Service2", datetime.now())
+        return ProjectCrud.another_build_directory_tree(temp_data)
