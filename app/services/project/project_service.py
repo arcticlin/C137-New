@@ -1,3 +1,5 @@
+import json
+
 from app.crud.project.project_crud import ProjectCrud
 from app.crud.project.project_directory_crud import PDirectoryCrud
 from app.enums.enum_project import ProjectRoleEnum
@@ -13,12 +15,14 @@ from app.utils.sql_checker import SqlChecker
 class ProjectService:
     @staticmethod
     async def add_project(data: AddProjectRequest, creator: int):
+        logger.debug(f"{creator} => 创建项目")
         if await ProjectCrud.query_project_by_name(data.project_name):
             raise CustomException(PROJECT_NAME_EXISTS)
         await ProjectCrud.add_project(data, creator)
 
     @staticmethod
     async def delete_project(project_id: int, operator: int):
+        logger.debug(f"{operator} => 删除项目: {project_id}")
         project = await ProjectCrud.query_project(project_id)
         if not project:
             raise CustomException(PROJECT_NOT_EXISTS)
@@ -28,8 +32,8 @@ class ProjectService:
 
     @staticmethod
     async def update_project(project_id: int, data: UpdateProjectRequest, operator: int):
+        logger.debug(f"{operator} => 更新项目: {project_id}")
         project = await ProjectCrud.query_project(project_id)
-        print("Here", project)
         if not project:
             raise CustomException(PROJECT_NOT_EXISTS)
         if project.create_user != operator:
@@ -38,6 +42,7 @@ class ProjectService:
 
     @staticmethod
     async def add_project_member(project_id: int, data: AddProjectMemberRequest, operator: int):
+        logger.debug(f"{operator} => 添加项目: {project_id} 成员: {data.user_id}")
         operator_role = await ProjectCrud.member_role_in_project(project_id, operator)
         if not operator_role:
             raise CustomException(PROJECT_NOT_CREATOR)
@@ -51,6 +56,7 @@ class ProjectService:
 
     @staticmethod
     async def get_project_detail(project_id: int):
+        logger.debug(f"查询项目: {project_id}详情")
         project_info = await ProjectCrud.query_project(project_id)
         project_member = await ProjectCrud.query_project_member(project_id)
         orm_project_member = C137Response.orm_with_list(project_member, "id", "updated_at", "deleted_at", "project_id")
@@ -60,29 +66,15 @@ class ProjectService:
         }
 
     @staticmethod
-    async def get_project_dir(project_id: int, directory_id: int = None):
-        if directory_id is None or directory_id == 0:
-            result = await ProjectCrud.get_project_dir_root(project_id)
-        else:
-            result = await PDirectoryCrud.get_project_dir_and_case(directory_id)
-        tree = []
-        for item in result:
-            temp = C137Response.orm_to_dict(
-                item, "create_user", "update_user", "created_at", "updated_at", "deleted_at", "project_id"
-            )
-            count = await PDirectoryCrud.query_dir_has_child(item.directory_id)
-            temp.__setitem__("has_child", count != 0)
-            tree.append(temp)
-        return tree
-
-    @staticmethod
     async def add_project_dir(project_id: int, data: AddPDirectoryRequest, creator: int):
+        logger.debug(f"{creator} => 添加项目: {project_id} 目录")
         if await PDirectoryCrud.pd_name_exists(project_id, data.name):
             raise CustomException(PD_NAME_EXISTS)
         await PDirectoryCrud.add_project_dir(project_id, data, creator)
 
     @staticmethod
     async def delete_project_dir(project_id: int, directory_id: int, operator: int):
+        logger.debug(f"{operator} => 删除项目: {project_id} 目录")
         check = await PDirectoryCrud.check_directory_permission(project_id, directory_id)
         if check is None:
             raise CustomException(PD_NOT_EXISTS)
@@ -93,6 +85,7 @@ class ProjectService:
 
     @staticmethod
     async def update_project_dir_name(project_id: int, directory_id: int, name: str, operator: int):
+        logger.debug(f"{operator} => 更新项目: {project_id} 目录信息")
         check = await PDirectoryCrud.check_directory_permission(project_id, directory_id)
         if check is None:
             raise CustomException(PD_NOT_EXISTS)
@@ -100,3 +93,48 @@ class ProjectService:
         if not SqlChecker().check_permission(operator, check_u):
             raise CustomException(PD_NOT_ALLOW)
         await PDirectoryCrud.update_project_dir_name(directory_id, name, operator)
+
+    @staticmethod
+    async def get_project_root_dir(project_id: int):
+        logger.debug(f"查询项目: {project_id} 根目录")
+        result = await PDirectoryCrud.query_project_directory_root(project_id)
+        temp_result = []
+        if result is None:
+            return []
+        for item in result:
+            directory_id, name, has_child = item
+            temp_result.append(
+                {
+                    "directory_id": directory_id,
+                    "name": name,
+                    "has_child": has_child,
+                }
+            )
+        return temp_result
+
+    @staticmethod
+    async def get_directory_children(directory_id: int):
+        logger.debug(f"查询目录: {directory_id} 子目录和用例")
+        list_dir, list_case = await PDirectoryCrud.query_directory_children(directory_id)
+        temp_result = []
+        if list_dir is None:
+            list_dir = []
+        if list_case is None:
+            list_case = []
+        for item in list_dir:
+            t_directory_id, t_name, t_parent_id, t_has_child = item
+            temp_result.append(
+                {"directory_id": t_directory_id, "name": t_name, "parent_id": t_parent_id, "has_child": t_has_child}
+            )
+
+        for item in list_case:
+            case_id, name, method, directory_id = item
+            temp_result.append({"case_id": case_id, "name": name, "method": method, "parent_id": directory_id})
+
+        return temp_result
+
+    @staticmethod
+    async def get_project_directory_tree(project_id: int):
+        result = await ProjectCrud.get_project_directory_tree(project_id)
+        orm_result = C137Response.orm_with_list(result)
+        return ProjectCrud.another_build_directory_tree(orm_result)

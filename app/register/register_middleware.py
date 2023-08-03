@@ -27,5 +27,5 @@ def register_middleware(app: FastAPI) -> None:
             allow_headers=["*"],
         )
     # app.add_middleware(ip_whitelist_middleware)
-    if Config.MIDDLEWARE_ACCESS:
-        app.add_middleware(RequestMiddleware)
+    # if Config.MIDDLEWARE_ACCESS:
+    #     app.add_middleware(RequestMiddleware)

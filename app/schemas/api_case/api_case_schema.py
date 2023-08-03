@@ -9,7 +9,7 @@ Description:
 from pydantic import BaseModel, Field
 from app.schemas.api_case.api_headers_schema import AddApiHeaderRequest
 from app.schemas.api_case.api_path_schema import AddApiPathRequest
-from typing import List
+from typing import List, Union
 
 from app.schemas.response_schema import CommonResponse
 
@@ -51,8 +51,9 @@ class ApiCaseShow(BaseModel):
     url: str = Field(..., title="请求url")
     method: str = Field(..., title="请求方法")
     body_type: int = Field(..., title="请求体类型, 0: none, 1: json 2: form 3: x-form 4: binary, 5: GraphQL")
-    body: str = Field(None, title="请求体数据")
+    body: Union[str, dict, bytes, None] = Field(None, title="请求体数据")
     path: List[AddApiPathRequest] = Field([], title="请求路径参数")
+    query: List[AddApiPathRequest] = Field([], title="请求query参数")
     headers: List[AddApiHeaderRequest] = Field([], title="请求头")
     directory_id: int = Field(..., title="目录id")
     tag: str = Field(None, title="标签")

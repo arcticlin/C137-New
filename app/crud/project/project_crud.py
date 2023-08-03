@@ -6,28 +6,59 @@ Created: 2023/7/28
 Description:
 """
 from datetime import datetime
+from typing import List, Dict
 
-from app.exceptions.commom_exception import CustomException
-from app.exceptions.project_exp import PROJECT_MEMBER_EXISTS
+from app.models.apicase.api_case import ApiCaseModel
 from app.schemas.project.project_schema import AddProjectRequest, UpdateProjectRequest
 from app.utils.new_logger import logger
 from app.models.project.project import ProjectModel
-from app.models.project.project_member import ProjectMemberModel
 
-from sqlalchemy import select, and_, or_
+
+from sqlalchemy import select, and_, or_, text
 
 from app.core.db_connector import async_session
-from app.handler.response_handler import C137Response
-from sqlalchemy.orm import selectinload
-from app.crud.project.project_member_crud import ProjectMCrud
+
 from app.enums.enum_project import ProjectRoleEnum
 from app.models.project.project_member import ProjectMemberModel
 from app.handler.db_bulk import DatabaseBulk
 from app.models.project.project_directory import PDirectoryModel
-from app.crud.project.project_directory_crud import PDirectoryCrud
 
 
 class ProjectCrud:
+    @staticmethod
+    def build_directory_tree(data: List[Dict]):
+        directory_map = {item["directory_id"]: item for item in data}
+        root = None
+
+        for item in data:
+            parent_id = item.get("parent_id")
+            if parent_id is None:
+                root = item
+            else:
+                parent = directory_map.get(parent_id)
+                if parent is not None:
+                    children = parent.setdefault("children", [])
+                    children.append(item)
+        if root is None:
+            return {}
+        return root
+
+    @staticmethod
+    def another_build_directory_tree(data: List[Dict]):
+        directory_map = {item["directory_id"]: item for item in data}
+        root = []
+
+        for item in data:
+            parent_id = item.get("parent_id")
+            if parent_id is None:
+                root.append(item)
+            else:
+                parent = directory_map.get(parent_id)
+                if parent is not None:
+                    children = parent.setdefault("children", [])
+                    children.append(item)
+        return root
+
     @staticmethod
     async def query_project(project_id: int):
         async with async_session() as session:
@@ -165,16 +196,26 @@ class ProjectCrud:
             return smtm.scalars().all()
 
     @staticmethod
-    async def get_project_dir_root(project_id: int):
+    async def get_project_directory_tree(project_id: int):
         async with async_session() as session:
-            # 根目录
-            smtm = select(PDirectoryModel).where(
-                and_(
-                    PDirectoryModel.project_id == project_id,
-                    PDirectoryModel.deleted_at == 0,
-                    PDirectoryModel.parent_id == None,
+            smtm = (
+                select(PDirectoryModel)
+                .join(
+                    ProjectModel,
+                    and_(ProjectModel.project_id == PDirectoryModel.project_id, ProjectModel.project_id == project_id),
                 )
+                .where(and_(ProjectModel.project_id == project_id, ProjectModel.deleted_at == 0))
             )
-            execute = await session.execute(smtm)
-            result = execute.scalars().all()
+            sql = await session.execute(smtm)
+            result = sql.scalars().all()
+            print(result)
             return result
+
+    @staticmethod
+    async def n_get_project_directory_tree(project_id: int):
+        async with async_session() as session:
+            smtm = """
+                SELECT d.directory_id, d.name, d.parent_id, (SELECT CASE WHEN EXISTS(SELECT 1 FROM api_case AS ac WHERE ac.directory_id = d.directory_id AND ac.deleted_at = 0) THEN 1 ELSE 0 END) AS has_case
+                FROM directory AS d
+                WHERE project_id = :project_id
+            """

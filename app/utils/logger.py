@@ -37,7 +37,6 @@ class Log:
 
     def info(self, message: str):
         file_name, line, func, _, _ = inspect.getframeinfo(inspect.currentframe().f_back)
-        print(func)
         logger.bind(
             name="C137_Info.log",
             func=func,

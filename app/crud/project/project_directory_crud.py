@@ -7,11 +7,9 @@ Description:
 """
 from datetime import datetime
 
-from sqlalchemy.orm import aliased
 
-from app.handler.response_handler import C137Response
-from app.schemas.project.pd_schema import AddPDirectoryRequest, DeletePDirectoryRequest
-from app.utils.new_logger import logger
+from app.schemas.project.pd_schema import AddPDirectoryRequest
+
 from app.core.db_connector import async_session
 from app.models.project.project_directory import PDirectoryModel
 from sqlalchemy import func, select, and_, or_, text
@@ -132,3 +130,69 @@ class PDirectoryCrud:
                 {"name": name, "update_user": operator, "directory_id": directory_id, "updated_at": datetime.now()},
             )
             await session.commit()
+
+    @staticmethod
+    async def query_project_directory_root(project_id: int):
+        """查询项目根目录并返回是否has_child"""
+        async with async_session() as session:
+            smtm = text(
+                """
+            SELECT d.directory_id, d.name, (SELECT
+                    CASE
+                        WHEN EXISTS(SELECT 1 FROM directory AS sd WHERE sd.parent_id = d.directory_id AND sd.deleted_at = 0)
+                        OR EXISTS(SELECT 1 FROM api_case AS ac WHERE ac.directory_id = d.directory_id AND ac.deleted_at = 0)
+                        THEN 1
+                        ELSE 0
+                    END)  AS has_child
+            FROM directory AS d
+            WHERE project_id = :project_id AND deleted_at = 0 AND (parent_id IS NULL OR parent_id = 0)
+            """
+            )
+            execute = await session.execute(smtm, {"project_id": project_id})
+            result = execute.all()
+            return result
+
+    @staticmethod
+    async def query_directory_children(directory_id: int):
+        async with async_session() as session:
+            smtm_d = text(
+                """
+                    SELECT d.directory_id, d.name, d.parent_id, (SELECT
+                    CASE
+                        WHEN EXISTS(SELECT 1 FROM directory AS sd WHERE sd.parent_id = d.directory_id AND sd.deleted_at = 0)
+                        OR EXISTS(SELECT 1 FROM api_case AS ac WHERE ac.directory_id = d.directory_id AND ac.deleted_at = 0)
+                        THEN 1
+                        ELSE 0
+                    END)  AS has_child
+                    FROM directory AS d
+                    WHERE parent_id = :directory_id AND deleted_at = 0
+                """
+            )
+            smtm_c = text(
+                """
+                    SELECT c.case_id, c.name, c.method, c.directory_id
+                    FROM api_case AS c
+                    WHERE directory_id = :directory_id AND deleted_at = 0
+                """
+            )
+            execute_d = await session.execute(smtm_d, {"directory_id": directory_id})
+            execute_c = await session.execute(smtm_c, {"directory_id": directory_id})
+
+            return execute_d.all(), execute_c.all()
+
+    @staticmethod
+    async def check_directory_has_child(directory_id: int):
+        async with async_session() as session:
+            smtm = text(
+                """
+                SELECT
+                    CASE
+                        WHEN EXISTS(SELECT 1 FROM directory AS sd WHERE sd.parent_id = :directory_id AND sd.deleted_at = 0)
+                        OR EXISTS(SELECT 1 FROM api_case AS ac WHERE ac.directory_id = :directory_id AND ac.deleted_at = 0)
+                        THEN 1
+                        ELSE 0
+                    END AS has_child
+            """
+            )
+            execute = await session.execute(smtm, {"directory_id": directory_id})
+            return execute.scalars().first()

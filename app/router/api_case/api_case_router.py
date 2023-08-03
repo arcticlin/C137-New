@@ -21,8 +21,8 @@ case = APIRouter()
 
 @case.get("/{case_id}", summary="查询用例详情")
 async def get_api_case(case_id: int):
-    await ApiCaseCrud.get_case_dependencies(case_id)
-    return C137Response.success()
+    result = await ApiCaseServices.query_case_detail(case_id)
+    return C137Response.success(data=result)
 
 
 @case.post("/add", summary="添加用例")
