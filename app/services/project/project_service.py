@@ -136,7 +136,6 @@ class ProjectService:
 
     @staticmethod
     async def get_project_directory_tree(project_id: int):
-        print("Service1", datetime.now())
         result = await ProjectCrud.n_get_project_directory_tree(project_id)
         temp_data = []
         for x in result:
@@ -149,5 +148,24 @@ class ProjectService:
                     "has_case": has_case,
                 }
             )
-        print("Service2", datetime.now())
+
         return ProjectCrud.another_build_directory_tree(temp_data)
+
+    @staticmethod
+    async def get_case_list_in_directory(directory_id: int):
+        result = await PDirectoryCrud.get_case_list_in_directory(directory_id)
+        temp_data = []
+        for x in result:
+            case_id, name, method, priority, status, create_user, updated_at = x
+            temp_data.append(
+                {
+                    "case_id": case_id,
+                    "name": name,
+                    "method": method,
+                    "priority": priority,
+                    "status": status,
+                    "create_user": create_user,
+                    "updated_at": int(updated_at.timestamp()),
+                }
+            )
+        return temp_data

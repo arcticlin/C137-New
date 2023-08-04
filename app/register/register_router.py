@@ -13,10 +13,11 @@ from app.router.admin.admin import admin
 from app.router.users.user_center import uc
 from app.router.api_case.api_case_router import case
 
-
+from app.router.common_config.config_router import cconfig
 def register_router(app: FastAPI):
     app.include_router(auth, prefix="/auth", tags=["用户中心"])
     app.include_router(project, prefix="/project", tags=["项目"])
     app.include_router(admin, prefix="/admin", tags=["管理员"])
     app.include_router(uc, prefix="/userc", tags=["用户中心"])
     app.include_router(case, prefix="/apicase", tags=["接口测试"])
+    app.include_router(cconfig, prefix="/config", tags=["配置中心"])

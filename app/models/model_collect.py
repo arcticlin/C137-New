@@ -13,3 +13,7 @@ from app.models.project.project_directory import PDirectoryModel
 from app.models.apicase.api_case import ApiCaseModel
 from app.models.apicase.api_path import ApiPathModel
 from app.models.apicase.api_headers import ApiHeadersModel
+
+from app.models.common_config.sql_model import SqlModel
+from app.models.common_config.redis_model import RedisModel
+from app.models.common_config.script_model import ScriptModel

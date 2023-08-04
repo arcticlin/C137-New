@@ -196,3 +196,16 @@ class PDirectoryCrud:
             )
             execute = await session.execute(smtm, {"directory_id": directory_id})
             return execute.scalars().first()
+
+    @staticmethod
+    async def get_case_list_in_directory(directory_id: int):
+        async with async_session() as session:
+            smtm = text(
+                """
+                SELECT case_id, name, method, priority, status, create_user, updated_at
+                FROM api_case
+                WHERE deleted_at = 0 AND directory_id = :directory_id
+            """
+            )
+            execute = await session.execute(smtm, {"directory_id": directory_id})
+            return execute.all()

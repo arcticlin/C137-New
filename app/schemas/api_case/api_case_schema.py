@@ -7,6 +7,8 @@ Description:
 """
 
 from pydantic import BaseModel, Field
+from pydantic.datetime_parse import datetime
+
 from app.schemas.api_case.api_headers_schema import AddApiHeaderRequest
 from app.schemas.api_case.api_path_schema import AddApiPathRequest
 from typing import List, Union
@@ -41,6 +43,16 @@ class UpdateApiCaseRequest(BaseModel):
     case_type: int = Field(None, title="用例类型, 1. 正常用例 2. 前置用例 3. 数据构造")
 
 
+class ApiListResponse(BaseModel):
+    case_id: int
+    name: str
+    method: str
+    priority: str
+    status: int
+    create_user: int
+    updated_at: int
+
+
 class DeleteApiCaseRequest(BaseModel):
     case_id: int = Field(..., title="用例id")
 
@@ -60,7 +72,20 @@ class ApiCaseShow(BaseModel):
     status: int = Field(..., title="用例状态, 1: debug, 2: close, 3: normal")
     priority: str = Field(..., title="用例优先级, P0-P4")
     case_type: int = Field(..., title="用例类型, 1. 正常用例 2. 前置用例 3. 数据构造")
+    create_user: int = Field(..., title="创建人")
+    update_user: int = Field(..., title="更新人")
+    created_at: int = Field(..., title="创建时间")
+    updated_at: int = Field(..., title="更新时间")
+
+
+class ApiCaseInfoShow(BaseModel):
+    case_info: ApiCaseShow
+    case_suffix: List = Field([], title="用例后置处理")
 
 
 class ApiCaseInfoResponse(CommonResponse):
-    data: ApiCaseShow
+    data: ApiCaseInfoShow
+
+
+class ApiCaseListResponse(CommonResponse):
+    data: List[ApiListResponse]

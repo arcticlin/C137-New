@@ -19,10 +19,11 @@ from app.services.api_case.api_case_services import ApiCaseServices
 case = APIRouter()
 
 
-@case.get("/{case_id}", summary="查询用例详情")
+@case.get("/{case_id}", summary="查询用例详情", response_model=ApiCaseInfoResponse)
 async def get_api_case(case_id: int):
     result = await ApiCaseServices.query_case_detail(case_id)
-    return C137Response.success(data=result)
+
+    return C137Response.success(data={"case_info": result})
 
 
 @case.post("/add", summary="添加用例")

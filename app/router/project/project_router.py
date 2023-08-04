@@ -13,6 +13,7 @@ from app.crud.project.project_directory_crud import PDirectoryCrud
 from app.handler.response_handler import C137Response
 from app.schemas.project.pd_schema import AddPDirectoryRequest, DeletePDirectoryRequest, UpdatePDirectoryRequest
 from app.schemas.project.project_schema import *
+from app.schemas.api_case.api_case_schema import ApiCaseListResponse
 from app.middleware.access_permission import Permission
 from app.services.project.project_service import ProjectService
 from app.utils.new_logger import logger
@@ -89,7 +90,12 @@ async def get_dir_child(project_id: int, directory_id: int):
 
 @project.get("/{project_id}/directory/tree", summary="获取项目目录树")
 async def get_project_dir_tree(project_id: int):
-    print("router1", datetime.now())
     result = await ProjectService.get_project_directory_tree(project_id)
-    print("router2", datetime.now())
+
     return C137Response.success(data=result)
+
+
+@project.get("/directory/{directory_id}/case_list", summary="获取目录下的用例列表", response_model=ApiCaseListResponse)
+async def get_case_list_in_directory(directory_id: int):
+    case_list = await ProjectService.get_case_list_in_directory(directory_id)
+    return C137Response.success(data=case_list)
