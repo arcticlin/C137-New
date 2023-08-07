@@ -30,6 +30,9 @@ class UpdateSqlRequest(BaseModel):
     sql_type: int = Field(None, description="SQL配置类型, 1: Mysql  2: POSTGRESQL 3: MONGODB")
 
 
+class PingSqlRequest(BaseModel):
+    sql_id: int = Field(..., description="SQL配置ID")
+
 class SqlDetailShow(BaseModel):
     sql_id: int = Field(..., description="SQL配置ID")
     name: str = Field(..., description="SQL配置名称")

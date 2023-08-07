@@ -43,6 +43,11 @@ class UpdateApiCaseRequest(BaseModel):
     case_type: int = Field(None, title="用例类型, 1. 正常用例 2. 前置用例 3. 数据构造")
 
 
+class DebugApiCaseRequest(BaseModel):
+    env_id: int
+    case_id: int
+
+
 class ApiListResponse(BaseModel):
     case_id: int
     name: str

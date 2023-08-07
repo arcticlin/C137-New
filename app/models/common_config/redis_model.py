@@ -19,6 +19,8 @@ class RedisModel(Base, BaseMixin):
     host = Column(String(128), nullable=False, comment="Redis域名")
     port = Column(INT, nullable=False, default=6379, comment="Redis端口")
 
+    db = Column(INT, default=0, comment="Redis DB")
+
     username = Column(String(64), comment="账号")
     password = Column(String(64), comment="密码")
 
@@ -29,8 +31,8 @@ class RedisModel(Base, BaseMixin):
         name: str,
         host: str,
         port: int,
-
         create_user: int,
+        db: int = 0,
         username: str = None,
         password: str = None,
         cluster: bool = False,
@@ -40,7 +42,7 @@ class RedisModel(Base, BaseMixin):
         self.name = name
         self.host = host
         self.port = port
-
+        self.db = db
         self.username = username
         self.password = password
         self.cluster = cluster

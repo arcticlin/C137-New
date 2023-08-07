@@ -17,3 +17,8 @@ from app.models.apicase.api_headers import ApiHeadersModel
 from app.models.common_config.sql_model import SqlModel
 from app.models.common_config.redis_model import RedisModel
 from app.models.common_config.script_model import ScriptModel
+
+from app.models.api_settings.assert_settings import AssertModel
+from app.models.api_settings.extract_settings import ExtractModel
+from app.models.api_settings.suffix_settings import SuffixModel
+from app.models.api_settings.env_settings import EnvModel

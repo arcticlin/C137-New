@@ -199,8 +199,40 @@ class CommonConfigCrud:
             return execute.all()
 
     @staticmethod
-    async def query_script_list(page: int = 1, page_size: int = 20,user_id: int = 0):
-        pass
+    async def query_script_list_public(page: int = 1, page_size: int = 20):
+        offset = (page - 1) * page_size
+        async with async_session() as session:
+            smtm_total = text(
+                """
+                SELECT COUNT(*) as total FROM script WHERE deleted_at = 0 AND public = 1
+                """
+            )
+            smtm_pagination = text(
+                """
+                SELECT script_id, name, var_key, public, create_user FROM script WHERE public = 1 AND deleted_at = 0 ORDER BY script_id DESC LIMIT :offset , :page_size
+                """
+            )
+            total = await session.execute(smtm_total)
+            record = await session.execute(smtm_pagination, {"offset": offset, "page_size": page_size})
+            return total.scalars().first(), record.all()
+
+    @staticmethod
+    async def query_script_list_myself(user_id: int, page: int = 1, page_size: int = 20):
+        offset = (page - 1) * page_size
+        async with async_session() as session:
+            smtm_total = text(
+                """
+                SELECT COUNT(*) as total FROM script WHERE deleted_at = 0 AND create_user = :user_id
+                """
+            )
+            smtm_pagination = text(
+                """
+                SELECT script_id, name, var_key, public, create_user FROM script WHERE create_user =  :user_id AND deleted_at = 0 ORDER BY script_id DESC LIMIT :offset , :page_size
+                """
+            )
+            total = await session.execute(smtm_total, {"user_id": user_id})
+            record = await session.execute(smtm_pagination, {"offset": offset, "page_size": page_size, "user_id": user_id})
+            return total.scalars().first(), record.all()
 
     @staticmethod
     async def query_sql_detail(sql_id: int):

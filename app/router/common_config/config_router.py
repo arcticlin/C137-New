@@ -80,8 +80,13 @@ async def delete_sql_config(sql_id: int, user=Depends(Permission())):
 
 
 @cconfig.get("/script/list", summary="获取script配置列表")
-async def get_script_config_list(user_id: int = Query(0, description="查看我的脚本, 不传则是我+公共的")):
-    pass
+async def get_script_config_list(
+        user_id: int = Query(0, description="查看我的脚本, 不传则是我+公共的"),
+        page: int = Query(1, description="页码"),
+        page_size: int = Query(20, description="每页数量")
+):
+    total, result = await CommonConfigServices.query_script_list(page, page_size, user_id)
+    return C137Response.success(data=result, total=total)
 
 
 @cconfig.post("/script/new", summary="新增script配置")
@@ -106,3 +111,18 @@ async def update_script_config(script_id: int, data: UpdateScriptRequest, user=D
 async def delete_script_config(script_id: int, user=Depends(Permission())):
     await CommonConfigServices.delete_script_config(script_id, user["user_id"])
     return C137Response.success(message="删除成功")
+
+
+@cconfig.post("/script/execute/debug", summary="执行script脚本")
+async def debug_script(data: DebugScript):
+    result = await CommonConfigServices.python_script_debug(data.script_id)
+    return C137Response.success(data=result)
+
+
+@cconfig.post("/sql/ping", summary="测试sql连接")
+async def ping_sql(data: PingSqlRequest):
+    pass
+
+@cconfig.post("/redis/ping", summary="测试redis连接")
+async def ping_redis(data: PingRedisRequest):
+    pass

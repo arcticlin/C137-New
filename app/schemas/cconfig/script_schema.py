@@ -19,6 +19,10 @@ class AddScriptRequest(BaseModel):
     public: bool = Field(..., description="脚本配置是否公开")
 
 
+class DebugScript(BaseModel):
+    script_id: int
+
+
 class UpdateScriptRequest(BaseModel):
     name: str = Field(None, description="脚本配置名称", max_length=16)
     description: str = Field(None, description="脚本配置描述", max_length=64)

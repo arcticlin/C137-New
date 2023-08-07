@@ -13,6 +13,8 @@ from app.exceptions.case_exp import *
 from app.handler.response_handler import C137Response
 from app.utils.new_logger import logger
 from app.schemas.api_case.api_case_schema import AddApiCaseRequest
+from app.handler.case_handler import CaseHandler
+from app.services.api_case.suffix_services import SuffixServices
 
 
 class ApiCaseServices:
@@ -88,3 +90,9 @@ class ApiCaseServices:
             raise CustomException(CASE_EXISTS)
         case_id = await ApiCaseCrud.add_api_case(case_detail, creator)
         return case_id
+
+    @staticmethod
+    async def debug_case_execute(env_id: int, case_id: int):
+        await CaseHandler.debug_case_execute(env_id, case_id)
+        await SuffixServices.get_env_suffix(env_id)
+        await SuffixServices.get_case_suffix(case_id)

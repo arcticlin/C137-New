@@ -16,6 +16,7 @@ from app.schemas.api_case.api_path_schema import *
 from app.schemas.api_case.api_headers_schema import *
 from app.schemas.api_case.api_case_schema import *
 from sqlalchemy import text, select, and_
+from app.models.api_settings.env_settings import EnvModel
 
 
 class ApiCaseCrud:
@@ -170,3 +171,14 @@ class ApiCaseCrud:
                         },
                     )
                 await session.commit()
+
+    @staticmethod
+    async def query_env_info(env_id: int):
+        async with async_session() as session:
+            smtm = text(
+                """
+                SELECT url FROM env WHERE env_id = :env_id AND deleted_at = 0;
+                """
+            )
+            result = await session.execute(smtm, {"env_id": env_id})
+            return result.scalars().first()

@@ -40,3 +40,8 @@ async def delete_api_case(data: DeleteApiCaseRequest, user=Depends(Permission())
 @case.put("/update", summary="更新用例")
 async def update_api_case(data: UpdateApiCaseRequest, user=Depends(Permission())):
     pass
+
+
+@case.post("/debug", summary="调试用例")
+async def debug_api_case(data: DebugApiCaseRequest):
+    await ApiCaseServices.debug_case_execute(data.env_id, data.case_id)
