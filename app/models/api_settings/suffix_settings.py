@@ -20,7 +20,7 @@ class SuffixModel(Base, BaseMixin):
     enable = Column(BOOLEAN, nullable=False, comment="是否启用")
     sort = Column(Integer, nullable=False, comment="排序")
 
-    execute_type = Column(Integer, nullable=False, comment="执行类型, 1: python 2: sql 3: redis 4: delay 5: 提取变量 6: 断言")
+    execute_type = Column(Integer, nullable=False, comment="执行类型, 1: python 2: sql 3: redis 4: delay")
 
     case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="绑定用例ID")
     env_id = Column(Integer, ForeignKey("env.env_id"), comment="绑定环境ID")

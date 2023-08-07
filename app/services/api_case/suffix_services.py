@@ -28,3 +28,4 @@ class SuffixServices:
     @staticmethod
     async def execute_delay(delay: int):
         await asyncio.sleep(delay)
+

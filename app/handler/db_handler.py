@@ -6,6 +6,8 @@ Created: 2023/8/7
 Description:
 """
 import aiopg, aiomysql, motor
+from app.exceptions.commom_exception import CustomException
+
 
 class DataBaseConnect:
 
@@ -27,7 +29,16 @@ class DataBaseConnect:
             )
             return connection
         except Exception as e:
-            return None
+            raise CustomException((400, 40801, f"数据库连接失败, {e}"))
+
+    @staticmethod
+    async def mysql_ping(host: str,
+            username: str,
+            password: str = None,
+            db: str = None,
+            port: int = 3306):
+        connection = await DataBaseConnect.mysql_connection(host, username, password, db, port)
+        connection.close()
 
     @staticmethod
     async def postgresql_connection(

@@ -14,7 +14,7 @@ from app.schemas.cconfig.script_schema import *
 from app.middleware.access_permission import Permission
 from app.services.cconfig.cconfig_services import CommonConfigServices
 from app.handler.response_handler import C137Response
-
+from app.handler.db_handler import DataBaseConnect
 
 cconfig = APIRouter()
 
@@ -59,6 +59,17 @@ async def get_sql_config_list():
 async def new_sql_config(data: AddSqlRequest, user=Depends(Permission())):
     await CommonConfigServices.add_sql_config(data, user["user_id"])
     return C137Response.success(message="添加成功")
+
+
+@cconfig.post("/sql/ping", summary="测试sql连接")
+async def ping_sql(data: PingSqlRequest):
+    await DataBaseConnect.mysql_ping(
+        host="127.0.0.1",
+        port=3306,
+        username="root",
+        password="test1234",
+        db="C137"
+    )
 
 
 @cconfig.post("/sql/{sql_id}", summary="获取sql配置")
@@ -119,9 +130,8 @@ async def debug_script(data: DebugScript):
     return C137Response.success(data=result)
 
 
-@cconfig.post("/sql/ping", summary="测试sql连接")
-async def ping_sql(data: PingSqlRequest):
-    pass
+
+
 
 @cconfig.post("/redis/ping", summary="测试redis连接")
 async def ping_redis(data: PingRedisRequest):
