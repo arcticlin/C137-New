@@ -14,7 +14,11 @@ from app.handler.response_handler import C137Response
 from app.utils.new_logger import logger
 from app.schemas.api_case.api_case_schema import AddApiCaseRequest
 from app.handler.case_handler import CaseHandler
+
+# from app.services.api_case.suffix_services import SuffixServices
+from app.handler.script_handler import ScriptHandler
 from app.services.api_case.suffix_services import SuffixServices
+from app.handler.redis_handler import redis_client
 
 
 class ApiCaseServices:
@@ -92,7 +96,7 @@ class ApiCaseServices:
         return case_id
 
     @staticmethod
-    async def debug_case_execute(env_id: int, case_id: int):
-        await CaseHandler.debug_case_execute(env_id, case_id)
-        await SuffixServices.get_env_suffix(env_id)
-        await SuffixServices.get_case_suffix(case_id)
+    async def debug_case_execute(env_id: int, case_id: int, trace_id: str):
+        # 获取环境信息
+        # 获取用例信息
+        await SuffixServices(trace_id).execute_env_prefix(env_id)

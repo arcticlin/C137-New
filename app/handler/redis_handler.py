@@ -5,6 +5,7 @@ Author: bot
 Created: 2023/7/25
 Description:
 """
+import json
 import sys
 
 from redis import asyncio as aioredis
@@ -37,6 +38,27 @@ class RedisCli(Redis):
         except Exception as e:
             logger.error(f"Redis连接异常: {e}")
             sys.exit()
+
+    async def set_kv(self, key: str, obj: dict, expired: int = None):
+        """设置键值对"""
+        await self.set(key, json.dumps(obj), ex=expired)
+
+    async def get_kv(self, key: str):
+        """获取键值对"""
+        value = await self.get(key)
+        try:
+            return json.loads(value)
+        except Exception as e:
+            return None
+
+    async def set_kv_load(self, key: str, obj: dict, expired: int = None):
+        """设置键值对"""
+        result = await self.get_kv(key)
+        if isinstance(result, dict):
+            result.update(obj)
+        else:
+            result = obj
+        await self.set_kv(key, result, expired)
 
 
 redis_client = RedisCli()

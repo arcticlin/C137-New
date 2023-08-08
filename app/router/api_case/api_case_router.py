@@ -14,6 +14,7 @@ from app.schemas.api_case.api_case_schema import *
 from app.middleware.access_permission import Permission
 from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.services.api_case.api_case_services import ApiCaseServices
+import uuid
 
 
 case = APIRouter()
@@ -44,4 +45,5 @@ async def update_api_case(data: UpdateApiCaseRequest, user=Depends(Permission())
 
 @case.post("/debug", summary="调试用例")
 async def debug_api_case(data: DebugApiCaseRequest):
-    await ApiCaseServices.debug_case_execute(data.env_id, data.case_id)
+    random_uid = str(uuid.uuid4())
+    await ApiCaseServices.debug_case_execute(data.env_id, data.case_id, random_uid)

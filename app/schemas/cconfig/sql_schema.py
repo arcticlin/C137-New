@@ -10,7 +10,6 @@ from app.schemas.response_schema import CommonResponse
 
 
 class AddSqlRequest(BaseModel):
-
     name: str = Field(..., description="SQL配置名称")
     host: str = Field(..., description="SQL配置地址")
     port: int = Field(..., description="SQL配置端口")
@@ -32,6 +31,12 @@ class UpdateSqlRequest(BaseModel):
 
 class PingSqlRequest(BaseModel):
     sql_id: int = Field(..., description="SQL配置ID")
+
+
+class ExecuteSqlRequest(BaseModel):
+    sql_id: int = Field(..., description="SQL配置ID")
+    text: str = Field(..., description="SQL语句")
+
 
 class SqlDetailShow(BaseModel):
     sql_id: int = Field(..., description="SQL配置ID")

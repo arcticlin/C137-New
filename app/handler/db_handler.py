@@ -7,55 +7,51 @@ Description:
 """
 import aiopg, aiomysql, motor
 from app.exceptions.commom_exception import CustomException
+from aiomysql import Connection
 
 
 class DataBaseConnect:
-
     @staticmethod
     async def mysql_connection(
-            host: str,
-            username: str,
-            password: str = None,
-            db: str = None,
-            port: int = 3306,
-    ):
+        host: str,
+        username: str,
+        password: str = None,
+        db: str = None,
+        port: int = 3306,
+    ) -> Connection:
         try:
-            connection = await aiomysql.connect(
-                host=host,
-                port=port,
-                user=username,
-                password=password,
-                db=db
-            )
+            connection = await aiomysql.connect(host=host, port=port, user=username, password=password, db=db)
             return connection
         except Exception as e:
             raise CustomException((400, 40801, f"数据库连接失败, {e}"))
 
     @staticmethod
-    async def mysql_ping(host: str,
-            username: str,
-            password: str = None,
-            db: str = None,
-            port: int = 3306):
+    async def mysql_ping(host: str, username: str, password: str = None, db: str = None, port: int = 3306):
         connection = await DataBaseConnect.mysql_connection(host, username, password, db, port)
         connection.close()
 
     @staticmethod
+    async def mysql_execute(connection: Connection, text: str):
+        async with connection.cursor() as cursor:
+            await cursor.execute(text)
+            result = await cursor.fetchall()
+            return result
+
+    @staticmethod
     async def postgresql_connection(
-            host: str,
-            username: str,
-            password: str = None,
-            db: str = None,
-            port: int = 5432,
+        host: str,
+        username: str,
+        password: str = None,
+        db: str = None,
+        port: int = 5432,
     ):
         pass
 
-
     @staticmethod
     async def mongodb_connection(
-            host: str,
-            username: str = None,
-            password: str = None,
-            port: int = 27017,
+        host: str,
+        username: str = None,
+        password: str = None,
+        port: int = 27017,
     ):
         pass

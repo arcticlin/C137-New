@@ -10,6 +10,8 @@ from typing import List
 from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.exceptions.commom_exception import CustomException
 from app.handler.response_handler import C137Response
+from app.handler.script_handler import ScriptHandler
+from app.services.api_case.suffix_services import SuffixServices
 import json
 from app.exceptions.case_exp import *
 from app.utils.new_logger import logger
@@ -179,3 +181,6 @@ class CaseHandler:
         print("case_method: ", case_method)
         print("case_headers: ", case_headers)
         print("case_params: ", case_params)
+        logger.debug(f"环境变量1: {ScriptHandler.temp_namespace}")
+        await SuffixServices.execute_env_prefix(env_id)
+        logger.debug(f"环境变量2: {ScriptHandler.temp_namespace}")

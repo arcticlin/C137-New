@@ -14,10 +14,10 @@ from app.exceptions.cconfig_exp import *
 from app.crud.cconfig.cconfig_crud import CommonConfigCrud
 from app.exceptions.commom_exception import CustomException
 from app.handler.script_handler import ScriptHandler
+from app.handler.db_handler import DataBaseConnect
 
 
 class CommonConfigServices:
-
     @staticmethod
     async def add_sql_config(data: AddSqlRequest, create_user: int):
         check = await CommonConfigCrud.query_sql_name_exists(data.name)
@@ -90,14 +90,7 @@ class CommonConfigServices:
         temp_data = []
         for item in result:
             sql_id, name, host, sql_type = item
-            temp_data.append(
-                {
-                    "sql_id": sql_id,
-                    "name": name,
-                    "host": host,
-                    "sql_type": sql_type
-                }
-            )
+            temp_data.append({"sql_id": sql_id, "name": name, "host": host, "sql_type": sql_type})
         return temp_data
 
     @staticmethod
@@ -106,11 +99,7 @@ class CommonConfigServices:
         temp_data = []
         for item in result:
             redis_id, name, host = item
-            temp_data.append({
-                "redis_id": redis_id,
-                "name": name,
-                "host": host
-            })
+            temp_data.append({"redis_id": redis_id, "name": name, "host": host})
         return temp_data
 
     @staticmethod
@@ -122,13 +111,9 @@ class CommonConfigServices:
         temp_data = []
         for item in result:
             script_id, name, var_key, public, create_user = item
-            temp_data.append({
-                "script_id": script_id,
-                "name": name,
-                "var_key": var_key,
-                "public": public,
-                "create_user": create_user
-            })
+            temp_data.append(
+                {"script_id": script_id, "name": name, "var_key": var_key, "public": public, "create_user": create_user}
+            )
         return total, temp_data
 
     @staticmethod
@@ -166,9 +151,23 @@ class CommonConfigServices:
 
     @staticmethod
     async def ping_sql(sql_id: int):
-        check = await CommonConfigCrud.query_sql_id_exists(sql_id)
+        check = await CommonConfigCrud.query_sql_detail(sql_id)
         if not check:
             raise CustomException(SQL_NOT_EXISTS)
+        await DataBaseConnect.mysql_ping(
+            host=check.host, port=check.port, username=check.db_user, password=check.db_password, db=check.db_name
+        )
+
+    @staticmethod
+    async def execute_sql(data: ExecuteSqlRequest):
+        check = await CommonConfigCrud.query_sql_detail(data.sql_id)
+        if not check:
+            raise CustomException(SQL_NOT_EXISTS)
+        c = await DataBaseConnect.mysql_connection(
+            host=check.host, port=check.port, username=check.db_user, password=check.db_password, db=check.db_name
+        )
+        result = await DataBaseConnect.mysql_execute(c, data.text)
+        return result
 
     @staticmethod
     async def ping_redis(redis_id: int):

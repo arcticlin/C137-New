@@ -63,13 +63,14 @@ async def new_sql_config(data: AddSqlRequest, user=Depends(Permission())):
 
 @cconfig.post("/sql/ping", summary="测试sql连接")
 async def ping_sql(data: PingSqlRequest):
-    await DataBaseConnect.mysql_ping(
-        host="127.0.0.1",
-        port=3306,
-        username="root",
-        password="test1234",
-        db="C137"
-    )
+    await CommonConfigServices.ping_sql(data.sql_id)
+    return C137Response.success(message="连接成功")
+
+
+@cconfig.post("/sql/execute", summary="执行sql")
+async def execute_sql(data: ExecuteSqlRequest):
+    result = await CommonConfigServices.execute_sql(data)
+    return C137Response.success(data=list(result))
 
 
 @cconfig.post("/sql/{sql_id}", summary="获取sql配置")
@@ -92,9 +93,9 @@ async def delete_sql_config(sql_id: int, user=Depends(Permission())):
 
 @cconfig.get("/script/list", summary="获取script配置列表")
 async def get_script_config_list(
-        user_id: int = Query(0, description="查看我的脚本, 不传则是我+公共的"),
-        page: int = Query(1, description="页码"),
-        page_size: int = Query(20, description="每页数量")
+    user_id: int = Query(0, description="查看我的脚本, 不传则是我+公共的"),
+    page: int = Query(1, description="页码"),
+    page_size: int = Query(20, description="每页数量"),
 ):
     total, result = await CommonConfigServices.query_script_list(page, page_size, user_id)
     return C137Response.success(data=result, total=total)
@@ -102,7 +103,7 @@ async def get_script_config_list(
 
 @cconfig.post("/script/new", summary="新增script配置")
 async def new_script_config(data: AddScriptRequest, user=Depends(Permission())):
-    await CommonConfigServices.add_script_config(data,  user["user_id"])
+    await CommonConfigServices.add_script_config(data, user["user_id"])
     return C137Response.success(message="添加成功")
 
 
@@ -128,9 +129,6 @@ async def delete_script_config(script_id: int, user=Depends(Permission())):
 async def debug_script(data: DebugScript):
     result = await CommonConfigServices.python_script_debug(data.script_id)
     return C137Response.success(data=result)
-
-
-
 
 
 @cconfig.post("/redis/ping", summary="测试redis连接")

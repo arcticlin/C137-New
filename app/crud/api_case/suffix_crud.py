@@ -5,10 +5,11 @@ Author: bot
 Created: 2023/8/7
 Description:
 """
+from typing import List, Any, Sequence
 
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.core.db_connector import async_session
-from sqlalchemy import text, select, and_, or_
+from sqlalchemy import text, select, and_, or_, Row, RowMapping
 from app.exceptions.commom_exception import CustomException
 
 

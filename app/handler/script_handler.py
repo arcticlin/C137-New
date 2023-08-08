@@ -12,10 +12,9 @@ Description:
 @time: 2023/3/22 17:10
 @description: 
 """
-import re, ast, builtins,asyncio, sys
+import re, ast, builtins, asyncio, sys
 
 from app.exceptions.commom_exception import CustomException
-
 
 
 class ScriptHandler:
@@ -29,9 +28,7 @@ class ScriptHandler:
         for result in valid_check:
             for module_name in result:
                 if module_name and module_name not in ScriptHandler.white_module:
-                    raise CustomException(
-                        (400, 40900, f"脚本导入的模块: {module_name}不在白名单中, 联系管理员添加")
-                    )
+                    raise CustomException((400, 40900, f"脚本导入的模块: {module_name}不在白名单中, 联系管理员添加"))
 
     @staticmethod
     def input_checker(script_text: str):
@@ -66,7 +63,6 @@ class ScriptHandler:
             )
             result = eval(get_var, ScriptHandler.temp_namespace)
             return {get_var: result}
-            # exec(compiled_code, ScriptHandler.temp_namespace)
         except asyncio.TimeoutError:
             raise CustomException((400, 40902, f"代码执行超时, 请检查"))
         except RecursionError:
@@ -99,5 +95,3 @@ class ScriptHandler:
         save_check = unsafe_pattern.search(code_str)
         if save_check:
             raise CustomException((400, 40900, f"脚本存在不可信任的模块或函数: {save_check.group()}"))
-
-
