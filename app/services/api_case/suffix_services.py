@@ -12,17 +12,19 @@ from app.crud.cconfig.cconfig_crud import CommonConfigCrud
 from app.exceptions.cconfig_exp import SQL_NOT_EXISTS, SCRIPT_NOT_EXISTS
 from app.exceptions.commom_exception import CustomException
 from app.handler.db_handler import DataBaseConnect
+from app.handler.response_handler import C137Response
 from app.handler.script_handler import ScriptHandler
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.handler.redis_handler import redis_client
+from app.utils.case_log import CaseLog
 
 
 class SuffixServices:
     def __init__(self, trace_id: str):
         self.trace_id = trace_id
-        self.log = []
+        self.log = CaseLog()
         self.g_var = {}
-        self.redis_key = f"c:runner_{trace_id}"
+        self.redis_key = trace_id
 
     def clear_log(self):
         self.log = []
@@ -41,11 +43,9 @@ class SuffixServices:
         return suffix_info
 
     async def execute_delay(self, delay: int):
-        self.log.append(f"延迟{delay}ms执行")
         await asyncio.sleep(delay / 1000)
 
     async def execute_sql(self, sql_id: int, text: str):
-        self.log.append(f"执行sql: {sql_id} -> {text}")
         sql_info = await CommonConfigCrud.query_sql_detail(sql_id)
         if not sql_info:
             raise CustomException(SQL_NOT_EXISTS)
@@ -62,7 +62,6 @@ class SuffixServices:
             return result
 
     async def execute_script(self, script_id: int):
-        self.log.append(f"执行脚本: {script_id}")
         script_info = await CommonConfigCrud.query_script_detail(script_id)
         if not script_info:
             raise CustomException(SCRIPT_NOT_EXISTS)
@@ -71,14 +70,18 @@ class SuffixServices:
         return result
 
     async def execute_suffix(self, model: SuffixModel):
+        is_end = model.suffix_type == 2
         if model.enable:
             if model.execute_type == 1:
+                self.log.append(f"执行脚本: {model.script_id}", is_end)
                 await self.execute_script(model.script_id)
             elif model.execute_type == 2:
+                self.log.append(f"执行sql: {model.sql_id} -> {model.run_command}", is_end)
                 await self.execute_sql(model.sql_id, model.run_command)
                 # elif item.suffix_type == 3:
                 #     await SuffixServices.execute_redis(item.suffix_content)
             elif model.execute_type == 4:
+                self.log.append(f"执行延迟: 延迟{model.run_delay}ms执行", is_end)
                 await self.execute_delay(model.run_delay)
 
     async def execute_env_prefix(self, env_id: int):
@@ -86,5 +89,5 @@ class SuffixServices:
         if prefix:
             for p in prefix:
                 await self.execute_suffix(p)
-            temp = {"vars": self.g_var, "log": {"env_prefix": self.log}}
+            temp = {"vars": self.g_var, "log": self.log.log}
             await redis_client.set_kv_load(self.redis_key, temp, 600)

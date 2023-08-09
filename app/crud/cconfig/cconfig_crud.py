@@ -18,7 +18,6 @@ from app.handler.db_bulk import DatabaseBulk
 
 
 class CommonConfigCrud:
-
     @staticmethod
     async def query_sql_id_exists(sql_id: int):
         async with async_session() as session:
@@ -109,7 +108,9 @@ class CommonConfigCrud:
     async def update_sql_config(data: UpdateSqlRequest, sql_id: int, operator: int):
         async with async_session() as session:
             async with session.begin():
-                smtm = await session.execute(select(SqlModel).where(and_(SqlModel.sql_id == sql_id, SqlModel.deleted_at == 0)))
+                smtm = await session.execute(
+                    select(SqlModel).where(and_(SqlModel.sql_id == sql_id, SqlModel.deleted_at == 0))
+                )
                 sql_model = smtm.scalars().first()
                 DatabaseBulk.update_model(sql_model, data.dict(), operator)
 
@@ -117,7 +118,9 @@ class CommonConfigCrud:
     async def delete_sql_config(sql_id: int, operator: int):
         async with async_session() as session:
             async with session.begin():
-                smtm = await session.execute(select(SqlModel).where(and_(SqlModel.sql_id == sql_id, SqlModel.deleted_at == 0)))
+                smtm = await session.execute(
+                    select(SqlModel).where(and_(SqlModel.sql_id == sql_id, SqlModel.deleted_at == 0))
+                )
                 sql_model = smtm.scalars().first()
                 DatabaseBulk.delete_model(sql_model, operator)
 
@@ -135,7 +138,8 @@ class CommonConfigCrud:
         async with async_session() as session:
             async with session.begin():
                 smtm = await session.execute(
-                    select(RedisModel).where(and_(RedisModel.redis_id == redis_id, RedisModel.deleted_at == 0)))
+                    select(RedisModel).where(and_(RedisModel.redis_id == redis_id, RedisModel.deleted_at == 0))
+                )
                 redis_model = smtm.scalars().first()
                 DatabaseBulk.update_model(redis_model, data.dict(), operator)
 
@@ -144,7 +148,8 @@ class CommonConfigCrud:
         async with async_session() as session:
             async with session.begin():
                 smtm = await session.execute(
-                    select(RedisModel).where(and_(RedisModel.redis_id == redis_id, RedisModel.deleted_at == 0)))
+                    select(RedisModel).where(and_(RedisModel.redis_id == redis_id, RedisModel.deleted_at == 0))
+                )
                 redis_model = smtm.scalars().first()
                 DatabaseBulk.delete_model(redis_model, operator)
 
@@ -163,7 +168,8 @@ class CommonConfigCrud:
         async with async_session() as session:
             async with session.begin():
                 smtm = await session.execute(
-                    select(ScriptModel).where(and_(ScriptModel.script_id == script_id, ScriptModel.deleted_at == 0)))
+                    select(ScriptModel).where(and_(ScriptModel.script_id == script_id, ScriptModel.deleted_at == 0))
+                )
                 script_model = smtm.scalars().first()
                 DatabaseBulk.update_model(script_model, data.dict(), operator)
 
@@ -172,7 +178,8 @@ class CommonConfigCrud:
         async with async_session() as session:
             async with session.begin():
                 smtm = await session.execute(
-                    select(ScriptModel).where(and_(ScriptModel.script_id == script_id, ScriptModel.deleted_at == 0)))
+                    select(ScriptModel).where(and_(ScriptModel.script_id == script_id, ScriptModel.deleted_at == 0))
+                )
                 script_model = smtm.scalars().first()
                 DatabaseBulk.delete_model(script_model, operator)
 
@@ -231,26 +238,32 @@ class CommonConfigCrud:
                 """
             )
             total = await session.execute(smtm_total, {"user_id": user_id})
-            record = await session.execute(smtm_pagination, {"offset": offset, "page_size": page_size, "user_id": user_id})
+            record = await session.execute(
+                smtm_pagination, {"offset": offset, "page_size": page_size, "user_id": user_id}
+            )
             return total.scalars().first(), record.all()
 
     @staticmethod
     async def query_sql_detail(sql_id: int):
+        logger.debug("查询sql_id: %s" % sql_id)
         async with async_session() as session:
-            smtm = await session.execute(select(SqlModel).where(and_(SqlModel.sql_id == sql_id, SqlModel.deleted_at == 0)))
+            smtm = await session.execute(
+                select(SqlModel).where(and_(SqlModel.sql_id == sql_id, SqlModel.deleted_at == 0))
+            )
             return smtm.scalars().first()
 
     @staticmethod
     async def query_redis_detail(redis_id: int):
         async with async_session() as session:
             smtm = await session.execute(
-                select(RedisModel).where(and_(RedisModel.redis_id == redis_id, RedisModel.deleted_at == 0)))
+                select(RedisModel).where(and_(RedisModel.redis_id == redis_id, RedisModel.deleted_at == 0))
+            )
             return smtm.scalars().first()
 
     @staticmethod
     async def query_script_detail(script_id: int):
         async with async_session() as session:
             smtm = await session.execute(
-                select(ScriptModel).where(and_(ScriptModel.script_id == script_id, ScriptModel.deleted_at == 0)))
+                select(ScriptModel).where(and_(ScriptModel.script_id == script_id, ScriptModel.deleted_at == 0))
+            )
             return smtm.scalars().first()
-

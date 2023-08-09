@@ -164,13 +164,10 @@ class CaseHandler:
         return temp
 
     @staticmethod
-    async def debug_case_execute(env_id: int, case_id: int):
+    async def debug_case_execute(env_url: str, case_id: int):
         """
         调试用例信息
         """
-        env_url = await CaseHandler.get_env_url(env_id)
-        load_env_prefix = await CaseHandler.get_prefix()
-        print("env_url: ", env_url)
         case_detail = await CaseHandler.get_case_detail(case_id)
         case_url = case_detail["url"]
         case_method = case_detail["method"]
@@ -182,5 +179,4 @@ class CaseHandler:
         print("case_headers: ", case_headers)
         print("case_params: ", case_params)
         logger.debug(f"环境变量1: {ScriptHandler.temp_namespace}")
-        await SuffixServices.execute_env_prefix(env_id)
         logger.debug(f"环境变量2: {ScriptHandler.temp_namespace}")

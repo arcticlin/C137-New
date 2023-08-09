@@ -9,8 +9,8 @@ Description:
 from pydantic import BaseModel, Field
 from pydantic.datetime_parse import datetime
 
-from app.schemas.api_case.api_headers_schema import AddApiHeaderRequest
-from app.schemas.api_case.api_path_schema import AddApiPathRequest
+from app.schemas.api_case.api_headers_schema import AddApiHeaderRequest, ApiHeaderShow
+from app.schemas.api_case.api_path_schema import AddApiPathRequest, ApiPathShow
 from typing import List, Union
 
 from app.schemas.response_schema import CommonResponse
@@ -63,6 +63,7 @@ class DeleteApiCaseRequest(BaseModel):
 
 
 class ApiCaseShow(BaseModel):
+    case_id: int = Field(..., title="用例id")
     name: str = Field(..., title="用例名称")
     request_type: int = Field(..., title="请求协议类型, 1: http, 2: grpc")
     url: str = Field(..., title="请求url")

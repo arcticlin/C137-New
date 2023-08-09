@@ -18,6 +18,7 @@ gunicorn==21.2.0
 h11==0.14.0
 idna==3.4
 iniconfig==2.0.0
+jsonpath==0.82
 loguru==0.7.0
 motor==3.2.0
 multidict==6.0.4

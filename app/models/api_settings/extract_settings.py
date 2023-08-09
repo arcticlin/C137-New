@@ -19,20 +19,22 @@ class ExtractModel(Base, BaseMixin):
 
     case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="绑定用例ID")
 
-    extract_from = Column(String(16), nullable=False, comment="提取来源, 1: res-header 2: res-body 3: res-cookie")
+    extract_from = Column(Integer, nullable=False, comment="提取来源, 1: res-header 2: res-body 3: res-cookie")
     extract_type = Column(Integer, nullable=False, comment="提取类型, 1: jsonpath 2: 正则")
     extract_exp = Column(TEXT, nullable=False, comment="提取表达式")
     extract_out_name = Column(String(16), nullable=False, comment="提取出参名")
+    extract_index = Column(Integer, comment="提取顺序")
 
     def __init__(
         self,
         name: str,
         case_id: int,
-        extract_from: str,
+        extract_from: int,
         extract_type: int,
         extract_exp: str,
         extract_out_name: str,
         description: str = None,
+        extract_index: int = None,
         enable: bool = True,
     ):
         self.name = name
@@ -43,3 +45,4 @@ class ExtractModel(Base, BaseMixin):
         self.extract_exp = extract_exp
         self.extract_out_name = extract_out_name
         self.description = description
+        self.extract_index = extract_index

@@ -7,6 +7,7 @@ Description:
 """
 import json
 import sys
+from typing import Union
 
 from redis import asyncio as aioredis
 from redis.asyncio import Redis
@@ -45,7 +46,9 @@ class RedisCli(Redis):
 
     async def get_kv(self, key: str):
         """获取键值对"""
+
         value = await self.get(key)
+
         try:
             return json.loads(value)
         except Exception as e:
@@ -59,6 +62,27 @@ class RedisCli(Redis):
         else:
             result = obj
         await self.set_kv(key, result, expired)
+
+    async def set_case_var_load(self, key: str, obj: dict, expired: int = 600):
+        result = await self.get_kv(key)
+        result["vars"].update(obj)
+        await self.set_kv(key, result, expired)
+
+    async def get_case_var(self, key: str):
+        result = await self.get_kv(key)
+        return result["vars"]
+
+    async def set_case_log_load(self, key: str, obj: Union[str, list], expired: int = 600):
+        result = await self.get_kv(key)
+        if isinstance(obj, str):
+            result["log"].append(obj)
+        elif isinstance(obj, list):
+            result["log"].extend(obj)
+        await self.set_kv(key, result, expired)
+
+    async def get_case_log(self, key: str):
+        result = await self.get_kv(key)
+        return result["log"]
 
 
 redis_client = RedisCli()

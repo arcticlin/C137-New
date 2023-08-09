@@ -6,6 +6,7 @@ Created: 2023/8/2
 Description:
 """
 import json
+from datetime import datetime
 
 from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.exceptions.commom_exception import CustomException
@@ -13,12 +14,13 @@ from app.exceptions.case_exp import *
 from app.handler.response_handler import C137Response
 from app.utils.new_logger import logger
 from app.schemas.api_case.api_case_schema import AddApiCaseRequest
-from app.handler.case_handler import CaseHandler
+from app.handler.cases_handler import CaseHandler
 
 # from app.services.api_case.suffix_services import SuffixServices
 from app.handler.script_handler import ScriptHandler
 from app.services.api_case.suffix_services import SuffixServices
 from app.handler.redis_handler import redis_client
+from app.services.api_case.extract_services import ExtractServices
 
 
 class ApiCaseServices:
@@ -47,7 +49,7 @@ class ApiCaseServices:
             case_header, "deleted_at", "case_id", "create_user", "update_user", "created_at", "updated_at"
         )
         # 处理Body
-        json_body = case_detail["body"]
+        json_body = case_detail["body"] if case_detail.get("body", False) else None
         if case_detail["body_type"] == 1:
             try:
                 json_body = json.loads(json_body)
@@ -99,4 +101,15 @@ class ApiCaseServices:
     async def debug_case_execute(env_id: int, case_id: int, trace_id: str):
         # 获取环境信息
         # 获取用例信息
+        case = CaseHandler(trace_id)
+        case_detail = await ApiCaseServices.query_case_detail(case_id)
+        env_url = await ApiCaseCrud.query_env_info(env_id)
+        # 执行环境前置
         await SuffixServices(trace_id).execute_env_prefix(env_id)
+
+        # 获取用例信息(替换变量)
+        response = await case.case_executor(env_url, case_detail)
+        print(response)
+        # 提取参数
+        await ExtractServices().extract(2, response, trace_id)
+        # await CaseHandler(trace_id).test(data)
