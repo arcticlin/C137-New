@@ -8,9 +8,22 @@ Description:
 from typing import List
 
 from app.models.api_settings.assert_settings import AssertModel
+from app.core.db_connector import async_session
+from sqlalchemy import select, and_, text
 
 
 class AssertCurd:
+    @staticmethod
+    async def query_assert_detail(env_id: int = None, case_id: int = None):
+        async with async_session() as session:
+            smtm = [AssertModel.deleted_at == 0]
+            if env_id:
+                smtm.append(AssertModel.env_id == env_id)
+            if case_id:
+                smtm.append(AssertModel.case_id == case_id)
+            result = await session.execute(select(AssertModel).where(and_(*smtm)).order_by(AssertModel.created_at))
+            return result.scalars().all()
+
     @staticmethod
     async def execute_assert_equal(assert_src: str, assert_value: str, is_equal: bool):
         pass

@@ -10,6 +10,8 @@ from datetime import datetime
 from typing import Any, List, Union, Dict, Sequence
 from enum import Enum
 
+from starlette.responses import JSONResponse
+
 
 class C137Response:
     @staticmethod
@@ -45,6 +47,7 @@ class C137Response:
         data: Union[List, Dict] = None,
         message: str = "操作成功",
         total: int = None,
+        headers: dict = None,
     ):
         response = dict()
         response.__setitem__("code", code)
@@ -64,6 +67,8 @@ class C137Response:
         response.__setitem__("message", message)
         # if total is not None:
         response.__setitem__("total", total)
+        if headers is not None:
+            return JSONResponse(content=response, headers=headers)
         return response
 
     @staticmethod

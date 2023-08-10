@@ -18,3 +18,11 @@ class ExtractCrud:
                 select(ExtractModel).where(and_(ExtractModel.extract_id == extract_id, ExtractModel.deleted_at == 0))
             )
             return smtm.scalars().first()
+
+    @staticmethod
+    async def query_case_extract(case_id: int):
+        async with async_session() as session:
+            smtm = await session.execute(
+                select(ExtractModel).where(and_(ExtractModel.case_id == case_id, ExtractModel.deleted_at == 0))
+            )
+            return smtm.scalars().all()

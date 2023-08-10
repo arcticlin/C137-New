@@ -19,6 +19,7 @@ from app.handler.cases_handler import CaseHandler
 # from app.services.api_case.suffix_services import SuffixServices
 from app.handler.script_handler import ScriptHandler
 from app.services.api_case.suffix_services import SuffixServices
+from app.services.api_case.assert_services import AssertServices
 from app.handler.redis_handler import redis_client
 from app.services.api_case.extract_services import ExtractServices
 
@@ -99,17 +100,44 @@ class ApiCaseServices:
 
     @staticmethod
     async def debug_case_execute(env_id: int, case_id: int, trace_id: str):
-        # 获取环境信息
-        # 获取用例信息
         case = CaseHandler(trace_id)
-        case_detail = await ApiCaseServices.query_case_detail(case_id)
+
+        # 获取环境信息
         env_url = await ApiCaseCrud.query_env_info(env_id)
+        # 获取用例信息
+        case_detail = await ApiCaseServices.query_case_detail(case_id)
+
         # 执行环境前置
         await SuffixServices(trace_id).execute_env_prefix(env_id)
+
+        # 执行用例前置
+        await SuffixServices(trace_id).execute_case_prefix(case_id)
 
         # 获取用例信息(替换变量)
         response = await case.case_executor(env_url, case_detail)
         print(response)
+
+        # 执行用例后置
+        await SuffixServices(trace_id).execute_case_suffix(case_id)
+
+        # 执行环境后置
+        await SuffixServices(trace_id).execute_env_suffix(env_id)
+
+        # 环境断言
+        env_result = await AssertServices(trace_id).assert_from_env(env_id, response)
+
+        # 用例断言
+        case_result = await AssertServices(trace_id).assert_from_case(case_id, response)
+
         # 提取参数
-        await ExtractServices().extract(2, response, trace_id)
-        # await CaseHandler(trace_id).test(data)
+        await ExtractServices(trace_id).extract(case_id, response)
+
+        execute_info = await redis_client.get_kv(trace_id)
+
+        # 返回结果
+        return {
+            "response": response,
+            "execute_info": execute_info,
+            "env_assert": env_result,
+            "case_assert": case_result,
+        }

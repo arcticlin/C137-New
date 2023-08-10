@@ -46,4 +46,5 @@ async def update_api_case(data: UpdateApiCaseRequest, user=Depends(Permission())
 @case.post("/debug", summary="调试用例")
 async def debug_api_case(data: DebugApiCaseRequest):
     random_uid = f"c:runner_{str(uuid.uuid4())}"
-    await ApiCaseServices.debug_case_execute(data.env_id, data.case_id, random_uid)
+    result = await ApiCaseServices.debug_case_execute(data.env_id, data.case_id, random_uid)
+    return C137Response.success(data=result, headers={"trace_id": random_uid})

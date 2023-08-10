@@ -19,7 +19,9 @@ from app.utils.case_log import CaseLog
 
 
 class ExtractServices:
-    case = CaseLog()
+    def __init__(self, trace_id: str):
+        self.trace_id = trace_id
+        self.log = CaseLog()
 
     @staticmethod
     async def extract_with_re(src: str, exp: str, out_name: str, index: int = None):
@@ -38,15 +40,12 @@ class ExtractServices:
 
     @staticmethod
     async def extract_with_jsonpath(src: dict, exp: str, out_name: str, index: int = None):
-        print(exp, src)
         result = jsonpath.jsonpath(src, exp)
-        print(result)
         if result and index is not None:
             return {out_name: result[index]}
         return {out_name: result if result else []}
 
-    @staticmethod
-    async def extract(extract_id: int, response: dict, trace_id: str):
+    async def extract(self, case_id: int, response: dict):
         (
             status_code,
             response_header,
@@ -54,30 +53,25 @@ class ExtractServices:
             response_body,
             response_elapsed,
         ) = AsyncRequest.collect_response_for_test(response)
-        extract_detail = await ExtractCrud.query_extract_detail(extract_id)
-        print(extract_detail)
-        print(C137Response.orm_to_dict(extract_detail))
-        if extract_detail is None:
-            raise CustomException(EXTRACT_NOT_EXISTS)
-        if extract_detail.enable == 0:
-            return
-        if extract_detail.extract_from == "1":
-            src = response_header
-        elif extract_detail.extract_from == "2":
-            src = response_body
-        else:
-            src = response_cookie
-        print("1", src)
-        if extract_detail.extract_type == 2:
-            result = await ExtractServices.extract_with_re(
-                src, extract_detail.extract_exp, extract_detail.extract_out_name, extract_detail.extract_index
-            )
-        else:
-            result = await ExtractServices.extract_with_jsonpath(
-                src, extract_detail.extract_exp, extract_detail.extract_out_name, extract_detail.extract_index
-            )
-
-        if result:
-            ExtractServices.case.append(f"提取响应生成变量: {extract_detail.extract_out_name}")
-            await redis_client.set_case_var_load(trace_id, result)
-            await redis_client.set_case_log_load(trace_id, ExtractServices.case.log)
+        extract_detail = await ExtractCrud.query_case_extract(case_id)
+        for e in extract_detail:
+            if e.enable == 0:
+                return
+            if e.extract_from == "1":
+                src = response_header
+            elif e.extract_from == "2":
+                src = response_body
+            else:
+                src = response_cookie
+            if e.extract_type == 2:
+                result = await ExtractServices.extract_with_re(src, e.extract_exp, e.extract_out_name, e.extract_index)
+            else:
+                result = await ExtractServices.extract_with_jsonpath(
+                    src, e.extract_exp, e.extract_out_name, e.extract_index
+                )
+            if result:
+                self.log.log_append(f"提取响应生成变量: {e.extract_out_name}", "extract")
+            else:
+                self.log.log_append(f"提取响应生成变量失败: {e.extract_out_name}", "extract")
+            await redis_client.set_case_var_load(self.trace_id, result)
+            await redis_client.set_case_log_load(self.trace_id, self.log.logs, "extract")

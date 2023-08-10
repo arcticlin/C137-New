@@ -26,9 +26,6 @@ class SuffixServices:
         self.g_var = {}
         self.redis_key = trace_id
 
-    def clear_log(self):
-        self.log = []
-
     def record_log(self, redis_key: str):
         pass
 
@@ -69,25 +66,49 @@ class SuffixServices:
         self.g_var[script_info.var_key] = result[script_info.var_key]
         return result
 
-    async def execute_suffix(self, model: SuffixModel):
+    async def execute_suffix(self, model: SuffixModel, log_type: str):
         is_end = model.suffix_type == 2
         if model.enable:
             if model.execute_type == 1:
-                self.log.append(f"执行脚本: {model.script_id}", is_end)
+                self.log.log_append(f"执行脚本: {model.script_id}", log_type)
                 await self.execute_script(model.script_id)
             elif model.execute_type == 2:
-                self.log.append(f"执行sql: {model.sql_id} -> {model.run_command}", is_end)
+                self.log.log_append(f"执行sql: {model.sql_id} -> {model.run_command}", log_type)
                 await self.execute_sql(model.sql_id, model.run_command)
                 # elif item.suffix_type == 3:
                 #     await SuffixServices.execute_redis(item.suffix_content)
             elif model.execute_type == 4:
-                self.log.append(f"执行延迟: 延迟{model.run_delay}ms执行", is_end)
+                self.log.log_append(f"执行延迟: 延迟{model.run_delay}ms执行", log_type)
                 await self.execute_delay(model.run_delay)
 
     async def execute_env_prefix(self, env_id: int):
         prefix = await self.get_prefix(env_id=env_id)
         if prefix:
             for p in prefix:
-                await self.execute_suffix(p)
-            temp = {"vars": self.g_var, "log": self.log.log}
-            await redis_client.set_kv_load(self.redis_key, temp, 600)
+                await self.execute_suffix(p, "env_prefix")
+            await redis_client.set_case_var_load(self.redis_key, self.g_var)
+            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "env_prefix")
+
+    async def execute_env_suffix(self, env_id: int):
+        prefix = await self.get_suffix(env_id=env_id)
+        if prefix:
+            for p in prefix:
+                await self.execute_suffix(p, "env_suffix")
+            await redis_client.set_case_var_load(self.redis_key, self.g_var)
+            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "env_suffix")
+
+    async def execute_case_prefix(self, case_id: int):
+        prefix = await self.get_prefix(case_id=case_id)
+        if prefix:
+            for p in prefix:
+                await self.execute_suffix(p, "case_prefix")
+            await redis_client.set_case_var_load(self.redis_key, self.g_var)
+            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_prefix")
+
+    async def execute_case_suffix(self, case_id: int):
+        prefix = await self.get_suffix(case_id=case_id)
+        if prefix:
+            for p in prefix:
+                await self.execute_suffix(p, "case_prefix")
+            await redis_client.set_case_var_load(self.redis_key, self.g_var)
+            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_prefix")

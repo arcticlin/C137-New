@@ -71,18 +71,18 @@ class CaseHandler:
 
     async def parse_text(self, key: str):
         if isinstance(key, str) and "${" in key:
-            self.log.var_append(f"尝试替换变量: {key}")
+            self.log.vars_append(f"尝试替换变量: {key}")
             find_el = CaseHandler.get_el_exp(key)
             if find_el:
                 result = await self.get_var_from_redis(find_el)
                 if result:
-                    self.log.var_append(f"替换变量成功: {key} -> {result}")
+                    self.log.vars_append(f"替换变量成功: {key} -> {result}")
                     replace_str_or_obj = CaseHandler.get_el_exp_exclude(key)
                     if replace_str_or_obj:
                         key = key.replace("${%s}" % find_el, str(result))
                         return key
                     return result
-                self.log.var_append(f"替换变量失败: {key} -> {result}")
+                self.log.vars_append(f"替换变量失败: {key} -> {result}")
         return key
 
     async def parse_list(self, key: list):
@@ -108,7 +108,7 @@ class CaseHandler:
                 temp[key] = await self.parse_list(value)
             else:
                 temp[key] = await self.parse_text(value)
-        await redis_client.set_case_log_load(self.trace_id, self.log.log)
+
         return temp
 
     async def parse_path(self, obj: list) -> List:
@@ -147,6 +147,7 @@ class CaseHandler:
         执行用例
         """
         url, method, headers, body, body_type, path, query = await self.case_pick_up(env_url, obj)
+        await redis_client.set_case_log_load(self.trace_id, self.log.logs, "case_vars")
         r = await AsyncRequest.package_request(
             url=url,
             body_type=body_type,
