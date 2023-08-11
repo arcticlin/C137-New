@@ -6,6 +6,7 @@ Created: 2023/8/4
 Description:
 """
 from app.handler.response_handler import C137Response
+from app.schemas.cconfig.env_schema import EnvAddRequest, EnvUpdateRequest
 from app.utils.new_logger import logger
 from app.schemas.cconfig.sql_schema import *
 from app.schemas.cconfig.redis_schema import *
@@ -174,3 +175,33 @@ class CommonConfigServices:
         check = await CommonConfigCrud.query_redis_id_exists(redis_id)
         if not check:
             raise CustomException(REDIS_NOT_EXISTS)
+
+    @staticmethod
+    async def query_env_list(page: int, page_size: int):
+        total, result = await CommonConfigCrud.query_env_list(page, page_size)
+        temp_data = []
+        for item in result:
+            env_id, name, url, create_user = item
+            temp_data.append({"env_id": env_id, "name": name, "url": url, "create_user": create_user})
+        return total, temp_data
+
+    @staticmethod
+    async def query_env_detail(env_id: int):
+        check = await CommonConfigCrud.query_env_detail(env_id)
+        if check is None:
+            raise CustomException(ENV_NOT_EXISTS)
+        return check
+
+    @staticmethod
+    async def add_env(form: EnvAddRequest, create_user: int):
+        check = await CommonConfigCrud.query_env_name_exists(form.name)
+        if check:
+            raise CustomException(ENV_NAME_EXISTS)
+        await CommonConfigCrud.add_env(form, create_user)
+
+    @staticmethod
+    async def update_env(env_id: int, form: EnvUpdateRequest, operator: int):
+        check = await CommonConfigCrud.query_env_detail(env_id)
+        if check is None:
+            raise CustomException(ENV_NOT_EXISTS)
+        await CommonConfigCrud.update_env(env_id, form, operator)

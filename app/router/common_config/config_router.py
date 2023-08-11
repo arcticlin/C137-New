@@ -7,6 +7,8 @@ Description:
 """
 
 from fastapi import APIRouter, Query, Depends
+
+from app.schemas.cconfig.env_schema import EnvListResponse, EnvAddRequest, EnvUpdateRequest
 from app.schemas.response_schema import CommonResponse
 from app.schemas.cconfig.sql_schema import *
 from app.schemas.cconfig.redis_schema import *
@@ -17,6 +19,33 @@ from app.handler.response_handler import C137Response
 from app.handler.db_handler import DataBaseConnect
 
 cconfig = APIRouter()
+
+
+@cconfig.get("/env/list", summary="获取环境列表", response_model=EnvListResponse)
+async def get_env_list(
+    page: int = Query(1, description="页码"),
+    page_size: int = Query(20, description="每页数量"),
+):
+    total, result = await CommonConfigServices.query_env_list(page, page_size)
+    return C137Response.success(data=result, total=total)
+
+
+@cconfig.get("/env/detail/{env_id}", summary="获取环境详情")
+async def get_env_list(env_id: int):
+    result = await CommonConfigServices.query_env_detail(env_id)
+    return C137Response.success(data=result)
+
+
+@cconfig.post("/env/add", summary="新增环境")
+async def add_env(form: EnvAddRequest, user=Depends(Permission())):
+    await CommonConfigServices.add_env(form, user["user_id"])
+    return C137Response.success(message="添加成功")
+
+
+@cconfig.post("/env/update/{env_id}", summary="更新环境")
+async def update_env(env_id: int, form: EnvUpdateRequest, user=Depends(Permission())):
+    await CommonConfigServices.update_env(env_id, form, user["user_id"])
+    return C137Response.success(message="更新成功")
 
 
 @cconfig.get("/redis/list", summary="获取Redis配置列表")

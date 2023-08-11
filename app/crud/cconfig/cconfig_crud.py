@@ -7,6 +7,9 @@ Description:
 """
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_, text
+
+from app.models.api_settings.env_settings import EnvModel
+from app.schemas.cconfig.env_schema import EnvAddRequest, EnvUpdateRequest
 from app.utils.new_logger import logger
 from app.schemas.cconfig.sql_schema import *
 from app.schemas.cconfig.redis_schema import *
@@ -267,3 +270,65 @@ class CommonConfigCrud:
                 select(ScriptModel).where(and_(ScriptModel.script_id == script_id, ScriptModel.deleted_at == 0))
             )
             return smtm.scalars().first()
+
+    @staticmethod
+    async def query_env_list(page: int, page_size: int):
+        offset = (page - 1) * page_size
+        async with async_session() as session:
+            smtm_total = text(
+                """
+                SELECT COUNT(*) as total FROM env WHERE deleted_at = 0
+                """
+            )
+            smtm_pagination = text(
+                """
+                SELECT env_id, name, url, create_user FROM env WHERE deleted_at = 0 ORDER BY env_id DESC LIMIT :offset , :page_size
+                """
+            )
+            total = await session.execute(smtm_total)
+            record = await session.execute(smtm_pagination, {"offset": offset, "page_size": page_size})
+            return total.scalars().first(), record.all()
+
+    @staticmethod
+    async def query_env_detail(env_id: int):
+        async with async_session() as session:
+            smtm = await session.execute(
+                select(EnvModel).where(and_(EnvModel.env_id == env_id, EnvModel.deleted_at == 0))
+            )
+            return smtm.scalars().first()
+
+    @staticmethod
+    async def query_env_name_exists(name: str):
+        async with async_session() as session:
+            smtm = text(
+                """
+                SELECT env_id  FROM env WHERE name = :name AND deleted_at = 0
+            """
+            )
+            execute = await session.execute(smtm, {"name": name})
+            return execute.scalars().first()
+
+    @staticmethod
+    async def add_env(form: EnvAddRequest, create_user: int):
+        async with async_session() as session:
+            async with session.begin():
+                env_model = EnvModel(
+                    name=form.name,
+                    url=form.url,
+                    create_user=create_user,
+                )
+                session.add(env_model)
+                await session.flush()
+                session.expunge(env_model)
+                return env_model.env_id
+
+    @staticmethod
+    async def update_env(env_id: int, form: EnvUpdateRequest, operator: int):
+        async with async_session() as session:
+            async with session.begin():
+                smtm = await session.execute(
+                    select(EnvModel).where(and_(EnvModel.env_id == env_id, EnvModel.deleted_at == 0))
+                )
+                env_model = smtm.scalars().first()
+                DatabaseBulk.update_model(env_model, form.dict(), operator)
+                await session.flush()
