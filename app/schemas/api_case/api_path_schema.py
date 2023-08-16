@@ -36,3 +36,5 @@ class ApiPathShow(BaseModel):
     types: int = Field(..., title="类型, 1: Path, 2: Query")
     enable: bool = Field(..., title="是否启用")
     comment: str = Field(None, title="备注")
+    case_id: int = Field(None, title="用例id")
+    env_id: int = Field(None, title="环境id")

@@ -8,6 +8,7 @@ Description:
 
 from fastapi import APIRouter, Query, Depends
 
+from app.schemas.api_settings.suffix_schema import AddSuffixSchema
 from app.schemas.cconfig.env_schema import EnvListResponse, EnvAddRequest, EnvUpdateRequest
 from app.schemas.response_schema import CommonResponse
 from app.schemas.cconfig.sql_schema import *
@@ -17,6 +18,8 @@ from app.middleware.access_permission import Permission
 from app.services.cconfig.cconfig_services import CommonConfigServices
 from app.handler.response_handler import C137Response
 from app.handler.db_handler import DataBaseConnect
+from app.schemas.cconfig.env_schema import EnvDetailResponse
+from app.services.api_case.suffix_services import SuffixServices
 
 cconfig = APIRouter()
 
@@ -30,7 +33,7 @@ async def get_env_list(
     return C137Response.success(data=result, total=total)
 
 
-@cconfig.get("/env/detail/{env_id}", summary="获取环境详情")
+@cconfig.get("/env/detail/{env_id}", summary="获取环境详情", response_model=EnvDetailResponse)
 async def get_env_list(env_id: int):
     result = await CommonConfigServices.query_env_detail(env_id)
     return C137Response.success(data=result)
@@ -39,6 +42,12 @@ async def get_env_list(env_id: int):
 @cconfig.post("/env/add", summary="新增环境")
 async def add_env(form: EnvAddRequest, user=Depends(Permission())):
     await CommonConfigServices.add_env(form, user["user_id"])
+    return C137Response.success(message="添加成功")
+
+
+@cconfig.post("/env/add_suffix", summary="新增环境前后置")
+async def add_env(form: AddSuffixSchema, user=Depends(Permission())):
+    await SuffixServices.add_suffix(form, user["user_id"])
     return C137Response.success(message="添加成功")
 
 
@@ -155,8 +164,8 @@ async def delete_script_config(script_id: int, user=Depends(Permission())):
 
 
 @cconfig.post("/script/execute/debug", summary="执行script脚本")
-async def debug_script(data: DebugScript):
-    result = await CommonConfigServices.python_script_debug(data.script_id)
+async def debug_script(data: DebugScriptSchema):
+    result = await CommonConfigServices.new_python_script_debug(data)
     return C137Response.success(data=result)
 
 

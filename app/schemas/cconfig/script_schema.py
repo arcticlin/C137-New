@@ -10,7 +10,6 @@ from app.schemas.response_schema import CommonResponse
 
 
 class AddScriptRequest(BaseModel):
-
     name: str = Field(..., description="脚本配置名称", max_length=16)
     description: str = Field(None, description="脚本配置描述", max_length=64)
     tag: str = Field(None, description="脚本配置标签", max_length=16)
@@ -19,8 +18,22 @@ class AddScriptRequest(BaseModel):
     public: bool = Field(..., description="脚本配置是否公开")
 
 
+class AddBindScriptRequest(BaseModel):
+    name: str = Field(..., description="脚本配置名称", max_length=16)
+    description: str = Field(None, description="脚本配置描述", max_length=64)
+    var_key: str = Field(..., description="脚本配置调用键", max_length=16)
+    var_script: str = Field(..., description="脚本配置脚本", max_length=1024)
+    env_id: int = Field(None, description="环境id")
+    case_id: int = Field(None, description="用例id")
+
+
 class DebugScript(BaseModel):
     script_id: int
+
+
+class DebugScriptSchema(BaseModel):
+    var_key: str = Field(..., description="脚本配置调用键", max_length=16)
+    var_script: str = Field(..., description="脚本配置脚本", max_length=1024)
 
 
 class UpdateScriptRequest(BaseModel):

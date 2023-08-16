@@ -20,11 +20,22 @@ class ApiHeadersModel(Base, BaseMixin):
     enable = Column(BOOLEAN, default=True, comment="是否启用")
     comment = Column(String(32), comment="备注")
     case_id = Column(Integer, ForeignKey("api_case.case_id"), index=True)
+    env_id = Column(Integer, ForeignKey("env.env_id"), index=True)
 
-    def __init__(self, key: str, value: str, value_type: int, enable: bool, case_id: int = None, comment: str = None):
+    def __init__(
+        self,
+        key: str,
+        value: str,
+        value_type: int,
+        enable: bool,
+        case_id: int = None,
+        env_id: int = None,
+        comment: str = None,
+    ):
         self.keys = key
         self.value = value
         self.value_type = value_type
         self.enable = enable
         self.case_id = case_id
         self.comment = comment
+        self.env_id = env_id

@@ -18,3 +18,6 @@ SCRIPT_NAME_EXISTS = (400, 40506, "脚本名称已存在")
 
 ENV_NOT_EXISTS = (400, 40507, "环境不存在")
 ENV_NAME_EXISTS = (400, 40508, "环境名称已存在")
+
+SUFFIX_NOT_EXISTS = (400, 40509, "环境不存在")
+SUFFIX_IS_EXISTS = (400, 40510, "环境名称已存在")

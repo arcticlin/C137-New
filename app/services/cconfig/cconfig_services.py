@@ -16,6 +16,10 @@ from app.crud.cconfig.cconfig_crud import CommonConfigCrud
 from app.exceptions.commom_exception import CustomException
 from app.handler.script_handler import ScriptHandler
 from app.handler.db_handler import DataBaseConnect
+from app.crud.api_case.suffix_crud import SuffixCrud
+from app.crud.api_case.assert_crud import AssertCurd
+from app.crud.api_case.api_headers_crud import ApiHeadersCrud
+from app.crud.api_case.api_path_crud import ApiPathCrud
 
 
 class CommonConfigServices:
@@ -151,6 +155,11 @@ class CommonConfigServices:
         return script_runner
 
     @staticmethod
+    async def new_python_script_debug(data: DebugScriptSchema):
+        script_runner = await ScriptHandler.python_executor(data.var_key, data.var_script)
+        return script_runner
+
+    @staticmethod
     async def ping_sql(sql_id: int):
         check = await CommonConfigCrud.query_sql_detail(sql_id)
         if not check:
@@ -187,14 +196,27 @@ class CommonConfigServices:
 
     @staticmethod
     async def query_env_detail(env_id: int):
+        temp = {}
         check = await CommonConfigCrud.query_env_detail(env_id)
         if check is None:
             raise CustomException(ENV_NOT_EXISTS)
-        return check
+        temp["env_info"] = C137Response.orm_to_dict(check)
+        prefix_info = await SuffixCrud.get_prefix(env_id=env_id)
+        suffix_info = await SuffixCrud.get_suffix(env_id=env_id)
+        assert_info = await AssertCurd.query_assert_detail(env_id=env_id)
+        query_info = await ApiPathCrud.query_path_detail_by_env_case(env_id=env_id)
+        headers_info = await ApiHeadersCrud.query_headers_detail_by_env_case(env_id=env_id)
+        # query_info = await
+        temp["prefix_info"] = C137Response.orm_with_list(prefix_info)
+        temp["suffix_info"] = C137Response.orm_with_list(suffix_info)
+        temp["assert_info"] = C137Response.orm_with_list(assert_info)
+        temp["query_info"] = C137Response.orm_with_list(query_info)
+        temp["headers_info"] = C137Response.orm_with_list(headers_info)
+        return temp
 
     @staticmethod
     async def add_env(form: EnvAddRequest, create_user: int):
-        check = await CommonConfigCrud.query_env_name_exists(form.name)
+        check = await CommonConfigCrud.query_env_name_exists(form.env_info.name)
         if check:
             raise CustomException(ENV_NAME_EXISTS)
         await CommonConfigCrud.add_env(form, create_user)

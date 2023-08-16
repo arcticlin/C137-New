@@ -15,15 +15,16 @@ class SuffixModel(Base, BaseMixin):
 
     suffix_id = Column(Integer, primary_key=True, autoincrement=True)
     suffix_type = Column(Integer, nullable=False, comment="前/后置, 1: 前置 2: 后置")
-    name = Column(String(16), nullable=False, comment="前/后置名称")
+    name = Column(String(16), nullable=False, comment="前/后置名称", index=True)
     description = Column(String(64), comment="前/后置描述")
     enable = Column(BOOLEAN, nullable=False, comment="是否启用")
     sort = Column(Integer, nullable=False, comment="排序")
 
-    execute_type = Column(Integer, nullable=False, comment="执行类型, 1: python 2: sql 3: redis 4: delay")
+    execute_type = Column(Integer, nullable=False, comment="执行类型, 1: python 2: sql 3: redis 4: delay 5: global-script")
 
     case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="绑定用例ID")
     env_id = Column(Integer, ForeignKey("env.env_id"), comment="绑定环境ID")
+    run_each_case = Column(BOOLEAN, comment="是否每条用例执行一次, 1: 是 0: 否")
 
     script_id = Column(Integer, ForeignKey("script.script_id"), comment="脚本ID")
     sql_id = Column(Integer, ForeignKey("sql_model.sql_id"), comment="SQL ID")

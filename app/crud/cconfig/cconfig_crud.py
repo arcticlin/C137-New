@@ -18,6 +18,9 @@ from app.models.common_config.redis_model import RedisModel
 from app.models.common_config.sql_model import SqlModel
 from app.models.common_config.script_model import ScriptModel
 from app.handler.db_bulk import DatabaseBulk
+from app.models.apicase.api_path import ApiPathModel
+from app.models.apicase.api_headers import ApiHeadersModel
+from app.models.api_settings.assert_settings import AssertModel
 
 
 class CommonConfigCrud:
@@ -313,14 +316,30 @@ class CommonConfigCrud:
         async with async_session() as session:
             async with session.begin():
                 env_model = EnvModel(
-                    name=form.name,
-                    url=form.url,
+                    name=form.env_info.name,
+                    url=form.env_info.url,
                     create_user=create_user,
                 )
                 session.add(env_model)
                 await session.flush()
-                session.expunge(env_model)
-                return env_model.env_id
+                if form.query_info:
+                    await DatabaseBulk.bulk_add_data(
+                        session,
+                        ApiPathModel,
+                        form.query_info,
+                        env_id=env_model.env_id,
+                        create_user=create_user,
+                    )
+                if form.headers_info:
+                    await DatabaseBulk.bulk_add_data(
+                        session,
+                        ApiHeadersModel,
+                        form.query_info,
+                        env_id=env_model.env_id,
+                        create_user=create_user,
+                    )
+                # session.expunge(env_model)
+                # return env_model.env_id
 
     @staticmethod
     async def update_env(env_id: int, form: EnvUpdateRequest, operator: int):

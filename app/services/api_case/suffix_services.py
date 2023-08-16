@@ -9,13 +9,14 @@ from app.crud.api_case.suffix_crud import SuffixCrud
 import asyncio
 
 from app.crud.cconfig.cconfig_crud import CommonConfigCrud
-from app.exceptions.cconfig_exp import SQL_NOT_EXISTS, SCRIPT_NOT_EXISTS
+from app.exceptions.cconfig_exp import SQL_NOT_EXISTS, SCRIPT_NOT_EXISTS, SUFFIX_IS_EXISTS
 from app.exceptions.commom_exception import CustomException
 from app.handler.db_handler import DataBaseConnect
 from app.handler.response_handler import C137Response
 from app.handler.script_handler import ScriptHandler
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.handler.redis_handler import redis_client
+from app.schemas.api_settings.suffix_schema import AddSuffixSchema
 from app.utils.case_log import CaseLog
 
 
@@ -112,3 +113,12 @@ class SuffixServices:
                 await self.execute_suffix(p, "case_prefix")
             await redis_client.set_case_var_load(self.redis_key, self.g_var)
             await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_prefix")
+
+    @staticmethod
+    async def add_suffix(data: AddSuffixSchema, create_user: int):
+        check = await SuffixCrud.query_suffix_name_exists(data.suffix_type, data.name, data.env_id, data.case_id)
+        if check:
+            raise CustomException(SUFFIX_IS_EXISTS)
+        if data.case_id and data.run_each_case is not None:
+            data.run_each_case = None
+        await SuffixCrud.add_suffix(create_user, **data.dict())
