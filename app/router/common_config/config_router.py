@@ -8,7 +8,7 @@ Description:
 
 from fastapi import APIRouter, Query, Depends
 
-from app.schemas.api_settings.suffix_schema import AddSuffixSchema
+from app.schemas.api_settings.suffix_schema import AddSuffixSchema, DeleteSuffixSchema, EnableSuffixSchema
 from app.schemas.cconfig.env_schema import EnvListResponse, EnvAddRequest, EnvUpdateRequest
 from app.schemas.response_schema import CommonResponse
 from app.schemas.cconfig.sql_schema import *
@@ -45,10 +45,22 @@ async def add_env(form: EnvAddRequest, user=Depends(Permission())):
     return C137Response.success(message="添加成功")
 
 
-@cconfig.post("/env/add_suffix", summary="新增环境前后置")
-async def add_env(form: AddSuffixSchema, user=Depends(Permission())):
+@cconfig.post("/suffix/add", summary="新增前后置")
+async def add_suffix(form: AddSuffixSchema, user=Depends(Permission())):
     await SuffixServices.add_suffix(form, user["user_id"])
     return C137Response.success(message="添加成功")
+
+
+@cconfig.post("/suffix/delete", summary="删除前后置")
+async def delete_suffix(data: DeleteSuffixSchema, user=Depends(Permission())):
+    await SuffixServices.delete_suffix(data, user["user_id"])
+    return C137Response.success(message="删除成功")
+
+
+@cconfig.post("/suffix/enable", summary="删除前后置")
+async def delete_suffix(data: EnableSuffixSchema, user=Depends(Permission())):
+    await SuffixServices.enable_suffix(data, user["user_id"])
+    return C137Response.success(message="删除成功")
 
 
 @cconfig.post("/env/update/{env_id}", summary="更新环境")

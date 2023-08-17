@@ -24,7 +24,7 @@ class SuffixModel(Base, BaseMixin):
 
     case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="绑定用例ID")
     env_id = Column(Integer, ForeignKey("env.env_id"), comment="绑定环境ID")
-    run_each_case = Column(BOOLEAN, comment="是否每条用例执行一次, 1: 是 0: 否")
+    run_each_case = Column(Integer, comment="是否每条用例执行一次, 1: 是 0: 否")
 
     script_id = Column(Integer, ForeignKey("script.script_id"), comment="脚本ID")
     sql_id = Column(Integer, ForeignKey("sql_model.sql_id"), comment="SQL ID")
@@ -40,9 +40,9 @@ class SuffixModel(Base, BaseMixin):
         suffix_type: int,
         name: str,
         enable: bool,
-        sort: int,
         execute_type: int,
         create_user: int,
+        sort: int = None,
         env_id: int = None,
         script_id: int = None,
         sql_id: int = None,
@@ -53,6 +53,7 @@ class SuffixModel(Base, BaseMixin):
         run_out_name: str = None,
         case_id: int = None,
         description: str = None,
+        run_each_case: int = None,
     ):
         self.suffix_type = suffix_type
         self.name = name
@@ -71,3 +72,4 @@ class SuffixModel(Base, BaseMixin):
         self.create_user = create_user
         self.update_user = create_user
         self.description = description
+        self.run_each_case = run_each_case

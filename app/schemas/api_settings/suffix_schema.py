@@ -49,3 +49,15 @@ class AddSuffixSchema(BaseModel):
         if case_id is None and env_id is None:
             raise ValueError("At least one of 'case_id' or 'env_id' must be provided")
         return values
+
+
+class DeleteSuffixSchema(BaseModel):
+    suffix_id: int = Field(..., description="前/后置ID")
+    case_id: int = Field(None, description="用例id")
+    env_id: int = Field(None, description="环境id")
+    suffix_type: int = Field(..., description="前/后置类型, 1: 前置, 2: 后置")
+
+
+class EnableSuffixSchema(BaseModel):
+    suffix_id: int = Field(..., description="前/后置ID")
+    enable: bool = Field(..., description="是否启用")

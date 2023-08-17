@@ -16,7 +16,7 @@ from app.handler.response_handler import C137Response
 from app.handler.script_handler import ScriptHandler
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.handler.redis_handler import redis_client
-from app.schemas.api_settings.suffix_schema import AddSuffixSchema
+from app.schemas.api_settings.suffix_schema import AddSuffixSchema, DeleteSuffixSchema, EnableSuffixSchema
 from app.utils.case_log import CaseLog
 
 
@@ -122,3 +122,17 @@ class SuffixServices:
         if data.case_id and data.run_each_case is not None:
             data.run_each_case = None
         await SuffixCrud.add_suffix(create_user, **data.dict())
+
+    @staticmethod
+    async def delete_suffix(data: DeleteSuffixSchema, operator: int):
+        await SuffixCrud.delete_suffix(
+            suffix_id=data.suffix_id,
+            suffix_type=data.suffix_type,
+            operator=operator,
+            case_id=data.case_id,
+            env_id=data.env_id,
+        )
+
+    @staticmethod
+    async def enable_suffix(data: EnableSuffixSchema, operator: int):
+        await SuffixCrud.enable_suffix(suffix_id=data.suffix_id, enable=data.enable, operator=operator)
