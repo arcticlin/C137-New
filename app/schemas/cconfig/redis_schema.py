@@ -46,5 +46,14 @@ class RedisDetailShow(BaseModel):
     create_user: int = Field(..., description="创建人")
 
 
+class RedisListShow(BaseModel):
+    redis_id: int = Field(..., description="Redis配置ID")
+    name: str = Field(..., description="Redis配置名称")
+
+
 class RedisDetailResponse(CommonResponse):
     data: RedisDetailShow
+
+
+class RedisListResponse(CommonResponse):
+    data: list[RedisListShow]

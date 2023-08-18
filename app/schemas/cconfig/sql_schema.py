@@ -5,6 +5,8 @@ Author: bot
 Created: 2023/8/4
 Description:
 """
+from typing import List
+
 from pydantic import BaseModel, Field
 from app.schemas.response_schema import CommonResponse
 
@@ -38,6 +40,12 @@ class ExecuteSqlRequest(BaseModel):
     text: str = Field(..., description="SQL语句")
 
 
+class ExecuteSqlDebugRequest(BaseModel):
+    sql_id: int = Field(..., description="SQL配置ID")
+    text: str = Field(..., description="SQL语句")
+    run_out_name: str = Field(None, description="出参")
+
+
 class SqlDetailShow(BaseModel):
     sql_id: int = Field(..., description="SQL配置ID")
     name: str = Field(..., description="SQL配置名称")
@@ -50,5 +58,15 @@ class SqlDetailShow(BaseModel):
     create_user: int = Field(..., description="创建人")
 
 
+class SqlListSHow(BaseModel):
+    sql_id: int = Field(..., description="SQL配置ID")
+    name: str = Field(..., description="SQL配置名称")
+    sql_type: int = Field(..., description="SQL配置类型, 1: Mysql  2: POSTGRESQL 3: MONGODB")
+
+
 class SqlDetailResponse(CommonResponse):
     data: SqlDetailShow
+
+
+class SqlListResponse(CommonResponse):
+    data: List[SqlListSHow]

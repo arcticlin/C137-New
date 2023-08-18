@@ -69,7 +69,7 @@ async def update_env(env_id: int, form: EnvUpdateRequest, user=Depends(Permissio
     return C137Response.success(message="更新成功")
 
 
-@cconfig.get("/redis/list", summary="获取Redis配置列表")
+@cconfig.get("/redis/list", summary="获取Redis配置列表", response_model=RedisListResponse)
 async def get_redis_config_list():
     result = await CommonConfigServices.query_redis_list()
     return C137Response.success(data=result)
@@ -99,7 +99,7 @@ async def delete_redis_config(redis_id: int, user=Depends(Permission())):
     return C137Response.success(message="删除成功")
 
 
-@cconfig.get("/sql/list", summary="获取sql配置列表")
+@cconfig.get("/sql/list", summary="获取sql配置列表", response_model=SqlListResponse)
 async def get_sql_config_list():
     result = await CommonConfigServices.query_sql_list()
     return C137Response.success(data=result)
@@ -119,8 +119,14 @@ async def ping_sql(data: PingSqlRequest):
 
 @cconfig.post("/sql/execute", summary="执行sql")
 async def execute_sql(data: ExecuteSqlRequest):
-    result = await CommonConfigServices.execute_sql(data)
-    return C137Response.success(data=list(result))
+    result = await CommonConfigServices.execute_sql(data.sql_id, data.text)
+    return C137Response.success(data=result)
+
+
+@cconfig.post("/sql/execute/debug", summary="执行sql")
+async def execute_sql(data: ExecuteSqlDebugRequest):
+    result = await CommonConfigServices.execute_sql(data.sql_id, data.text, data.run_out_name)
+    return C137Response.success(data=result)
 
 
 @cconfig.post("/sql/{sql_id}", summary="获取sql配置")

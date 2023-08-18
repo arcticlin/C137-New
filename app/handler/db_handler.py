@@ -31,10 +31,16 @@ class DataBaseConnect:
         connection.close()
 
     @staticmethod
-    async def mysql_execute(connection: Connection, text: str):
+    async def mysql_execute(connection: Connection, text: str, is_first: bool = False):
         async with connection.cursor() as cursor:
-            await cursor.execute(text)
-            result = await cursor.fetchall()
+            try:
+                await cursor.execute(text)
+                if is_first:
+                    result = await cursor.fetchone()
+                else:
+                    result = await cursor.fetchall()
+            except Exception as e:
+                raise CustomException((400, 40802, f"SQL执行失败, {e}"))
             return result
 
     @staticmethod
