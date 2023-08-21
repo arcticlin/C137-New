@@ -16,6 +16,7 @@ from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.services.api_case.api_case_services import ApiCaseServices
 import uuid
 
+from app.services.api_case.suffix_services import SuffixServices
 
 case = APIRouter()
 
@@ -24,7 +25,7 @@ case = APIRouter()
 async def get_api_case(case_id: int):
     result = await ApiCaseServices.query_case_detail(case_id)
 
-    return C137Response.success(data={"case_info": result})
+    return C137Response.success(data=result)
 
 
 @case.post("/add", summary="添加用例")

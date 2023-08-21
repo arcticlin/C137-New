@@ -39,6 +39,8 @@ class C137Response:
 
     @staticmethod
     def orm_with_list(obj: Sequence[Any], *args):
+        if isinstance(obj, list) and len(obj) == 0:
+            return []
         return [C137Response.orm_to_dict(x, *args) for x in obj]
 
     @staticmethod

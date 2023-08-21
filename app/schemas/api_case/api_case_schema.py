@@ -13,6 +13,8 @@ from app.schemas.api_case.api_headers_schema import AddApiHeaderRequest, ApiHead
 from app.schemas.api_case.api_path_schema import AddApiPathRequest, ApiPathShow
 from typing import List, Union
 
+from app.schemas.api_settings.assert_schema import AssertShow
+from app.schemas.api_settings.suffix_schema import SuffixSimpleShow
 from app.schemas.response_schema import CommonResponse
 
 
@@ -70,9 +72,9 @@ class ApiCaseShow(BaseModel):
     method: str = Field(..., title="请求方法")
     body_type: int = Field(..., title="请求体类型, 0: none, 1: json 2: form 3: x-form 4: binary, 5: GraphQL")
     body: Union[str, dict, bytes, None] = Field(None, title="请求体数据")
-    path: List[AddApiPathRequest] = Field([], title="请求路径参数")
-    query: List[AddApiPathRequest] = Field([], title="请求query参数")
-    headers: List[AddApiHeaderRequest] = Field([], title="请求头")
+    path: List[ApiPathShow] = Field([], title="请求路径参数")
+    query: List[ApiPathShow] = Field([], title="请求query参数")
+    headers: List[ApiHeaderShow] = Field([], title="请求头")
     directory_id: int = Field(..., title="目录id")
     tag: str = Field(None, title="标签")
     status: int = Field(..., title="用例状态, 1: debug, 2: close, 3: normal")
@@ -86,7 +88,11 @@ class ApiCaseShow(BaseModel):
 
 class ApiCaseInfoShow(BaseModel):
     case_info: ApiCaseShow
-    case_suffix: List = Field([], title="用例后置处理")
+    prefix_info: list[SuffixSimpleShow] = Field([], description="前缀信息")
+    suffix_info: list[SuffixSimpleShow] = Field([], description="后缀信息")
+    # query_info: list[ApiPathShow] = Field([], description="查询信息")
+    # headers_info: list[ApiHeaderShow] = Field([], description="请求头信息")
+    assert_info: list[AssertShow] = Field([], description="断言信息")
 
 
 class ApiCaseInfoResponse(CommonResponse):

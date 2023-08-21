@@ -9,6 +9,8 @@ import json
 from datetime import datetime
 
 from app.crud.api_case.api_case_crud import ApiCaseCrud
+from app.crud.api_case.assert_crud import AssertCurd
+from app.crud.api_case.suffix_crud import SuffixCrud
 from app.exceptions.commom_exception import CustomException
 from app.exceptions.case_exp import *
 from app.handler.response_handler import C137Response
@@ -39,6 +41,7 @@ class ApiCaseServices:
 
     @staticmethod
     async def query_case_detail(case_id: int):
+        temp = {}
         case_detail, case_path, case_header = await ApiCaseCrud.query_case_detail(case_id)
         if case_detail is None:
             raise CustomException(CASE_NOT_EXISTS)
@@ -84,7 +87,14 @@ class ApiCaseServices:
         case_detail["path"] = path_list
         case_detail["query"] = params_list
         case_detail["headers"] = header_list
-        return case_detail
+        prefix_info = await SuffixCrud.get_prefix(case_id=case_id)
+        suffix_info = await SuffixCrud.get_suffix(case_id=case_id)
+        assert_info = await AssertCurd.query_assert_detail(case_id=case_id)
+        temp["case_info"] = case_detail
+        temp["prefix_info"] = C137Response.orm_with_list(prefix_info)
+        temp["suffix_info"] = C137Response.orm_with_list(suffix_info)
+        temp["assert_info"] = C137Response.orm_with_list(assert_info)
+        return temp
 
     @staticmethod
     async def add_case(case_detail: AddApiCaseRequest, creator: int):
