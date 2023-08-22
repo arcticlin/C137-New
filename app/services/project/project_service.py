@@ -56,6 +56,39 @@ class ProjectService:
         )
 
     @staticmethod
+    async def get_project_list(user_id: int):
+        logger.debug(f"查询用户: {user_id} 项目列表")
+        result = await ProjectCrud.get_project_list(user_id)
+        print(result)
+        temp = []
+        for item in result:
+            (
+                project_id,
+                project_name,
+                create_user,
+                create_time,
+                update_time,
+                public,
+                project_avatar,
+                case_count,
+                member_count,
+            ) = item
+            temp.append(
+                {
+                    "project_id": project_id,
+                    "project_name": project_name,
+                    "create_user": create_user,
+                    "created_at": create_time,
+                    "updated_at": update_time,
+                    "public": public,
+                    "project_avatar": project_avatar,
+                    "case_count": case_count,
+                    "member_count": member_count,
+                }
+            )
+        return temp
+
+    @staticmethod
     async def get_project_detail(project_id: int):
         logger.debug(f"查询项目: {project_id}详情")
         project_info = await ProjectCrud.query_project(project_id)

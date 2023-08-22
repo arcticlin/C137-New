@@ -24,7 +24,7 @@ project = APIRouter()
 
 @project.get("/list", summary="获取项目列表, 我创建+我参与的+公开的", response_model=ProjectListResponse)
 async def get_project_list(user_info=Depends(Permission())):
-    result = await ProjectCrud.get_project_list(user_id=user_info["user_id"])
+    result = await ProjectService.get_project_list(user_id=user_info["user_id"])
     return C137Response.success(data=result)
 
 

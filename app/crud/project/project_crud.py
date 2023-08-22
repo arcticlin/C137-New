@@ -140,16 +140,29 @@ class ProjectCrud:
     async def get_project_list(user_id: int):
         async with async_session() as session:
             # 我创建或我参与的项目
-            smtm = select(ProjectModel).join(
-                ProjectMemberModel,
-                and_(
-                    ProjectModel.project_id == ProjectMemberModel.project_id,
-                    ProjectMemberModel.user_id == user_id,
-                ),
+            # smtm = select(ProjectModel).join(
+            #     ProjectMemberModel,
+            #     and_(
+            #         ProjectModel.project_id == ProjectMemberModel.project_id,
+            #         ProjectMemberModel.user_id == user_id,
+            #     ),
+            # )
+            smtm_case_count = text(
+                """
+                SELECT 
+                    p.project_id, p.project_name, p.create_user, UNIX_TIMESTAMP(p.created_at), UNIX_TIMESTAMP(p.updated_at),p.public,p.project_avatar,IFNULL(COUNT(ac.case_id), 0) AS case_count, COUNT(pm.id) AS member_count
+                FROM project p
+                LEFT JOIN directory d on p.project_id = d.project_id AND d.deleted_at = 0
+                LEFT JOIN api_case ac on d.directory_id = ac.directory_id AND ac.deleted_at = 0
+                LEFT JOIN project_member pm on p.project_id = pm.project_id AND pm.deleted_at = 0
+                WHERE p.deleted_at = 0 AND p.project_id IN (SELECT project_id FROM project_member WHERE user_id = :user_id AND deleted_at = 0)
+                GROUP BY p.project_id, p.project_name
+            """
             )
-
-            execute_member = await session.execute(smtm)
-            result = execute_member.scalars().all()
+            smtm_case_count = await session.execute(smtm_case_count, {"user_id": user_id})
+            result = smtm_case_count.all()
+            # execute_member = await session.execute(smtm)
+            # result = execute_member.scalars().all()
             return result
 
     @staticmethod
