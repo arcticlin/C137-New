@@ -26,24 +26,6 @@ from app.models.project.project_directory import PDirectoryModel
 
 class ProjectCrud:
     @staticmethod
-    def build_directory_tree(data: List[Dict]):
-        directory_map = {item["directory_id"]: item for item in data}
-        root = None
-
-        for item in data:
-            parent_id = item.get("parent_id")
-            if parent_id is None:
-                root = item
-            else:
-                parent = directory_map.get(parent_id)
-                if parent is not None:
-                    children = parent.setdefault("children", [])
-                    children.append(item)
-        if root is None:
-            return {}
-        return root
-
-    @staticmethod
     def another_build_directory_tree(data: List[Dict]):
         directory_map = {item["directory_id"]: item for item in data}
         root = []
@@ -102,32 +84,69 @@ class ProjectCrud:
 
     @staticmethod
     async def delete_project(project_id: int, operator: int):
-        logger.info(f"{operator}: 删除项目: {project_id}")
         async with async_session() as session:
             async with session.begin():
-                smtm = await session.execute(
-                    select(ProjectModel).where(
-                        and_(
-                            ProjectModel.project_id == project_id,
-                            ProjectModel.deleted_at == 0,
-                        )
-                    )
+                smtm_case = text(
+                    """
+                    UPDATE api_case c 
+                    INNER JOIN directory d 
+                    ON c.directory_id = d.directory_id 
+                    SET c.deleted_at = :deleted_at, c.update_user = :operator 
+                    WHERE d.project_id = :project_id AND c.deleted_at = 0
+                """
                 )
-                result = smtm.scalars().first()
-                result.deleted_at = int(datetime.now().timestamp())
-                result.update_user = operator
+                smtm_dir = text(
+                    """
+                    UPDATE directory 
+                    SET deleted_at = :deleted_at, update_user = :operator 
+                    WHERE project_id = :project_id AND deleted_at = 0
+                """
+                )
+                smtm_pm = text(
+                    """
+                    UPDATE project_member 
+                    SET deleted_at = :deleted_at, update_user = :operator 
+                    WHERE project_id = :project_id AND deleted_at = 0
+                """
+                )
+                smtm_project = text(
+                    """
+                    UPDATE project 
+                    SET deleted_at = :deleted_at, update_user = :operator 
+                    WHERE project_id = :project_id AND deleted_at = 0
+                """
+                )
+                logger.debug(f"{operator}: 删除项目: {project_id} 关联的用例")
+                await session.execute(
+                    smtm_case,
+                    {"deleted_at": int(datetime.now().timestamp()), "operator": operator, "project_id": project_id},
+                )
+                logger.debug(f"{operator}: 删除项目: {project_id} 关联的目录")
+                await session.execute(
+                    smtm_dir,
+                    {"deleted_at": int(datetime.now().timestamp()), "operator": operator, "project_id": project_id},
+                )
+                logger.debug(f"{operator}: 删除项目: {project_id} 关联的成员")
+                await session.execute(
+                    smtm_pm,
+                    {"deleted_at": int(datetime.now().timestamp()), "operator": operator, "project_id": project_id},
+                )
+                logger.debug(f"{operator}: 删除项目: {project_id} 关联的项目")
+                await session.execute(
+                    smtm_project,
+                    {"deleted_at": int(datetime.now().timestamp()), "operator": operator, "project_id": project_id},
+                )
                 await session.flush()
-                session.expunge(result)
 
     @staticmethod
-    async def update_project(project_id: int, data: UpdateProjectRequest, operator: int):
+    async def update_project(data: UpdateProjectRequest, operator: int):
         logger.info(f"{operator}: 修改信息项目: {data.dict()}")
         async with async_session() as session:
             async with session.begin():
                 smtm = await session.execute(
                     select(ProjectModel).where(
                         and_(
-                            ProjectModel.project_id == project_id,
+                            ProjectModel.project_id == data.project_id,
                             ProjectModel.deleted_at == 0,
                         )
                     )
@@ -209,28 +228,12 @@ class ProjectCrud:
             return smtm.scalars().all()
 
     @staticmethod
-    async def get_project_directory_tree(project_id: int):
-        async with async_session() as session:
-            smtm = (
-                select(PDirectoryModel)
-                .join(
-                    ProjectModel,
-                    and_(ProjectModel.project_id == PDirectoryModel.project_id, ProjectModel.project_id == project_id),
-                )
-                .where(and_(ProjectModel.project_id == project_id, ProjectModel.deleted_at == 0))
-            )
-            sql = await session.execute(smtm)
-            result = sql.scalars().all()
-            print(result)
-            return result
-
-    @staticmethod
     async def n_get_project_directory_tree(project_id: int):
         async with async_session() as session:
             smtm = """
                 SELECT d.directory_id, d.name, d.parent_id, (SELECT COUNT(case_id) FROM api_case AS ac WHERE ac.directory_id = d.directory_id AND ac.deleted_at = 0) AS has_case
                 FROM directory AS d
-                WHERE project_id = :project_id
+                WHERE project_id = :project_id  AND deleted_at =0
             """
             execute = await session.execute(text(smtm), {"project_id": project_id})
             return execute.all()

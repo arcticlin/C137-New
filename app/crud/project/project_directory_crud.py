@@ -44,27 +44,47 @@ class PDirectoryCrud:
             return result
 
     @staticmethod
-    async def pd_name_exists(project_id: int, name: str):
+    async def pd_is_exists(directory_id: int):
         async with async_session() as session:
-            smtm = await session.execute(
-                select(func.count(PDirectoryModel.directory_id)).where(
-                    and_(
-                        PDirectoryModel.project_id == project_id,
-                        PDirectoryModel.deleted_at == 0,
-                        PDirectoryModel.name == name,
-                    )
-                )
+            smtm = text(
+                """
+                SELECT directory_id FROM `directory` WHERE directory_id=:directory_id AND deleted_at = 0;
+            """
             )
-            result = smtm.scalars().first()
-            if result > 0:
+            result = await session.execute(smtm, {"directory_id": directory_id})
+            if result.first() is not None:
                 return True
-            return False
+            else:
+                return False
 
     @staticmethod
-    async def add_project_dir(project_id: int, data: AddPDirectoryRequest, creator: int):
+    async def pd_name_exists(name: str, project_id: int = None, directory_id: int = None):
+        async with async_session() as session:
+            if project_id is not None:
+                smtm = text(
+                    """
+                        SELECT COUNT(directory_id) FROM directory WHERE project_id = :project_id AND deleted_at = 0 AND name = :name
+                    """
+                )
+                result = await session.execute(smtm, {"project_id": project_id, "name": name})
+            if directory_id is not None:
+                smtm = text(
+                    """
+                        SELECT directory_id  FROM `directory` WHERE name=:name AND deleted_at = 0 AND project_id = (SELECT project_id FROM `directory` WHERE directory_id=:directory_id);
+                    """
+                )
+                result = await session.execute(smtm, {"directory_id": directory_id, "name": name})
+            print(result.fetchone())
+            if result.first() is not None:
+                return True
+            else:
+                return False
+
+    @staticmethod
+    async def add_project_dir(data: AddPDirectoryRequest, creator: int):
         async with async_session() as session:
             async with session.begin():
-                directory = PDirectoryModel(**data.dict(), create_user=creator, project_id=project_id)
+                directory = PDirectoryModel(**data.dict(), create_user=creator)
                 session.add(directory)
                 await session.flush()
                 return directory.directory_id
@@ -94,31 +114,7 @@ class PDirectoryCrud:
             return result.first()
 
     @staticmethod
-    async def delete_project_dir(directory_id: int, operator: int):
-        async with async_session() as session:
-            smtm = text(
-                """
-                UPDATE 
-                    directory 
-                SET 
-                    deleted_at = :deleted_at, update_user = :update_user, updated_at = :updated_at WHERE directory_id = :directory_id
-            """
-            )
-            await session.execute(
-                smtm,
-                {
-                    "deleted_at": int(datetime.now().timestamp()),
-                    "update_user": operator,
-                    "directory_id": directory_id,
-                    "updated_at": datetime.now(),
-                },
-            )
-            await session.commit()
-
-    @staticmethod
     async def update_project_dir_name(directory_id: int, name: str, operator: int):
-        logger.info("11")
-        logger.debug("22")
         async with async_session() as session:
             smtm = text(
                 """
@@ -130,55 +126,6 @@ class PDirectoryCrud:
                 {"name": name, "update_user": operator, "directory_id": directory_id, "updated_at": datetime.now()},
             )
             await session.commit()
-
-    @staticmethod
-    async def query_project_directory_root(project_id: int):
-        """查询项目根目录并返回是否has_child"""
-        async with async_session() as session:
-            smtm = text(
-                """
-            SELECT d.directory_id, d.name, (SELECT
-                    CASE
-                        WHEN EXISTS(SELECT 1 FROM directory AS sd WHERE sd.parent_id = d.directory_id AND sd.deleted_at = 0)
-                        OR EXISTS(SELECT 1 FROM api_case AS ac WHERE ac.directory_id = d.directory_id AND ac.deleted_at = 0)
-                        THEN 1
-                        ELSE 0
-                    END)  AS has_child
-            FROM directory AS d
-            WHERE project_id = :project_id AND deleted_at = 0 AND (parent_id IS NULL OR parent_id = 0)
-            """
-            )
-            execute = await session.execute(smtm, {"project_id": project_id})
-            result = execute.all()
-            return result
-
-    @staticmethod
-    async def query_directory_children(directory_id: int):
-        async with async_session() as session:
-            smtm_d = text(
-                """
-                    SELECT d.directory_id, d.name, d.parent_id, (SELECT
-                    CASE
-                        WHEN EXISTS(SELECT 1 FROM directory AS sd WHERE sd.parent_id = d.directory_id AND sd.deleted_at = 0)
-                        OR EXISTS(SELECT 1 FROM api_case AS ac WHERE ac.directory_id = d.directory_id AND ac.deleted_at = 0)
-                        THEN 1
-                        ELSE 0
-                    END)  AS has_child
-                    FROM directory AS d
-                    WHERE parent_id = :directory_id AND deleted_at = 0
-                """
-            )
-            smtm_c = text(
-                """
-                    SELECT c.case_id, c.name, c.method, c.directory_id
-                    FROM api_case AS c
-                    WHERE directory_id = :directory_id AND deleted_at = 0
-                """
-            )
-            execute_d = await session.execute(smtm_d, {"directory_id": directory_id})
-            execute_c = await session.execute(smtm_c, {"directory_id": directory_id})
-
-            return execute_d.all(), execute_c.all()
 
     @staticmethod
     async def check_directory_has_child(directory_id: int):
@@ -209,3 +156,89 @@ class PDirectoryCrud:
             )
             execute = await session.execute(smtm, {"directory_id": directory_id})
             return execute.all()
+
+    @staticmethod
+    async def verify_permission_in_directory(directory_id: int, user_id: int):
+        async with async_session() as session:
+            smtm = text(
+                """
+                SELECT 1
+                FROM directory AS d
+                JOIN project_member AS pm
+                ON d.project_id = pm.project_id AND pm.role > 1
+                WHERE d.directory_id = :directory_id AND pm.user_id = :user_id AND d.deleted_at = 0
+            """
+            )
+            execute = await session.execute(smtm, {"directory_id": directory_id, "user_id": user_id})
+            return execute.first() is not None
+
+    @staticmethod
+    async def delete_dir(directory_id: int, operator: int):
+        async with async_session() as session:
+            async with session.begin():
+                smtm_dir = text(
+                    """
+                    UPDATE directory AS d
+                    SET deleted_at = :deleted_at
+                    WHERE deleted_at = 0 AND d.directory_id IN (
+                      WITH RECURSIVE DirectoryCTE AS (
+                        SELECT directory_id
+                        FROM directory
+                        WHERE directory_id = :start_directory_id
+
+                        UNION ALL
+                    
+                        SELECT d2.directory_id
+                        FROM directory AS d2
+                        JOIN DirectoryCTE cte ON d2.parent_id = cte.directory_id
+                      )
+                      SELECT directory_id
+                      FROM DirectoryCTE
+                    );
+                """
+                )
+
+                smtm_case = text(
+                    """
+                UPDATE `api_case`
+                SET deleted_at = :deleted_at
+                WHERE deleted_at = 0 AND directory_id IN (
+                  WITH RECURSIVE DirectoryCTE AS (
+                    SELECT directory_id
+                    FROM directory
+                    WHERE directory_id = :start_directory_id
+                
+                    UNION ALL
+                
+                    SELECT d2.directory_id
+                    FROM directory AS d2
+                    JOIN DirectoryCTE cte ON d2.parent_id = cte.directory_id
+                  )
+                  SELECT directory_id
+                  FROM DirectoryCTE
+                ) ;
+                
+                """
+                )
+
+                await session.execute(
+                    smtm_dir,
+                    {
+                        "deleted_at": int(datetime.now().timestamp()),
+                        "update_user": operator,
+                        "start_directory_id": directory_id,
+                        "updated_at": datetime.now(),
+                    },
+                )
+
+                await session.execute(
+                    smtm_case,
+                    {
+                        "deleted_at": int(datetime.now().timestamp()),
+                        "update_user": operator,
+                        "start_directory_id": directory_id,
+                        "updated_at": datetime.now(),
+                    },
+                )
+
+                await session.flush()

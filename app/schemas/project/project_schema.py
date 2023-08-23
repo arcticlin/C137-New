@@ -30,6 +30,7 @@ class AddProjectRequest(BaseModel):
 class UpdateProjectRequest(BaseModel):
     """更新项目Schema"""
 
+    project_id: int
     project_name: str = Field(None, title="项目名称")
     project_desc: str = Field(None, title="项目描述")
     public: bool = Field(None, title="是否公开")

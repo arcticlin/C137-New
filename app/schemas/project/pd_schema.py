@@ -9,11 +9,13 @@ from pydantic import BaseModel
 
 
 class AddPDirectoryRequest(BaseModel):
+    project_id: int
     name: str
     parent_id: int = None
 
 
 class DeletePDirectoryRequest(BaseModel):
+    project_id: int
     directory_id: int
 
 
