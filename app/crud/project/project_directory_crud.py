@@ -63,7 +63,7 @@ class PDirectoryCrud:
             if project_id is not None:
                 smtm = text(
                     """
-                        SELECT COUNT(directory_id) FROM directory WHERE project_id = :project_id AND deleted_at = 0 AND name = :name
+                        SELECT directory_id FROM directory WHERE project_id = :project_id AND deleted_at = 0 AND name = :name
                     """
                 )
                 result = await session.execute(smtm, {"project_id": project_id, "name": name})
@@ -74,7 +74,6 @@ class PDirectoryCrud:
                     """
                 )
                 result = await session.execute(smtm, {"directory_id": directory_id, "name": name})
-            print(result.fetchone())
             if result.first() is not None:
                 return True
             else:
