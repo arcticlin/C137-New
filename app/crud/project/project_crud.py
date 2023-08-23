@@ -42,6 +42,61 @@ class ProjectCrud:
         return root
 
     @staticmethod
+    async def exists_project_name(name: str, creator: int):
+        async with async_session() as session:
+            """
+            查询项目是否存在:
+                1. 当项目为公开时, 任何用户无法创建同名项目
+                2. 当项目为私密时, 不同用户可以创建同名项目
+                3. 当创建人为同一人时, 不可以创建同名项目
+            """
+            smtm = """
+                SELECT EXISTS(
+                    SELECT 1 
+                    FROM project 
+                    WHERE project_name=:name AND deleted_at = 0 AND (public = true OR create_user= :create_user)
+                    ) AS is_exists;
+            """
+            result = await session.execute(text(smtm), {"name": name, "create_user": creator})
+            return result.scalars().first()
+
+    @staticmethod
+    async def exists_project_id(project_id: int):
+        """
+        查询项目是否存在
+        """
+        async with async_session() as session:
+            smtm = text("""
+                SELECT EXISTS(
+                    SELECT 1
+                    FROM project
+                    WHERE project_id=:project_id AND deleted_at = 0
+                )
+            """)
+            result = await session.execute(smtm, {"project_id": project_id})
+            return result.scalars().first()
+
+    @staticmethod
+    async def user_has_permission(project_id: int, operator: int):
+        async with async_session() as session:
+            smtm = text("""
+                SELECT
+                  CASE
+                    WHEN 
+                      (p.create_user =:user_id) 
+                      OR 
+                      (pm.user_id = :user_id AND pm.role > 1 AND pm.deleted_at = 0)
+                    THEN 1 ELSE 0
+                  END AS has_permission
+                FROM project p
+                LEFT JOIN
+                  project_member pm ON p.project_id = pm.project_id
+                WHERE p.project_id = :project_id AND p.deleted_at = 0
+            """)
+            result = await session.execute(smtm, {"project_id": project_id, "user_id": operator})
+            return result.scalars().first()
+
+    @staticmethod
     async def query_project(project_id: int):
         async with async_session() as session:
             smtm = select(ProjectModel).where(and_(ProjectModel.project_id == project_id, ProjectModel.deleted_at == 0))
@@ -158,14 +213,9 @@ class ProjectCrud:
     @staticmethod
     async def get_project_list(user_id: int):
         async with async_session() as session:
-            # 我创建或我参与的项目
-            # smtm = select(ProjectModel).join(
-            #     ProjectMemberModel,
-            #     and_(
-            #         ProjectModel.project_id == ProjectMemberModel.project_id,
-            #         ProjectMemberModel.user_id == user_id,
-            #     ),
-            # )
+            """
+            查询用户可查看的项目列表(我创建, 我参与, 公开的项目)并统计项目下的用例数和成员数
+            """
             smtm_case_count = text(
                 """
                 SELECT 
@@ -174,7 +224,9 @@ class ProjectCrud:
                 LEFT JOIN directory d on p.project_id = d.project_id AND d.deleted_at = 0
                 LEFT JOIN api_case ac on d.directory_id = ac.directory_id AND ac.deleted_at = 0
                 LEFT JOIN project_member pm on p.project_id = pm.project_id AND pm.deleted_at = 0
-                WHERE p.deleted_at = 0 AND p.project_id IN (SELECT project_id FROM project_member WHERE user_id = :user_id AND deleted_at = 0)
+                WHERE p.deleted_at = 0 AND p.project_id IN (
+                    SELECT project_id FROM project_member WHERE user_id = :user_id AND deleted_at = 0
+                    )
                 GROUP BY p.project_id, p.project_name
             """
             )

@@ -23,6 +23,12 @@ project = APIRouter()
 directory = APIRouter()
 
 
+@project.get("/debug")
+async def debug():
+    result = await ProjectCrud.exists_project_name("项目10")
+    return C137Response.success()
+
+
 @project.get("/list", summary="获取项目列表, 我创建+我参与的+公开的", response_model=ProjectListResponse)
 async def get_project_list(user_info=Depends(Permission())):
     result = await ProjectService.get_project_list(user_id=user_info["user_id"])
@@ -31,7 +37,7 @@ async def get_project_list(user_info=Depends(Permission())):
 
 @project.post("/new", summary="创建项目", response_model=CommonResponse)
 async def new_project(data: AddProjectRequest, user_info=Depends(Permission())):
-    await ProjectCrud.add_project(data, user_info["user_id"])
+    await ProjectService.add_project(data, user_info["user_id"])
     return C137Response.success(message="创建成功")
 
 
@@ -59,7 +65,7 @@ async def get_project_detail(project_id: int):
     return C137Response.success(data=data)
 
 
-@directory.post("/add", summary="创建项目目录")
+@directory.post("/add", summary="创建项目目录", response_model=CommonResponse)
 async def add_project_dir(data: AddPDirectoryRequest, user_info=Depends(Permission())):
     await ProjectService.add_project_dir(data, user_info["user_id"])
     return C137Response.success(message="创建成功")

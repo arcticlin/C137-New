@@ -17,27 +17,30 @@ class ProjectService:
     @staticmethod
     async def add_project(data: AddProjectRequest, creator: int):
         logger.debug(f"{creator} => 创建项目")
-        if await ProjectCrud.query_project_by_name(data.project_name):
+        exists = await ProjectCrud.exists_project_name(data.project_name, creator)
+        if exists:
             raise CustomException(PROJECT_NAME_EXISTS)
         await ProjectCrud.add_project(data, creator)
 
     @staticmethod
     async def delete_project(project_id: int, operator: int):
         logger.debug(f"{operator} => 删除项目: {project_id}")
-        project = await ProjectCrud.query_project(project_id)
-        if not project:
+        exists = await ProjectCrud.exists_project_id(project_id)
+        has_permission = await ProjectCrud.user_has_permission(project_id, operator)
+        if not exists:
             raise CustomException(PROJECT_NOT_EXISTS)
-        if project.create_user != operator:
+        if not has_permission:
             raise CustomException(PROJECT_NOT_CREATOR)
         await ProjectCrud.delete_project(project_id, operator)
 
     @staticmethod
     async def update_project(data: UpdateProjectRequest, operator: int):
         logger.debug(f"{operator} => 更新项目: {data.project_id}")
-        project = await ProjectCrud.query_project(data.project_id)
-        if not project:
+        exists = await ProjectCrud.exists_project_id(data.project_id)
+        has_permission = await ProjectCrud.user_has_permission(data.project_id, operator)
+        if not exists:
             raise CustomException(PROJECT_NOT_EXISTS)
-        if project.create_user != operator:
+        if not has_permission:
             raise CustomException(PROJECT_NOT_CREATOR)
         await ProjectCrud.update_project(data.project_id, data, operator)
 
