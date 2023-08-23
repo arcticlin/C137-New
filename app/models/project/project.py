@@ -8,9 +8,9 @@ class ProjectModel(Base, BaseMixin):
     __tablename__ = "project"
 
     project_id = Column(Integer, primary_key=True)
-    project_name = Column(String(16), nullable=False, comment="项目名称")
+    project_name = Column(String(16), nullable=False, comment="项目名称", index=True)
     project_desc = Column(String(128), nullable=True, comment="项目描述")
-    public = Column(Boolean, nullable=False, default=False, comment="是否公开")
+    public = Column(Boolean, nullable=False, default=False, comment="是否公开", index=True)
     project_avatar = Column(String(128), nullable=True, comment="项目头像")
 
     def __init__(
