@@ -1,10 +1,9 @@
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 from pydantic import BaseModel, Field, validator
 
 from app.schemas.response_schema import CommonResponse
-from app.enums.enum_project import ProjectRoleEnum
 
 
 class ProjectBaseSchema(BaseModel):
@@ -41,23 +40,23 @@ class AddProjectMemberRequest(BaseModel):
     """添加项目成员Schema"""
 
     user_id: int = Field(..., title="用户id")
-    role: ProjectRoleEnum = Field(..., title="角色")
+    role: int = Field(..., title="角色")
+
+
+class UpdatePMRequest(BaseModel):
+    """添加项目成员Schema"""
+
+    user_id: int = Field(..., title="用户id")
+    role: int = Field(..., title="角色")
 
 
 class ProjectMemberShow(BaseModel):
     """项目成员展示Schema"""
 
     user_id: int = Field(..., title="用户id")
-    role: ProjectRoleEnum = Field(..., title="角色")
+    role: int = Field(..., title="角色")
     create_user: int = Field(..., title="创建人")
     created_at: int = Field(..., title="创建时间")
-
-
-class ProjectDetailShow(BaseModel):
-    """项目详情展示Schema"""
-
-    project_info: ProjectBaseSchema = Field(..., title="项目信息")
-    project_member: List[ProjectMemberShow] = Field(..., title="项目成员")
 
 
 class ProjectListShow(BaseModel):
@@ -84,4 +83,16 @@ class ProjectListResponse(CommonResponse):
 class ProjectDetailResponse(CommonResponse):
     """项目详情响应Schema"""
 
-    data: ProjectDetailShow = Field(..., title="项目详情")
+    data: ProjectBaseSchema = Field(..., title="项目详情")
+
+
+class ProjectMemberResponse(CommonResponse):
+    data: List[ProjectMemberShow] = Field(..., title="项目成员列表")
+
+
+class ProjectCreateShow(BaseModel):
+    project_id: int = Field(..., title="项目id")
+
+
+class ProjectCreateResponse(CommonResponse):
+    data: ProjectCreateShow = Field(..., title="项目创建返回")

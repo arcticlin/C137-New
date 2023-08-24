@@ -18,7 +18,7 @@ from sqlalchemy import select, and_, or_, text
 
 from app.core.db_connector import async_session
 
-from app.enums.enum_project import ProjectRoleEnum
+
 from app.models.project.project_member import ProjectMemberModel
 from app.handler.db_bulk import DatabaseBulk
 from app.models.project.project_directory import PDirectoryModel
@@ -66,20 +66,23 @@ class ProjectCrud:
         查询项目是否存在
         """
         async with async_session() as session:
-            smtm = text("""
+            smtm = text(
+                """
                 SELECT EXISTS(
                     SELECT 1
                     FROM project
                     WHERE project_id=:project_id AND deleted_at = 0
                 )
-            """)
+            """
+            )
             result = await session.execute(smtm, {"project_id": project_id})
             return result.scalars().first()
 
     @staticmethod
     async def user_has_permission(project_id: int, operator: int):
         async with async_session() as session:
-            smtm = text("""
+            smtm = text(
+                """
                 SELECT
                   CASE
                     WHEN 
@@ -90,9 +93,10 @@ class ProjectCrud:
                   END AS has_permission
                 FROM project p
                 LEFT JOIN
-                  project_member pm ON p.project_id = pm.project_id
+                  project_member pm ON p.project_id = pm.project_id AND pm.user_id=:user_id
                 WHERE p.project_id = :project_id AND p.deleted_at = 0
-            """)
+            """
+            )
             result = await session.execute(smtm, {"project_id": project_id, "user_id": operator})
             return result.scalars().first()
 
@@ -100,19 +104,6 @@ class ProjectCrud:
     async def query_project(project_id: int):
         async with async_session() as session:
             smtm = select(ProjectModel).where(and_(ProjectModel.project_id == project_id, ProjectModel.deleted_at == 0))
-            execute = await session.execute(smtm)
-            result = execute.scalars().first()
-            return result
-
-    @staticmethod
-    async def query_project_by_name(project_name: str):
-        async with async_session() as session:
-            smtm = select(ProjectModel).where(
-                and_(
-                    ProjectModel.project_name == project_name,
-                    ProjectModel.deleted_at == 0,
-                )
-            )
             execute = await session.execute(smtm)
             result = execute.scalars().first()
             return result
@@ -129,16 +120,20 @@ class ProjectCrud:
                 logger.info(f"{creator}: 创建添加用户: {creator}进项目")
                 add_member = ProjectMemberModel(
                     project_id=project.project_id,
-                    role=ProjectRoleEnum.CREATOR,
+                    role=3,
                     user_id=creator,
                     create_user=creator,
                 )
                 session.add(add_member)
                 await session.flush()
                 session.expunge(add_member)
+                return project.project_id
 
     @staticmethod
     async def delete_project(project_id: int, operator: int):
+        """
+        删除项目: 删除项目和目录和成员和用例
+        """
         async with async_session() as session:
             async with session.begin():
                 smtm_case = text(
@@ -146,50 +141,70 @@ class ProjectCrud:
                     UPDATE api_case c 
                     INNER JOIN directory d 
                     ON c.directory_id = d.directory_id 
-                    SET c.deleted_at = :deleted_at, c.update_user = :operator 
+                    SET c.deleted_at = :deleted_at, c.update_user = :operator, c.updated_at = :updated_at
                     WHERE d.project_id = :project_id AND c.deleted_at = 0
                 """
                 )
                 smtm_dir = text(
                     """
                     UPDATE directory 
-                    SET deleted_at = :deleted_at, update_user = :operator 
+                    SET deleted_at = :deleted_at, update_user = :operator ,updated_at = :updated_at
                     WHERE project_id = :project_id AND deleted_at = 0
                 """
                 )
                 smtm_pm = text(
                     """
                     UPDATE project_member 
-                    SET deleted_at = :deleted_at, update_user = :operator 
+                    SET deleted_at = :deleted_at, update_user = :operator , updated_at = :updated_at
                     WHERE project_id = :project_id AND deleted_at = 0
                 """
                 )
                 smtm_project = text(
                     """
                     UPDATE project 
-                    SET deleted_at = :deleted_at, update_user = :operator 
+                    SET deleted_at = :deleted_at, update_user = :operator , updated_at = :updated_at
                     WHERE project_id = :project_id AND deleted_at = 0
                 """
                 )
                 logger.debug(f"{operator}: 删除项目: {project_id} 关联的用例")
                 await session.execute(
                     smtm_case,
-                    {"deleted_at": int(datetime.now().timestamp()), "operator": operator, "project_id": project_id},
+                    {
+                        "deleted_at": int(datetime.now().timestamp()),
+                        "operator": operator,
+                        "project_id": project_id,
+                        "updated_at": int(datetime.now().timestamp()),
+                    },
                 )
                 logger.debug(f"{operator}: 删除项目: {project_id} 关联的目录")
                 await session.execute(
                     smtm_dir,
-                    {"deleted_at": int(datetime.now().timestamp()), "operator": operator, "project_id": project_id},
+                    {
+                        "deleted_at": int(datetime.now().timestamp()),
+                        "operator": operator,
+                        "project_id": project_id,
+                        "updated_at": int(datetime.now().timestamp()),
+                    },
                 )
                 logger.debug(f"{operator}: 删除项目: {project_id} 关联的成员")
                 await session.execute(
                     smtm_pm,
-                    {"deleted_at": int(datetime.now().timestamp()), "operator": operator, "project_id": project_id},
+                    {
+                        "deleted_at": int(datetime.now().timestamp()),
+                        "operator": operator,
+                        "project_id": project_id,
+                        "updated_at": int(datetime.now().timestamp()),
+                    },
                 )
                 logger.debug(f"{operator}: 删除项目: {project_id} 关联的项目")
                 await session.execute(
                     smtm_project,
-                    {"deleted_at": int(datetime.now().timestamp()), "operator": operator, "project_id": project_id},
+                    {
+                        "deleted_at": int(datetime.now().timestamp()),
+                        "operator": operator,
+                        "project_id": project_id,
+                        "updated_at": int(datetime.now().timestamp()),
+                    },
                 )
                 await session.flush()
 
@@ -235,49 +250,6 @@ class ProjectCrud:
             # execute_member = await session.execute(smtm)
             # result = execute_member.scalars().all()
             return result
-
-    @staticmethod
-    async def member_role_in_project(user_id: int, project_id: int):
-        async with async_session() as session:
-            smtm = select(ProjectMemberModel).where(
-                and_(
-                    ProjectMemberModel.project_id == project_id,
-                    ProjectMemberModel.user_id == user_id,
-                    ProjectMemberModel.deleted_at == 0,
-                )
-            )
-            result = await session.execute(smtm)
-            user_role = result.scalars().first()
-            if user_role is None:
-                return None
-            return user_role.role
-
-    @staticmethod
-    async def add_project_member(
-        project_id: int, user_id: int, operator: int, role: ProjectRoleEnum = ProjectRoleEnum.MEMBER
-    ):
-        async with async_session() as session:
-            async with session.begin():
-                member = ProjectMemberModel(
-                    project_id=project_id,
-                    user_id=user_id,
-                    create_user=operator,
-                    role=role,
-                )
-                session.add(member)
-
-    @staticmethod
-    async def query_project_member(project_id: int):
-        async with async_session() as session:
-            smtm = await session.execute(
-                select(ProjectMemberModel).where(
-                    and_(
-                        ProjectMemberModel.project_id == project_id,
-                        ProjectMemberModel.deleted_at == 0,
-                    )
-                )
-            )
-            return smtm.scalars().all()
 
     @staticmethod
     async def n_get_project_directory_tree(project_id: int):

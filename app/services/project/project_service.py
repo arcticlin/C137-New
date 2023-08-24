@@ -3,7 +3,6 @@ from datetime import datetime
 
 from app.crud.project.project_crud import ProjectCrud
 from app.crud.project.project_directory_crud import PDirectoryCrud
-from app.enums.enum_project import ProjectRoleEnum
 from app.exceptions.commom_exception import CustomException
 from app.handler.response_handler import C137Response
 from app.schemas.project.pd_schema import AddPDirectoryRequest, DeletePDirectoryRequest
@@ -11,19 +10,23 @@ from app.schemas.project.project_schema import AddProjectRequest, UpdateProjectR
 from app.utils.new_logger import logger
 from app.exceptions.project_exp import *
 from app.utils.sql_checker import SqlChecker
+from app.crud.project.project_member_crud import ProjectMCrud
 
 
 class ProjectService:
     @staticmethod
     async def add_project(data: AddProjectRequest, creator: int):
+        """创建项目"""
         logger.debug(f"{creator} => 创建项目")
         exists = await ProjectCrud.exists_project_name(data.project_name, creator)
         if exists:
             raise CustomException(PROJECT_NAME_EXISTS)
-        await ProjectCrud.add_project(data, creator)
+        project_id = await ProjectCrud.add_project(data, creator)
+        return project_id
 
     @staticmethod
     async def delete_project(project_id: int, operator: int):
+        """删除项目"""
         logger.debug(f"{operator} => 删除项目: {project_id}")
         exists = await ProjectCrud.exists_project_id(project_id)
         has_permission = await ProjectCrud.user_has_permission(project_id, operator)
@@ -35,14 +38,18 @@ class ProjectService:
 
     @staticmethod
     async def update_project(data: UpdateProjectRequest, operator: int):
+        """更新项目"""
         logger.debug(f"{operator} => 更新项目: {data.project_id}")
         exists = await ProjectCrud.exists_project_id(data.project_id)
         has_permission = await ProjectCrud.user_has_permission(data.project_id, operator)
+        name_exists = await ProjectCrud.exists_project_name(data.project_name, operator)
         if not exists:
             raise CustomException(PROJECT_NOT_EXISTS)
         if not has_permission:
             raise CustomException(PROJECT_NOT_CREATOR)
-        await ProjectCrud.update_project(data.project_id, data, operator)
+        if name_exists:
+            raise CustomException(PROJECT_NAME_EXISTS)
+        await ProjectCrud.update_project(data, operator)
 
     @staticmethod
     async def add_project_member(project_id: int, data: AddProjectMemberRequest, operator: int):
@@ -50,7 +57,7 @@ class ProjectService:
         operator_role = await ProjectCrud.member_role_in_project(project_id, operator)
         if not operator_role:
             raise CustomException(PROJECT_NOT_CREATOR)
-        if operator_role == ProjectRoleEnum.MEMBER:
+        if operator_role == 1:
             raise CustomException(PROJECT_NOT_CREATOR)
         if await ProjectCrud.member_role_in_project(project_id, data.user_id):
             raise CustomException(PROJECT_MEMBER_EXISTS)
@@ -95,12 +102,7 @@ class ProjectService:
     async def get_project_detail(project_id: int):
         logger.debug(f"查询项目: {project_id}详情")
         project_info = await ProjectCrud.query_project(project_id)
-        project_member = await ProjectCrud.query_project_member(project_id)
-        orm_project_member = C137Response.orm_with_list(project_member, "id", "updated_at", "deleted_at", "project_id")
-        return {
-            "project_info": C137Response.orm_to_dict(project_info),
-            "project_member": orm_project_member,
-        }
+        return project_info
 
     @staticmethod
     async def add_project_dir(data: AddPDirectoryRequest, creator: int):
@@ -175,3 +177,53 @@ class ProjectService:
         if check_name:
             raise CustomException(PD_NAME_EXISTS)
         await PDirectoryCrud.update_project_dir_name(dir_id, name, operator)
+
+    @staticmethod
+    async def get_project_members(project_id: int):
+        logger.debug(f"查询项目: {project_id}详情")
+        members = await ProjectMCrud.query_project_members(project_id)
+        return members
+
+    @staticmethod
+    async def add_member(project_id: int, member_id: int, role: int, operator: int):
+        logger.debug(f"添加项目: {project_id}成员, 成员: {member_id}")
+        if not await ProjectCrud.user_has_permission(project_id, operator):
+            raise CustomException(PROJECT_NOT_CREATOR)
+        if await ProjectMCrud.exists_member(project_id, member_id):
+            raise CustomException(PROJECT_MEMBER_EXISTS)
+        if role == 3:
+            raise CustomException(PROJECT_MEMBER_NOT_ALLOW_ADD_CREATOR)
+        await ProjectMCrud.add_member(project_id, member_id, operator, role)
+
+    @staticmethod
+    async def remove_member(project_id: int, member_id: int, operator: int):
+        logger.debug(f"移除项目: {project_id}成员, 成员: {member_id}")
+        if not await ProjectCrud.user_has_permission(project_id, operator):
+            raise CustomException(PROJECT_NOT_CREATOR)
+        if await ProjectMCrud.member_is_creator(project_id, member_id):
+            raise CustomException(PROJECT_MEMBER_NOT_ALLOW_REMOVE_CREATOR)
+        if not await ProjectMCrud.exists_member(project_id, member_id):
+            raise CustomException(PROJECT_MEMBER_NOT_EXISTS)
+        await ProjectMCrud.remove_member(project_id, member_id, operator)
+
+    @staticmethod
+    async def update_member(project_id: int, member_id: int, member_role: int, operator: int):
+        logger.debug(f"更新项目: {project_id}成员, 成员: {member_id}")
+        if not await ProjectCrud.user_has_permission(project_id, operator):
+            raise CustomException(PROJECT_NOT_CREATOR)
+        if await ProjectMCrud.member_is_creator(project_id, member_id):
+            raise CustomException(PROJECT_MEMBER_NOT_ALLOW_UPDATE_CREATOR)
+        if not await ProjectMCrud.exists_member(project_id, member_id):
+            raise CustomException(PROJECT_MEMBER_NOT_EXISTS)
+        if member_role == 3:
+            raise CustomException(PROJECT_MEMBER_NOT_ALLOW_TO_CREATOR)
+        await ProjectMCrud.update_member(project_id, member_id, member_role, operator)
+
+    @staticmethod
+    async def member_exit(project_id: int, operator: int):
+        logger.debug(f"退出项目: {project_id}成员, 成员: {operator}")
+        if await ProjectMCrud.member_is_creator(project_id, operator):
+            raise CustomException(PROJECT_MEMBER_NOT_ALLOW_EXIT_CREATOR)
+        if not await ProjectMCrud.exists_member(project_id, operator):
+            raise CustomException(PROJECT_MEMBER_NOT_EXISTS)
+        await ProjectMCrud.exit_member(project_id, operator)

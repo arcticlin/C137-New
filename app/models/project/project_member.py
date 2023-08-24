@@ -7,8 +7,6 @@ Description:
 """
 from app.core.db_connector import Base, BaseMixin
 from sqlalchemy import Column, Integer, String, DateTime, func, Boolean, ForeignKey
-from app.enums.enum_project import ProjectRoleEnum
-from sqlalchemy import Enum as SqlEnum
 from sqlalchemy.orm import relationship
 
 
@@ -18,7 +16,7 @@ class ProjectMemberModel(Base, BaseMixin):
     id = Column(Integer, primary_key=True)
     project_id = Column(Integer, ForeignKey("project.project_id"), index=True)
     user_id = Column(Integer, ForeignKey("users.user_id"), index=True)
-    role = Column(SqlEnum(ProjectRoleEnum), nullable=False, comment="角色")
+    role = Column(Integer, nullable=False, comment="角色, 1: 成员 2: 组长 3: 创建人")
 
     users = relationship("UserModel", backref="project_member")
     project = relationship("ProjectModel", backref="project_member")
@@ -28,7 +26,7 @@ class ProjectMemberModel(Base, BaseMixin):
         project_id: int,
         user_id: int,
         create_user: int,
-        role: ProjectRoleEnum = ProjectRoleEnum.MEMBER,
+        role: int = 1,
     ):
         self.project_id = project_id
         self.user_id = user_id
