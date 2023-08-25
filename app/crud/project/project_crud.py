@@ -101,6 +101,10 @@ class ProjectCrud:
             return result.scalars().first()
 
     @staticmethod
+    async def user_in():
+        pass
+
+    @staticmethod
     async def query_project(project_id: int):
         async with async_session() as session:
             smtm = select(ProjectModel).where(and_(ProjectModel.project_id == project_id, ProjectModel.deleted_at == 0))

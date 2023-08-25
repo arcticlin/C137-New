@@ -42,8 +42,8 @@ async def update_project(data: UpdateProjectRequest, user_info=Depends(Permissio
 
 
 @project.get("/{project_id}/detail", summary="获取项目详情", response_model=ProjectDetailResponse)
-async def get_project_detail(project_id: int):
-    data = await ProjectService.get_project_detail(project_id)
+async def get_project_detail(project_id: int, user_info=Depends(Permission())):
+    data = await ProjectService.get_project_detail(project_id, user_info["user_id"])
     return C137Response.success(data=data)
 
 
@@ -77,7 +77,7 @@ async def update_member_role(project_id: int, data: UpdatePMRequest, user_info=D
     return C137Response.success(message="更新成功")
 
 
-@project.post("/{project_id}/member/quit", summary="退出项目", response_model=CommonResponse)
+@project.put("/{project_id}/member/quit", summary="退出项目", response_model=CommonResponse)
 async def exit_project(project_id: int, user_info=Depends(Permission())):
     await ProjectService.member_exit(project_id, user_info["user_id"])
     return C137Response.success(message="退出成功")

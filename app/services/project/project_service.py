@@ -99,8 +99,10 @@ class ProjectService:
         return temp
 
     @staticmethod
-    async def get_project_detail(project_id: int):
+    async def get_project_detail(project_id: int, user_id: int):
         logger.debug(f"查询项目: {project_id}详情")
+        if not await ProjectMCrud.exists_member(project_id, user_id):
+            raise CustomException(PROJECT_MEMBER_NOT_ALLOW)
         project_info = await ProjectCrud.query_project(project_id)
         return project_info
 
