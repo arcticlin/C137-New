@@ -13,6 +13,7 @@ from app.schemas.api_case.api_headers_schema import *
 from app.schemas.api_case.api_case_schema import *
 from app.middleware.access_permission import Permission
 from app.crud.api_case.api_case_crud import ApiCaseCrud
+from app.schemas.api_case.api_request_temp import TempRequestApi
 from app.services.api_case.api_case_services import ApiCaseServices
 import uuid
 
@@ -48,4 +49,12 @@ async def update_api_case(data: UpdateApiCaseRequest, user=Depends(Permission())
 async def debug_api_case(data: DebugApiCaseRequest):
     random_uid = f"c:runner_{str(uuid.uuid4())}"
     result = await ApiCaseServices.debug_case_execute(data.env_id, data.case_id, random_uid)
+    return C137Response.success(data=result, headers={"trace_id": random_uid})
+
+
+@case.post("/request", summary="调试请求用例")
+async def debug_temp_case(data: TempRequestApi):
+    # random_uid = f"c:runner_{str(uuid.uuid4())}"
+    random_uid = f"c:runner_2ae4bbc2-2c66-4568-a207-66f32438179c"
+    result = await ApiCaseServices.temp_request(data, random_uid)
     return C137Response.success(data=result, headers={"trace_id": random_uid})

@@ -14,6 +14,7 @@ from app.crud.api_case.suffix_crud import SuffixCrud
 from app.exceptions.commom_exception import CustomException
 from app.exceptions.case_exp import *
 from app.handler.response_handler import C137Response
+from app.schemas.api_case.api_request_temp import TempRequestApi
 from app.utils.new_logger import logger
 from app.schemas.api_case.api_case_schema import AddApiCaseRequest
 from app.handler.cases_handler import CaseHandler
@@ -97,6 +98,16 @@ class ApiCaseServices:
         return temp
 
     @staticmethod
+    async def handle_temp_case(data: TempRequestApi):
+        temp = {}
+        # 用例名称
+        t_name = data.basic_info.name
+        # TODO: 处理非HTTP请求
+        # 请求方法
+        t_method, t_url = data.url_info.method, data.url_info.url
+        t_query, t_path, t_headers = data.query_info, data.path_info, data.header_info
+
+    @staticmethod
     async def add_case(case_detail: AddApiCaseRequest, creator: int):
         check_case_exists = await ApiCaseCrud.check_case_exists(
             case_detail.directory_id,
@@ -151,3 +162,21 @@ class ApiCaseServices:
             "env_assert": env_result,
             "case_assert": case_result,
         }
+
+    @staticmethod
+    async def temp_request(data: TempRequestApi, trace_id: str):
+        case = CaseHandler(trace_id)
+
+        # 获取环境信息
+        env_url = await ApiCaseCrud.query_env_info(data.env_id)
+        # 执行环境前置
+        await SuffixServices(trace_id).execute_env_prefix(data.env_id)
+
+        # 处理临时用例
+        # 获取用例信息(替换变量)
+        response = await case.case_executor_with_model(env_url, data)
+        print(response)
+        response["assert_result"] = True
+        return response
+        # 执行环境前置
+        # await SuffixServices(trace_id).execute_env_prefix(data.env_id)

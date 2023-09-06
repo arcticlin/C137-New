@@ -6,11 +6,12 @@ Created: 2023/8/8
 Description:
 """
 import json
-from typing import List
+from typing import List, Union
 import re
 
 from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.handler.redis_handler import redis_client
+from app.schemas.api_case.api_request_temp import TempRequestApi
 from app.utils.case_log import CaseLog
 from app.handler.async_http_client import AsyncRequest
 
@@ -25,9 +26,13 @@ class CaseHandler:
         """
         根据path设置URL
         """
+        # for x in path:
+        #     if "{%s}" % x["key"] in url and x["enable"]:
+        #         url = url.replace("{%s}" % x["key"], x["value"])
         for x in path:
-            if "{%s}" % x["key"] in url and x["enable"]:
-                url = url.replace("{%s}" % x["key"], x["value"])
+            for key, value in x.items():
+                if "{%s}" % key in url and value:
+                    url = url.replace("{%s}" % key, value)
         return url
 
     @staticmethod
@@ -70,6 +75,7 @@ class CaseHandler:
         return result
 
     async def parse_text(self, key: str):
+        print("here?", key)
         if isinstance(key, str) and "${" in key:
             self.log.vars_append(f"尝试替换变量: {key}")
             find_el = CaseHandler.get_el_exp(key)
@@ -99,8 +105,13 @@ class CaseHandler:
                 temp.append(result)
         return temp
 
-    async def parse_obj(self, obj: dict):
+    async def parse_obj(self, obj: Union[dict, str]):
         temp = {}
+        if isinstance(obj, str):
+            try:
+                obj = json.loads(obj)
+            except Exception:
+                obj = {}
         for key, value in obj.items():
             if isinstance(value, dict):
                 temp[key] = await self.parse_obj(value)
@@ -142,11 +153,37 @@ class CaseHandler:
         url = self.set_url_with_env(env_url, url)
         return url, method, headers, body, body_type, path, query
 
+    async def case_pick_up_with_model(self, env_url: str, data: TempRequestApi):
+        url = data.url_info.url
+        method = data.url_info.method
+        headers = await self.parse_query([x.dict() for x in data.header_info])
+        query = await self.parse_query([x.dict() for x in data.query_info])
+        path = await self.parse_path([x.dict() for x in data.path_info])
+
+        body_type = data.body_info.body_type
+        body = await self.parse_obj(data.body_info.body) if data.body_info.body and body_type != 0 else {}
+        url = self.set_url_with_env(env_url, url)
+        url = self.set_url_by_path(url, path)
+        return url, method, headers, body, body_type, path, query
+
     async def case_executor(self, env_url: str, obj: dict):
         """
         执行用例
         """
         url, method, headers, body, body_type, path, query = await self.case_pick_up(env_url, obj)
+        await redis_client.set_case_log_load(self.trace_id, self.log.logs, "case_vars")
+        r = await AsyncRequest.package_request(
+            url=url,
+            body_type=body_type,
+            body=body,
+            params=query,
+            headers=headers,
+        )
+        response = await r.request_to(method)
+        return response
+
+    async def case_executor_with_model(self, env_url: str, data: TempRequestApi):
+        url, method, headers, body, body_type, path, query = await self.case_pick_up_with_model(env_url, data)
         await redis_client.set_case_log_load(self.trace_id, self.log.logs, "case_vars")
         r = await AsyncRequest.package_request(
             url=url,

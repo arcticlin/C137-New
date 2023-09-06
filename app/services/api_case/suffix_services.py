@@ -69,6 +69,7 @@ class SuffixServices:
 
     async def execute_suffix(self, model: SuffixModel, log_type: str):
         is_end = model.suffix_type == 2
+
         if model.enable:
             if model.execute_type == 1:
                 self.log.log_append(f"执行脚本: {model.script_id}", log_type)
