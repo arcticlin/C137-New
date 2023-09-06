@@ -177,6 +177,7 @@ class ApiCaseServices:
         response = await case.case_executor_with_model(env_url, data)
         print(response)
         response["assert_result"] = True
+        response["trace_id"] = trace_id
         return response
         # 执行环境前置
         # await SuffixServices(trace_id).execute_env_prefix(data.env_id)
