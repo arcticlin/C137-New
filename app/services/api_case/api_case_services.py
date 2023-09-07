@@ -187,7 +187,7 @@ class ApiCaseServices:
             "env_assert": env_result,
             "temp_assert": temp_result,
             "final_result": False not in [e["result"] for e in env_result]
-            or False not in [e["result"] for e in temp_result],
+            and False not in [e["result"] for e in temp_result],
         }
         return response
         # 执行环境前置

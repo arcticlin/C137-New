@@ -72,7 +72,7 @@ class NewAssertServices:
         result = re.findall(exp, actual)
         if result:
             if expect is not None:
-                return {"actual": f"'{exp}'返回'{result}'", "expect": expect, "result": expect in result}
+                return {"actual": f"'{exp}'返回'{result}'", "expect": expect, "result": str(expect) in str(result)}
                 # return result, expect in result
             return {"actual": f"'{exp}'返回'{result}'", "expect": "存在", "result": True}
         return {"actual": f"'{exp}'返回'{result}'", "expect": "不存在", "result": False}
@@ -82,7 +82,7 @@ class NewAssertServices:
         result = jsonpath.jsonpath(actual, exp)
         if result:
             if expect is not None:
-                return {"actual": f"'{exp}'返回'{result}'", "expect": expect, "result": expect in result}
+                return {"actual": f"'{exp}'返回'{result}'", "expect": expect, "result": str(expect) in str(result)}
 
             return {"actual": f"'{exp}'返回'{result}'", "expect": "存在", "result": True}
         return {"actual": f"'{exp}'返回'{result}'", "expect": "不存在", "result": False}
@@ -166,11 +166,12 @@ class NewAssertServices:
             self.log.log_append(f"断言-以XX结尾 -> 实际: {src} 期望: {assert_detail.assert_value} 结果: {result}", log_type)
 
         elif assert_detail.assert_type == 11:
-            result = self._re(src, assert_detail.assert_exp)
+            result = self._re(src, assert_detail.assert_exp, assert_detail.assert_value)
             self.log.log_append(f"断言-匹配到RE表达式 -> 实际: {src} 期望: {assert_detail.assert_exp} 结果: {result}", log_type)
 
         else:
-            result = self._jsonpath(src, assert_detail.assert_exp)
+            result = self._jsonpath(src, assert_detail.assert_exp, assert_detail.assert_value)
             self.log.log_append(f"断言-匹配到JP表达式 -> 实际: {src} 期望: {assert_detail.assert_exp} 结果: {result}", log_type)
         await redis_client.set_case_log_load(trace_id, self.log.logs, log_type)
+        result["name"] = assert_detail.name
         return result
