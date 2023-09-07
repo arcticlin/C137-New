@@ -1,10 +1,13 @@
 # coding=utf-8
 """
-File: assert_services.py
+File: new_assert_services.py
 Author: bot
-Created: 2023/8/10
+Created: 2023/9/7
 Description:
 """
+import json
+from typing import Union, Tuple, List
+
 import jsonpath
 
 from app.exceptions.case_exp import ASSERT_NOT_EXISTS
@@ -15,69 +18,96 @@ from app.handler.response_handler import C137Response
 from app.handler.redis_handler import redis_client
 import re
 
+from app.models.api_settings.assert_settings import AssertModel
 from app.schemas.api_case.api_request_temp import TempRequestAssert
 from app.utils.case_log import CaseLog
 
 
-class AssertServices:
+class NewAssertServices:
     def __init__(self, trace_id: str):
         self.trace_id = trace_id
         self.log = CaseLog()
 
-    def _equal(self, src, target, is_equal: bool = True):
-        if isinstance(src, int):
-            target = int(target)
+    @staticmethod
+    def _equal(actual: int, expect: Union[str, list], is_equal: bool = True) -> dict:
+        if isinstance(expect, str):
+            expect = int(expect)
         if is_equal:
-            return src == target
-        return src != target
+            return {"actual": actual, "expect": expect, "result": actual == expect}
+        return {"actual": actual, "expect": expect, "result": actual != expect}
 
-    def _ge(self, src: int, target: int, is_ge: bool = True):
-        if isinstance(src, int):
-            target = int(target)
+    @staticmethod
+    def _ge(actual: int, expect: Union[str, list], is_ge: bool = True) -> dict:
+        if isinstance(expect, str):
+            expect = int(expect)
         if is_ge:
-            return src >= target
-        return src <= target
+            return {"actual": actual, "expect": expect, "result": actual >= expect}
+        return {"actual": actual, "expect": expect, "result": actual <= expect}
 
-    def _in_list(self, src, target: list, is_in: bool = True):
+    @staticmethod
+    def _in_list(actual, expect: Union[str, list], is_in: bool = True) -> dict:
+        try:
+            if isinstance(expect, str):
+                expect = json.loads(expect)
+        except Exception as e:
+            pass
         if is_in:
-            return src in target
-        return src not in target
+            return {"actual": actual, "expect": expect, "result": actual in expect}
+        return {"actual": actual, "expect": expect, "result": actual not in expect}
 
-    def _contains(self, src: str, target: str, is_contains: bool = True):
+    @staticmethod
+    def _contains(actual: str, expect: str, is_contains: bool = True) -> dict:
         if is_contains:
-            return target in src
-        return target not in src
+            return {"actual": actual, "expect": expect, "result": actual in expect}
+        return {"actual": actual, "expect": expect, "result": actual not in expect}
 
-    def _start_with(self, src: str, target: str, is_start: bool = True):
+    @staticmethod
+    def _start_with(actual: str, expect: str, is_start: bool = True) -> dict:
         if is_start:
-            return src.startswith(target)
-        return not src.endswith(target)
+            return {"actual": actual, "expect": expect, "result": actual.startswith(expect)}
+        return {"actual": actual, "expect": expect, "result": actual.endswith(expect)}
 
-    def _re(self, src: str, exp: str):
-        result = re.findall(exp, src)
+    @staticmethod
+    def _re(actual: str, exp: str, expect=None) -> dict:
+        result = re.findall(exp, actual)
         if result:
-            return True
-        return False
+            if expect is not None:
+                return {"actual": f"'{exp}'返回'{result}'", "expect": expect, "result": expect in result}
+                # return result, expect in result
+            return {"actual": f"'{exp}'返回'{result}'", "expect": "存在", "result": True}
+        return {"actual": f"'{exp}'返回'{result}'", "expect": "不存在", "result": False}
 
-    def _jsonpath(self, src: (list, dict), exp: str):
-        result = jsonpath.jsonpath(src, exp)
+    @staticmethod
+    def _jsonpath(actual: Union[list, dict], exp: str, expect=None) -> dict:
+        result = jsonpath.jsonpath(actual, exp)
+        if result:
+            if expect is not None:
+                return {"actual": f"'{exp}'返回'{result}'", "expect": expect, "result": expect in result}
+
+            return {"actual": f"'{exp}'返回'{result}'", "expect": "存在", "result": True}
+        return {"actual": f"'{exp}'返回'{result}'", "expect": "不存在", "result": False}
+
+    async def assert_from_env(self, env_id: int, async_response: dict):
+        env_assert = await AssertCurd.query_assert_detail(env_id=env_id)
+        result = [await self.assert_result(e, async_response, self.trace_id, "env_assert") for e in env_assert]
         return result
 
-    async def assert_from_env(self, env_id: int, response: dict):
-        env_assert_detail = await AssertCurd.query_assert_detail(env_id=env_id)
-        result = [await self.assert_result(e, response, self.trace_id, "env_assert") for e in env_assert_detail]
-        return result
-
-    async def assert_from_case(self, case_id: int, response: dict):
+    async def assert_from_case(self, case_id: int, response: dict) -> List:
         case_assert_detail = await AssertCurd.query_assert_detail(case_id=case_id)
         result = [await self.assert_result(e, response, self.trace_id, "case_assert") for e in case_assert_detail]
         return result
 
-    async def assert_from_temp(self, data: list[TempRequestAssert], response: dict):
+    async def assert_from_temp(self, data: list[TempRequestAssert], response: dict) -> list:
         result = [await self.assert_result(e, response, self.trace_id, "case_assert") for e in data]
         return result
 
-    async def assert_result(self, assert_detail, response: dict, trace_id: str = None, log_type: str = None):
+    async def assert_result(
+        self,
+        assert_detail: Union[AssertModel, TempRequestAssert],
+        response: dict,
+        trace_id: str = None,
+        log_type: str = None,
+    ):
         (
             status_code,
             response_header,
@@ -85,9 +115,6 @@ class AssertServices:
             response_body,
             response_elapsed,
         ) = AsyncRequest.collect_response_for_test(response)
-        temp_result = {}
-        if assert_detail.enable == 0:
-            return
         if assert_detail.assert_from == 1:
             src = response_header
         elif assert_detail.assert_from == 2:
@@ -96,37 +123,22 @@ class AssertServices:
             src = status_code
         else:
             src = response_elapsed
-
         if assert_detail.assert_type == 1:
-            result = self._equal(src, assert_detail.assert_value)
-            temp_result["expect"] = assert_detail.assert_value
-            temp_result["condition"] = "相等"
-            temp_result["actual"] = src
-            temp_result["result"] = result
+            # 相等
+            result = self._equal(src, assert_detail.assert_value, True)
             self.log.log_append(f"断言-相等 -> 实际: {src} 期望: {assert_detail.assert_value} 结果: {result}", log_type)
 
         elif assert_detail.assert_type == 2:
             result = self._equal(src, assert_detail.assert_value, False)
-            temp_result["expect"] = assert_detail.assert_value
-            temp_result["condition"] = "不相等"
-            temp_result["actual"] = src
-            temp_result["result"] = result
             self.log.log_append(f"断言-不相等 -> 实际: {src} 期望: {assert_detail.assert_value} 结果: {result}", log_type)
 
         elif assert_detail.assert_type == 3:
             result = self._ge(src, assert_detail.assert_value)
-            temp_result["expect"] = assert_detail.assert_value
-            temp_result["condition"] = "大于等于"
-            temp_result["actual"] = src
-            temp_result["result"] = result
             self.log.log_append(f"断言-大于等于 -> 实际: {src} 期望: {assert_detail.assert_value} 结果: {result}", log_type)
 
         elif assert_detail.assert_type == 4:
             result = self._ge(src, assert_detail.assert_value, False)
-            temp_result["expect"] = assert_detail.assert_value
-            temp_result["condition"] = "小于等于"
-            temp_result["actual"] = src
-            temp_result["result"] = result
+
             self.log.log_append(f"断言-小于等于 -> 实际: {src} 期望: {assert_detail.assert_value} 结果: {result}", log_type)
 
         elif assert_detail.assert_type == 5:
@@ -160,6 +172,5 @@ class AssertServices:
         else:
             result = self._jsonpath(src, assert_detail.assert_exp)
             self.log.log_append(f"断言-匹配到JP表达式 -> 实际: {src} 期望: {assert_detail.assert_exp} 结果: {result}", log_type)
-
         await redis_client.set_case_log_load(trace_id, self.log.logs, log_type)
         return result

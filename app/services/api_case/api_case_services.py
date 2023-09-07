@@ -15,6 +15,7 @@ from app.exceptions.commom_exception import CustomException
 from app.exceptions.case_exp import *
 from app.handler.response_handler import C137Response
 from app.schemas.api_case.api_request_temp import TempRequestApi
+from app.services.api_case.new_assert_services import NewAssertServices
 from app.utils.new_logger import logger
 from app.schemas.api_case.api_case_schema import AddApiCaseRequest
 from app.handler.cases_handler import CaseHandler
@@ -176,8 +177,18 @@ class ApiCaseServices:
         # 获取用例信息(替换变量)
         response = await case.case_executor_with_model(env_url, data)
         print(response)
-        response["assert_result"] = True
+
         response["trace_id"] = trace_id
+
+        # 执行环境断言
+        env_result = await NewAssertServices(trace_id).assert_from_env(data.env_id, response)
+        temp_result = await NewAssertServices(trace_id).assert_from_temp(data.assert_info, response)
+        response["assert_result"] = {
+            "env_assert": env_result,
+            "temp_assert": temp_result,
+            "final_result": False not in [e["result"] for e in env_result]
+            or False not in [e["result"] for e in temp_result],
+        }
         return response
         # 执行环境前置
         # await SuffixServices(trace_id).execute_env_prefix(data.env_id)

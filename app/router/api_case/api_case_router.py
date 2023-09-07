@@ -55,6 +55,6 @@ async def debug_api_case(data: DebugApiCaseRequest):
 @case.post("/request", summary="调试请求用例")
 async def debug_temp_case(data: TempRequestApi):
     random_uid = f"c:runner_{str(uuid.uuid4())}"
-    # random_uid = f"c:runner_2ae4bbc2-2c66-4568-a207-66f32438179c"
+    random_uid = f"c:runner_2ae4bbc2-2c66-4568-a207-66f32438179c"
     result = await ApiCaseServices.temp_request(data, random_uid)
     return C137Response.success(data=result, headers={"trace_id": random_uid})

@@ -39,6 +39,7 @@ class CaseLog:
         :param log_type:
         :return:
         """
+
         if log_type == "env_prefix":
             t = "环境前置"
         elif log_type == "env_suffix":

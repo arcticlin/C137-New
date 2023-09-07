@@ -55,7 +55,7 @@ class TempRequestAssert(BaseModel):
     name: str
     enable: bool
     assert_from: int
-    assert_with: int
+    assert_type: int
     assert_exp: str = None
     assert_value: str = None
 
