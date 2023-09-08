@@ -14,26 +14,29 @@ class SuffixModel(Base, BaseMixin):
     __tablename__ = "common_suffix"
 
     suffix_id = Column(Integer, primary_key=True, autoincrement=True)
-    suffix_type = Column(Integer, nullable=False, comment="前/后置, 1: 前置 2: 后置")
+    suffix_type = Column(Integer, nullable=False, comment="前/后置, 1: 前置 2: 后置", index=True)
     name = Column(String(16), nullable=False, comment="前/后置名称", index=True)
     description = Column(String(64), comment="前/后置描述")
-    enable = Column(BOOLEAN, nullable=False, comment="是否启用")
-    sort = Column(Integer, nullable=False, comment="排序")
+    enable = Column(BOOLEAN, nullable=False, comment="是否启用", index=True)
+    sort = Column(Integer, nullable=False, comment="排序", index=True)
 
-    execute_type = Column(Integer, nullable=False, comment="执行类型, 1: python 2: sql 3: redis 4: delay 5: global-script")
+    execute_type = Column(
+        Integer, nullable=False, comment="执行类型, 1: python 2: sql 3: redis 4: delay 5: global-script", index=True
+    )
 
     case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="绑定用例ID")
     env_id = Column(Integer, ForeignKey("env.env_id"), comment="绑定环境ID")
     run_each_case = Column(Integer, comment="是否每条用例执行一次, 1: 是 0: 否")
 
-    script_id = Column(Integer, ForeignKey("script.script_id"), comment="脚本ID")
-    sql_id = Column(Integer, ForeignKey("sql_model.sql_id"), comment="SQL ID")
-    redis_id = Column(Integer, ForeignKey("redis_model.redis_id"), comment="Redis ID")
-    run_case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="执行用例ID")
+    script_id = Column(Integer, ForeignKey("script.script_id"), comment="脚本ID", index=True)
+    sql_id = Column(Integer, ForeignKey("sql_model.sql_id"), comment="SQL ID", index=True)
+    redis_id = Column(Integer, ForeignKey("redis_model.redis_id"), comment="Redis ID", index=True)
+    run_case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="执行用例ID", index=True)
 
     run_delay = Column(Integer, comment="execute_type == 4时生效, 延迟时间ms")
+    fetch_one = Column(BOOLEAN, comment="execute_type == 2时生效, 是否只取一条数据")
     run_command = Column(TEXT, comment="执行命令")
-    run_out_name = Column(String(16), comment="出参名")
+    run_out_name = Column(String(16), comment="出参名", index=True)
 
     def __init__(
         self,
@@ -54,6 +57,7 @@ class SuffixModel(Base, BaseMixin):
         case_id: int = None,
         description: str = None,
         run_each_case: int = None,
+        fetch_one: bool = None,
     ):
         self.suffix_type = suffix_type
         self.name = name
@@ -73,3 +77,4 @@ class SuffixModel(Base, BaseMixin):
         self.update_user = create_user
         self.description = description
         self.run_each_case = run_each_case
+        self.fetch_one = fetch_one

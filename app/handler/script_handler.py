@@ -51,7 +51,7 @@ class ScriptHandler:
         # 将传入的字符串编译为函数对象，并执行该函数
         compiled_code = compile(script_text, "<string>", "exec")
         # 将内置变量和函数添加到命名空间中
-        ScriptHandler.temp_namespace.update(vars(builtins))
+        # ScriptHandler.temp_namespace.update(vars(builtins))
 
         try:
             # 限制递归层数, 避免出现死循环
@@ -62,11 +62,14 @@ class ScriptHandler:
                 timeout=5,
             )
             result = eval(get_var, ScriptHandler.temp_namespace)
+            ScriptHandler.temp_namespace.pop(get_var)
             return {get_var: result}
         except asyncio.TimeoutError:
             raise CustomException((400, 40902, f"代码执行超时, 请检查"))
         except RecursionError:
             raise CustomException((400, 40902, f"代码递归栈溢出(限制100次), 请检查"))
+        except Exception as e:
+            raise CustomException((400, 40902, f"{e}"))
         finally:
             sys.setrecursionlimit(10000)
         # exec(compiled_code, ScriptHandler.temp_namespace)

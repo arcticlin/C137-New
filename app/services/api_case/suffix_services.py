@@ -65,6 +65,7 @@ class SuffixServices:
             raise CustomException(SCRIPT_NOT_EXISTS)
         result = await ScriptHandler.python_executor(script_info.var_key, script_info.var_script)
         self.g_var[script_info.var_key] = result[script_info.var_key]
+        await redis_client.set_case_var_load(self.redis_key, self.g_var)
         return result
 
     async def execute_suffix(self, model: SuffixModel, log_type: str):
@@ -88,7 +89,7 @@ class SuffixServices:
         if prefix:
             for p in prefix:
                 await self.execute_suffix(p, "env_prefix")
-            await redis_client.set_case_var_load(self.redis_key, self.g_var)
+            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
             await redis_client.set_case_log_load(self.redis_key, self.log.logs, "env_prefix")
 
     async def execute_env_suffix(self, env_id: int):
@@ -96,7 +97,7 @@ class SuffixServices:
         if prefix:
             for p in prefix:
                 await self.execute_suffix(p, "env_suffix")
-            await redis_client.set_case_var_load(self.redis_key, self.g_var)
+            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
             await redis_client.set_case_log_load(self.redis_key, self.log.logs, "env_suffix")
 
     async def execute_case_prefix(self, case_id: int):
@@ -104,7 +105,7 @@ class SuffixServices:
         if prefix:
             for p in prefix:
                 await self.execute_suffix(p, "case_prefix")
-            await redis_client.set_case_var_load(self.redis_key, self.g_var)
+            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
             await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_prefix")
 
     async def execute_case_suffix(self, case_id: int):
@@ -112,8 +113,8 @@ class SuffixServices:
         if prefix:
             for p in prefix:
                 await self.execute_suffix(p, "case_prefix")
-            await redis_client.set_case_var_load(self.redis_key, self.g_var)
-            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_prefix")
+            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
+            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_suffix")
 
     @staticmethod
     async def add_suffix(data: AddSuffixSchema, create_user: int):

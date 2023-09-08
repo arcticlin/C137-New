@@ -182,6 +182,7 @@ class ApiCaseServices:
 
         # 执行环境断言
         env_result = await NewAssertServices(trace_id).assert_from_env(data.env_id, response)
+        # 执行用例断言
         temp_result = await NewAssertServices(trace_id).assert_from_temp(data.assert_info, response)
         response["assert_result"] = {
             "env_assert": env_result,
@@ -189,6 +190,10 @@ class ApiCaseServices:
             "final_result": False not in [e["result"] for e in env_result]
             and False not in [e["result"] for e in temp_result],
         }
+        # 提取参数
+        extract_result = await ExtractServices(trace_id).extract(response, temp_extract=data.extract_info)
+        response["extract_result"] = extract_result
+
         return response
         # 执行环境前置
         # await SuffixServices(trace_id).execute_env_prefix(data.env_id)

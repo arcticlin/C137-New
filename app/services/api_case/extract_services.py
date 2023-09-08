@@ -15,6 +15,7 @@ from app.exceptions.commom_exception import CustomException
 from app.handler.async_http_client import AsyncRequest
 from app.handler.redis_handler import redis_client
 from app.handler.response_handler import C137Response
+from app.schemas.api_case.api_request_temp import TempRequestExtract
 from app.utils.case_log import CaseLog
 
 
@@ -42,11 +43,19 @@ class ExtractServices:
     @staticmethod
     async def extract_with_jsonpath(src: dict, exp: str, out_name: str, index: int = None):
         result = jsonpath.jsonpath(src, exp)
+        print(out_name, index, bool(index is not None), result)
         if result and index is not None:
+            print("1asda", result)
+            print(result[0])
             return {out_name: result[index]}
         return {out_name: result if result else []}
 
-    async def extract(self, case_id: int, response: dict):
+    async def extract(
+        self,
+        response: dict,
+        temp_extract: list[TempRequestExtract] = None,
+        case_id: int = None,
+    ):
         (
             status_code,
             response_header,
@@ -54,13 +63,19 @@ class ExtractServices:
             response_body,
             response_elapsed,
         ) = AsyncRequest.collect_response_for_test(response)
-        extract_detail = await ExtractCrud.query_case_extract(case_id)
+        if case_id != None:
+            extract_detail = await ExtractCrud.query_case_extract(case_id)
+        else:
+            extract_detail = temp_extract
+        temp_result = []
+
         for e in extract_detail:
+            print(e)
             if e.enable == 0:
-                return
-            if e.extract_from == "1":
+                continue
+            if e.extract_from == 1:
                 src = response_header
-            elif e.extract_from == "2":
+            elif e.extract_from == 2:
                 src = response_body
             else:
                 src = response_cookie
@@ -71,8 +86,23 @@ class ExtractServices:
                     src, e.extract_exp, e.extract_out_name, e.extract_index
                 )
             if result:
+                temp_result.append(
+                    {
+                        "name": e.extract_out_name,
+                        "extract_key": e.extract_out_name,
+                        "extract_result": result[e.extract_out_name],
+                    }
+                )
                 self.log.log_append(f"提取响应生成变量: {e.extract_out_name}", "extract")
             else:
+                temp_result.append(
+                    {
+                        "name": e.extract_out_name,
+                        "extract_key": e.extract_out_name,
+                        "extract_value": None,
+                    }
+                )
                 self.log.log_append(f"提取响应生成变量失败: {e.extract_out_name}", "extract")
             await redis_client.set_case_var_load(self.trace_id, result)
             await redis_client.set_case_log_load(self.trace_id, self.log.logs, "extract")
+        return temp_result

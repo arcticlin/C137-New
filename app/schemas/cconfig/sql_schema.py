@@ -42,8 +42,9 @@ class ExecuteSqlRequest(BaseModel):
 
 class ExecuteSqlDebugRequest(BaseModel):
     sql_id: int = Field(..., description="SQL配置ID")
-    text: str = Field(..., description="SQL语句")
+    run_command: str = Field(..., description="SQL语句")
     run_out_name: str = Field(None, description="出参")
+    fetch_one: bool = Field(True, description="是否只取一条")
 
 
 class SqlDetailShow(BaseModel):

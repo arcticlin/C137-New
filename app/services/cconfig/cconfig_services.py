@@ -169,16 +169,14 @@ class CommonConfigServices:
         )
 
     @staticmethod
-    async def execute_sql(sql_id: int, text: str, run_out_name: str = None, is_first: bool = False):
+    async def execute_sql(sql_id: int, run_command: str, run_out_name: str = None, is_first: bool = False):
         check = await CommonConfigCrud.query_sql_detail(sql_id)
         if not check:
             raise CustomException(SQL_NOT_EXISTS)
         c = await DataBaseConnect.mysql_connection(
             host=check.host, port=check.port, username=check.db_user, password=check.db_password, db=check.db_name
         )
-        result = await DataBaseConnect.mysql_execute(c, text, is_first=is_first)
-        if is_first:
-            result = result[0]
+        result = await DataBaseConnect.mysql_execute(c, run_command, is_first=is_first)
         if run_out_name:
             return {run_out_name: result}
         return result

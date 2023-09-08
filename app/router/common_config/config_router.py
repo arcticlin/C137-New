@@ -125,7 +125,7 @@ async def execute_sql(data: ExecuteSqlRequest):
 
 @cconfig.post("/sql/execute/debug", summary="执行sql")
 async def execute_sql(data: ExecuteSqlDebugRequest):
-    result = await CommonConfigServices.execute_sql(data.sql_id, data.text, data.run_out_name)
+    result = await CommonConfigServices.execute_sql(data.sql_id, data.run_command, data.run_out_name, data.fetch_one)
     return C137Response.success(data=result)
 
 

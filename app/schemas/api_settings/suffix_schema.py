@@ -41,6 +41,7 @@ class AddSuffixSchema(BaseModel):
     run_delay: int = Field(None, description="延迟时间")
     run_command: str = Field(None, description="执行命令")
     run_out_name: str = Field(None, description="出参")
+    fetch_one: bool = Field(None, description="是否只取一条数据")
 
     @root_validator(pre=True)
     def check_ids(cls, values):
