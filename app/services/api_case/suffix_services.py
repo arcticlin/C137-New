@@ -5,6 +5,8 @@ Author: bot
 Created: 2023/8/8
 Description: 执行Suffix
 """
+from typing import Union
+
 from app.crud.api_case.suffix_crud import SuffixCrud
 import asyncio
 
@@ -16,6 +18,7 @@ from app.handler.response_handler import C137Response
 from app.handler.script_handler import ScriptHandler
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.handler.redis_handler import redis_client
+from app.schemas.api_case.api_request_temp import TempRequestSuffix
 from app.schemas.api_settings.suffix_schema import AddSuffixSchema, DeleteSuffixSchema, EnableSuffixSchema
 from app.utils.case_log import CaseLog
 
@@ -68,7 +71,7 @@ class SuffixServices:
         await redis_client.set_case_var_load(self.redis_key, self.g_var)
         return result
 
-    async def execute_suffix(self, model: SuffixModel, log_type: str):
+    async def execute_suffix(self, model: Union[SuffixModel, TempRequestSuffix], log_type: str):
         is_end = model.suffix_type == 2
 
         if model.enable:
@@ -113,6 +116,13 @@ class SuffixServices:
         if prefix:
             for p in prefix:
                 await self.execute_suffix(p, "case_prefix")
+            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
+            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_suffix")
+
+    async def execute_case_temp(self, tempPrefix: TempRequestSuffix):
+
+            for p in tempPrefix:
+                await self.execute_suffix(p, "temp_prefix")
             # await redis_client.set_case_var_load(self.redis_key, self.g_var)
             await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_suffix")
 

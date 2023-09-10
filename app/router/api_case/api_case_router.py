@@ -22,12 +22,17 @@ from app.services.api_case.suffix_services import SuffixServices
 case = APIRouter()
 
 
-@case.get("/{case_id}", summary="查询用例详情", response_model=ApiCaseInfoResponse)
+# @case.get("/{case_id}", summary="查询用例详情", response_model=ApiCaseInfoResponse)
+# async def get_api_case(case_id: int):
+#     result = await ApiCaseServices.query_case_detail(case_id)
+#
+#     return C137Response.success(data=result)
+
+@case.get("/{case_id}", summary="查询用例详情")
 async def get_api_case(case_id: int):
-    result = await ApiCaseServices.query_case_detail(case_id)
+    result = await ApiCaseServices.query_case_detail_form(case_id)
 
     return C137Response.success(data=result)
-
 
 @case.post("/add", summary="添加用例")
 async def add_api_case(data: AddApiCaseRequest, user=Depends(Permission())):
