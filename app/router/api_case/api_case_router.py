@@ -8,6 +8,7 @@ Description:
 
 from fastapi import APIRouter, Depends
 from app.handler.response_handler import C137Response
+from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
 from app.schemas.api_case.api_path_schema import *
 from app.schemas.api_case.api_headers_schema import *
 from app.schemas.api_case.api_case_schema import *
@@ -28,15 +29,23 @@ case = APIRouter()
 #
 #     return C137Response.success(data=result)
 
+
 @case.get("/{case_id}", summary="查询用例详情")
 async def get_api_case(case_id: int):
     result = await ApiCaseServices.query_case_detail_form(case_id)
 
     return C137Response.success(data=result)
 
+
 @case.post("/add", summary="添加用例")
 async def add_api_case(data: AddApiCaseRequest, user=Depends(Permission())):
     pass
+
+
+@case.post("/add_form", summary="添加用例")
+async def add_api_case_form(form: SchemaRequestAddCase, user=Depends(Permission())):
+    await ApiCaseServices.add_case_form(form, user["user_id"])
+    return C137Response.success(message="添加成功")
 
 
 @case.delete("/delete", summary="删除用例")

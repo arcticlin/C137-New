@@ -15,6 +15,7 @@ from app.crud.api_case.suffix_crud import SuffixCrud
 from app.exceptions.commom_exception import CustomException
 from app.exceptions.case_exp import *
 from app.handler.response_handler import C137Response
+from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
 from app.schemas.api_case.api_request_temp import TempRequestApi
 from app.services.api_case.new_assert_services import NewAssertServices
 from app.utils.new_logger import logger
@@ -48,15 +49,17 @@ class ApiCaseServices:
         case_detail, case_path, case_header = await ApiCaseCrud.query_case_detail(case_id)
         if case_detail is None:
             raise CustomException(CASE_NOT_EXISTS)
-        temp["case_url"] = {"url": case_detail.url, "method": case_detail.method}
-        temp["case_basic"] = {
+        temp["case_id"] = case_id
+        temp["directory_id"] = case_detail.directory_id
+        temp["url_info"] = {"url": case_detail.url, "method": case_detail.method}
+        temp["basic_info"] = {
             "name": case_detail.name,
             "request_type": case_detail.request_type,
             "directory_id": case_detail.directory_id,
             "tag": case_detail.tag,
             "status": case_detail.status,
             "priority": case_detail.priority,
-            "case_type": case_detail.case_type
+            "case_type": case_detail.case_type,
         }
         case_detail = C137Response.orm_to_dict(case_detail, "deleted_at")
         case_path = C137Response.orm_with_list(
@@ -98,18 +101,26 @@ class ApiCaseServices:
                 handle_value = json.loads(handle_value)
             x["value"] = handle_value
             header_list.append(x)
-        temp["path"] = path_list
-        temp["query"] = params_list
-        temp["headers"] = header_list
+        temp["path_info"] = path_list
+        temp["query_info"] = params_list
+        temp["header_info"] = header_list
         prefix_info = await SuffixCrud.get_prefix(case_id=case_id)
         suffix_info = await SuffixCrud.get_suffix(case_id=case_id)
         assert_info = await AssertCurd.query_assert_detail(case_id=case_id)
         extract_info = await ExtractCrud.query_case_extract(case_id=case_id)
         # temp["case_info"] = case_detail
-        temp["prefix_info"] = C137Response.orm_with_list(prefix_info, "deleted_at", "case_id", "create_user", "update_user", "created_at", "updated_at")
-        temp["suffix_info"] = C137Response.orm_with_list(suffix_info, "deleted_at", "case_id", "create_user", "update_user", "created_at", "updated_at")
-        temp["assert_info"] = C137Response.orm_with_list(assert_info, "deleted_at", "case_id", "create_user", "update_user", "created_at", "updated_at")
-        temp["extract_info"] = C137Response.orm_with_list(extract_info, "deleted_at", "case_id", "create_user", "update_user", "created_at", "updated_at")
+        temp["prefix_info"] = C137Response.orm_with_list(
+            prefix_info, "deleted_at", "case_id", "create_user", "update_user", "created_at", "updated_at"
+        )
+        temp["suffix_info"] = C137Response.orm_with_list(
+            suffix_info, "deleted_at", "case_id", "create_user", "update_user", "created_at", "updated_at"
+        )
+        temp["assert_info"] = C137Response.orm_with_list(
+            assert_info, "deleted_at", "case_id", "create_user", "update_user", "created_at", "updated_at"
+        )
+        temp["extract_info"] = C137Response.orm_with_list(
+            extract_info, "deleted_at", "case_id", "create_user", "update_user", "created_at", "updated_at"
+        )
         return temp
 
     @staticmethod
@@ -167,6 +178,7 @@ class ApiCaseServices:
         temp["prefix_info"] = C137Response.orm_with_list(prefix_info)
         temp["suffix_info"] = C137Response.orm_with_list(suffix_info)
         temp["assert_info"] = C137Response.orm_with_list(assert_info)
+
         return temp
 
     @staticmethod
@@ -271,3 +283,11 @@ class ApiCaseServices:
         return response
         # 执行环境前置
         # await SuffixServices(trace_id).execute_env_prefix(data.env_id)
+
+    @staticmethod
+    async def add_case_form(form: SchemaRequestAddCase, creator: int):
+        repeat = await ApiCaseCrud.check_case_exists(form.directory_id, form.basic_info.name, form.url_info.method)
+        if repeat:
+            raise CustomException(CASE_EXISTS)
+        case_id = await ApiCaseCrud.add_case_form(form, creator)
+        return case_id

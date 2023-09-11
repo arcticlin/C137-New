@@ -62,3 +62,24 @@ class DeleteSuffixSchema(BaseModel):
 class EnableSuffixSchema(BaseModel):
     suffix_id: int = Field(..., description="前/后置ID")
     enable: bool = Field(..., description="是否启用")
+
+
+class SchemaCaseSuffix(BaseModel):
+    suffix_id: int = Field(None, description="前/后置ID")
+    suffix_type: int
+    name: str
+    enable: bool
+    sort: int
+    execute_type: int
+    case_id: int = Field(None, description="用例id")
+    env_id: int = Field(None, description="环境id")
+    run_each_case: bool = Field(None, description="是否每个用例都运行")
+    run_out_name: str = Field(None, description="出参")
+    description: str = Field(None, description="描述")
+    script_id: int = Field(None, description="脚本id")
+    sql_id: int = Field(None, description="sql id")
+    redis_id: int = Field(None, description="redis id")
+    run_case_id: int = Field(None, description="执行用例id")
+    run_delay: int = Field(None, description="延迟时间")
+    run_command: str = Field(None, description="执行命令")
+    fetch_one: bool = Field(None, description="是否只取一条数据")

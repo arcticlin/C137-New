@@ -43,15 +43,20 @@ class DatabaseBulk:
             setattr(model_instance, "update_user", operator)
 
     @staticmethod
-    async def bulk_add_data(session, model, data: List[BaseModel], **addition_data):
+    async def bulk_add_data(session, model, data: List[BaseModel], *ignore_key, **addition_data):
         """批量添加数据"""
         serialized_data_list = []
         for item in data:
             serialized_data = item.dict()
+            if ignore_key:
+                for key in ignore_key:
+                    if key in serialized_data:
+                        serialized_data.pop(key)
             if addition_data:
                 for key, value in addition_data.items():
                     serialized_data[key] = (
                         json.dumps(value, ensure_ascii=False) if isinstance(value, (list, dict)) else value
                     )
                 serialized_data_list.append(serialized_data)
-        await session.execute(model.__table__.insert(), serialized_data_list)
+        if serialized_data_list:
+            await session.execute(model.__table__.insert(), serialized_data_list)

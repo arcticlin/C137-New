@@ -8,10 +8,12 @@ Description:
 from datetime import datetime
 from typing import List, Any, Sequence
 
+from app.handler.db_bulk import DatabaseBulk
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.core.db_connector import async_session
 from sqlalchemy import text, select, and_, or_, Row, RowMapping, func
 from app.exceptions.commom_exception import CustomException
+from app.schemas.api_settings.suffix_schema import SchemaCaseSuffix
 
 
 class SuffixCrud:
@@ -152,3 +154,33 @@ class SuffixCrud:
                 result.enable = enable
                 result.update_user = operator
                 await session.flush()
+
+    @staticmethod
+    async def add_suffix_form(form: list[SchemaCaseSuffix], creator: int, case_id: int = None, env_id: int = None):
+        async with async_session() as session:
+            async with session.begin():
+                await DatabaseBulk.bulk_add_data(
+                    session,
+                    SuffixModel,
+                    form,
+                    create_user=creator,
+                    case_id=case_id,
+                    env_id=env_id,
+                    update_user=creator,
+                )
+                await session.flush()
+
+    @staticmethod
+    async def add_suffix_form_with_session(
+        session, form: list[SchemaCaseSuffix], creator: int, case_id: int = None, env_id: int = None
+    ):
+        await DatabaseBulk.bulk_add_data(
+            session,
+            SuffixModel,
+            form,
+            create_user=creator,
+            case_id=case_id,
+            env_id=env_id,
+            update_user=creator,
+        )
+        await session.flush()

@@ -7,7 +7,17 @@ Description:
 """
 from datetime import datetime
 
+from pymysql import OperationalError
+from sqlalchemy.dialects.mysql import pymysql
+
 from app.core.db_connector import async_session
+from app.crud.api_case.api_headers_crud import ApiHeadersCrud
+from app.crud.api_case.api_path_crud import ApiPathCrud
+from app.crud.api_case.assert_crud import AssertCurd
+from app.crud.api_case.extract_crud import ExtractCrud
+from app.crud.api_case.suffix_crud import SuffixCrud
+from app.exceptions.commom_exception import CustomException
+from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
 from app.utils.new_logger import logger
 from app.models.apicase.api_case import ApiCaseModel
 from app.models.apicase.api_path import ApiPathModel
@@ -182,3 +192,43 @@ class ApiCaseCrud:
             )
             result = await session.execute(smtm, {"env_id": env_id})
             return result.scalars().first()
+
+    @staticmethod
+    async def add_case_form(form: SchemaRequestAddCase, creator: int):
+        # 检查目录用例名是否存在
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    case = ApiCaseModel(
+                        name=form.basic_info.name,
+                        url=form.url_info.url,
+                        method=form.url_info.method,
+                        directory_id=form.directory_id,
+                        create_user=creator,
+                        status=form.basic_info.status,
+                        priority=form.basic_info.priority,
+                        case_type=form.basic_info.case_type,
+                        body_type=form.body_info.body_type,
+                        body=form.body_info.body,
+                        request_type=form.basic_info.request_type,
+                    )
+                    session.add(case)
+                    await session.flush()
+                    session.expunge(case)
+                    case_id = case.case_id
+                    await ApiPathCrud.add_params_form_with_session(session, form.path_info, creator, case_id=case_id)
+                    await ApiPathCrud.add_params_form_with_session(session, form.query_info, creator, case_id=case_id)
+                    await ApiHeadersCrud.add_header_form_with_session(
+                        session, form.header_info, creator, case_id=case_id
+                    )
+                    await SuffixCrud.add_suffix_form_with_session(session, form.prefix_info, creator, case_id=case_id)
+                    await SuffixCrud.add_suffix_form_with_session(session, form.suffix_info, creator, case_id=case_id)
+                    await AssertCurd.add_assert_form_with_session(session, form.assert_info, creator, case_id=case_id)
+                    await ExtractCrud.add_extract_form_with_session(
+                        session, form.extract_info, creator, case_id=case_id
+                    )
+                    await session.commit()
+                except Exception as e:
+                    await session.rollback()
+                    raise CustomException((500, 50001, f"数据库操作失败, {e}"))
+            return case_id
