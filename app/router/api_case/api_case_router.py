@@ -8,7 +8,7 @@ Description:
 
 from fastapi import APIRouter, Depends
 from app.handler.response_handler import C137Response
-from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
+from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase, SchemaRequestDebugCase
 from app.schemas.api_case.api_path_schema import *
 from app.schemas.api_case.api_headers_schema import *
 from app.schemas.api_case.api_case_schema import *
@@ -37,15 +37,10 @@ async def get_api_case(case_id: int):
     return C137Response.success(data=result)
 
 
-@case.post("/add", summary="添加用例")
-async def add_api_case(data: AddApiCaseRequest, user=Depends(Permission())):
-    pass
-
-
 @case.post("/add_form", summary="添加用例")
 async def add_api_case_form(form: SchemaRequestAddCase, user=Depends(Permission())):
-    await ApiCaseServices.add_case_form(form, user["user_id"])
-    return C137Response.success(message="添加成功")
+    case_id = await ApiCaseServices.add_case_form(form, user["user_id"])
+    return C137Response.success(message="添加成功", data={"case_id": case_id})
 
 
 @case.delete("/delete", summary="删除用例")
@@ -59,15 +54,8 @@ async def update_api_case(data: UpdateApiCaseRequest, user=Depends(Permission())
     pass
 
 
-@case.post("/debug", summary="调试用例")
-async def debug_api_case(data: DebugApiCaseRequest):
-    random_uid = f"c:runner_{str(uuid.uuid4())}"
-    result = await ApiCaseServices.debug_case_execute(data.env_id, data.case_id, random_uid)
-    return C137Response.success(data=result, headers={"trace_id": random_uid})
-
-
 @case.post("/request", summary="调试请求用例")
-async def debug_temp_case(data: TempRequestApi):
+async def debug_temp_case(data: SchemaRequestDebugCase, user=Depends(Permission())):
     random_uid = f"c:runner_temp_request"
-    result = await ApiCaseServices.temp_request(data, random_uid)
+    result = await ApiCaseServices.temp_request(data, user["user_id"])
     return C137Response.success(data=result, headers={"trace_id": random_uid})

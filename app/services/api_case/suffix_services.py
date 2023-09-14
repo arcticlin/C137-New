@@ -71,13 +71,20 @@ class SuffixServices:
         await redis_client.set_case_var_load(self.redis_key, self.g_var)
         return result
 
+    async def execute_script_temp(self, script_info: TempRequestSuffix):
+        print("here2", script_info)
+        result = await ScriptHandler.python_executor(script_info.run_out_name, script_info.run_command)
+        self.g_var[script_info.run_out_name] = result[script_info.run_out_name]
+        await redis_client.set_case_var_load(self.redis_key, self.g_var)
+        return result
+
     async def execute_suffix(self, model: Union[SuffixModel, TempRequestSuffix], log_type: str):
         is_end = model.suffix_type == 2
 
         if model.enable:
             if model.execute_type == 1:
                 self.log.log_append(f"执行脚本: {model.script_id}", log_type)
-                await self.execute_script(model.script_id)
+                await self.execute_script_temp(model)
             elif model.execute_type == 2:
                 self.log.log_append(f"执行sql: {model.sql_id} -> {model.run_command}", log_type)
                 await self.execute_sql(model.sql_id, model.run_command)
@@ -119,12 +126,11 @@ class SuffixServices:
             # await redis_client.set_case_var_load(self.redis_key, self.g_var)
             await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_suffix")
 
-    async def execute_case_temp(self, tempPrefix: TempRequestSuffix):
-
-            for p in tempPrefix:
-                await self.execute_suffix(p, "temp_prefix")
-            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
-            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_suffix")
+    async def execute_case_temp(self, tempPrefix: list[TempRequestSuffix]):
+        for p in tempPrefix:
+            await self.execute_suffix(p, "case_prefix")
+        # await redis_client.set_case_var_load(self.redis_key, self.g_var)
+        await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_suffix")
 
     @staticmethod
     async def add_suffix(data: AddSuffixSchema, create_user: int):

@@ -267,7 +267,7 @@ class CommonConfigCrud:
             return smtm.scalars().first()
 
     @staticmethod
-    async def query_script_detail(script_id: int):
+    async def query_script_detail(script_id: int) -> ScriptModel:
         async with async_session() as session:
             smtm = await session.execute(
                 select(ScriptModel).where(and_(ScriptModel.script_id == script_id, ScriptModel.deleted_at == 0))
