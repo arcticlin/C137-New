@@ -7,8 +7,11 @@ Description:
 """
 
 from fastapi import APIRouter, Depends
+
+
 from app.handler.response_handler import C137Response
 from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase, SchemaRequestDebugCase
+from app.schemas.api_case.api_case_schemas import OrmFullCase
 from app.schemas.api_case.api_path_schema import *
 from app.schemas.api_case.api_headers_schema import *
 from app.schemas.api_case.api_case_schema import *
@@ -18,7 +21,6 @@ from app.schemas.api_case.api_request_temp import TempRequestApi
 from app.services.api_case.api_case_services import ApiCaseServices
 import uuid
 
-from app.services.api_case.suffix_services import SuffixServices
 
 case = APIRouter()
 
@@ -32,8 +34,7 @@ case = APIRouter()
 
 @case.get("/{case_id}", summary="查询用例详情")
 async def get_api_case(case_id: int):
-    result = await ApiCaseServices.query_case_detail_form(case_id)
-
+    result = await ApiCaseServices.query_case_details(case_id)
     return C137Response.success(data=result)
 
 
@@ -50,12 +51,13 @@ async def delete_api_case(data: DeleteApiCaseRequest, user=Depends(Permission())
 
 
 @case.put("/update", summary="更新用例")
-async def update_api_case(data: UpdateApiCaseRequest, user=Depends(Permission())):
-    pass
+async def update_api_case():
+    await ApiCaseServices.query_case_details(2)
 
 
 @case.post("/request", summary="调试请求用例")
-async def debug_temp_case(data: SchemaRequestDebugCase, user=Depends(Permission())):
+async def debug_temp_case(data: OrmFullCase, user=Depends(Permission())):
     random_uid = f"c:runner_temp_request"
+    print("1")
     result = await ApiCaseServices.temp_request(data, user["user_id"])
     return C137Response.success(data=result, headers={"trace_id": random_uid})

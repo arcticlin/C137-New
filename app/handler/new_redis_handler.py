@@ -52,10 +52,13 @@ class RedisCli(Redis):
         except Exception as e:
             return {}
 
-    async def set_env_var(self, env_id: int, user_id: int, value: dict):
+    async def set_env_var(self, env_id: int, user_id: int, value: dict, is_update: bool = True):
         """
         设置环境变量,存储格式: env_var_{env_id}_{user_id}, 保存3天
         """
+        if is_update:
+            temp = await self.get_kv(f"e:e_{env_id}_{user_id}")
+            value = {**temp, **value}
         await self.set_kv(f"e:e_{env_id}_{user_id}", value, expired=600 * 60 * 24 * 3)
 
     async def get_env_var(self, env_id: int, user_id: int):
@@ -64,12 +67,15 @@ class RedisCli(Redis):
         """
         return await self.get_kv(f"e:e_{env_id}_{user_id}")
 
-    async def set_case_log(self, user_id: int, value: dict, case_id: int = None):
+    async def set_case_log(self, user_id: int, value: dict, case_id: int = None, is_update: bool = False):
         """
         设置用例变量,存储格式: c:c_{case_id}_{user_id}, 保存3天
         """
         if case_id is None:
             case_id = "temp"
+        if is_update:
+            temp = await self.get_kv(f"c:c_{case_id}_{user_id}")
+            value = {**temp, **value}
         await self.set_kv(f"c:c_{case_id}_{user_id}", value, expired=600 * 60 * 24 * 3)
 
     async def get_case_log(self, user_id: int, case_id: int = None):
@@ -80,19 +86,19 @@ class RedisCli(Redis):
             case_id = "temp"
         return await self.get_kv(f"c:c_{case_id}_{user_id}")
 
-    # async def init_case_log_body(self, user_id: int, case_id: int = None):
-    #     """初始化每次执行用例的数据"""
-    #     body = dict(
-    #         env_prefix=[],
-    #         case_prefix=[],
-    #         var_replace=[],
-    #         case_suffix=[],
-    #         env_suffix=[],
-    #         env_assert=[],
-    #         case_assert=[],
-    #         extract=[],
-    #     )
-    #     await self.set_case_var(user_id, body, case_id)
+    async def init_case_log_body(self, user_id: int, case_id: int = None):
+        """初始化每次执行用例的数据"""
+        body = dict(
+            env_prefix=[],
+            case_prefix=[],
+            var_replace=[],
+            case_suffix=[],
+            env_suffix=[],
+            env_assert=[],
+            case_assert=[],
+            extract=[],
+        )
+        await self.set_case_log(user_id, body, case_id)
 
 
 redis_client = RedisCli()

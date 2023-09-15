@@ -71,7 +71,7 @@ class SchemaRequestDebugCase(BaseModel):
     env_id: int = Field(None, title="环境id")
     directory_id: int = Field(None, title="环境目录")
     basic_info: SchemaCaseBaseInfo = Field(None, title="基础信息")
-    url_info: SchemaCaseUrl = Field(..., title="url信息")
+    url_info: SchemaCaseUrl = Field(None, title="url信息")
     body_info: SchemaCaseBody = Field(None, title="请求体信息")
     query_info: list[SchemaCaseParams] = Field([], title="请求参数")
     path_info: list[SchemaCaseParams] = Field([], title="路径参数")

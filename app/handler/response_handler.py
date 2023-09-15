@@ -78,3 +78,7 @@ class C137Response:
         model_dict = C137Response.orm_to_dict(obj)
         model_dict[addition_key_name] = user_name
         return model_dict
+
+    @staticmethod
+    def orm_to_pydantic(model, pydantic_model):
+        return pydantic_model(**C137Response.orm_to_dict(model))

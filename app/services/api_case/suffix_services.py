@@ -2,51 +2,66 @@
 """
 File: suffix_services.py
 Author: bot
-Created: 2023/8/8
-Description: 执行Suffix
+Created: 2023/9/14
+Description:
 """
-from typing import Union
+import asyncio
+from typing import List, Union
 
 from app.crud.api_case.suffix_crud import SuffixCrud
-import asyncio
-
 from app.crud.cconfig.cconfig_crud import CommonConfigCrud
-from app.exceptions.cconfig_exp import SQL_NOT_EXISTS, SCRIPT_NOT_EXISTS, SUFFIX_IS_EXISTS
+from app.exceptions.cconfig_exp import SQL_NOT_EXISTS
 from app.exceptions.commom_exception import CustomException
 from app.handler.db_handler import DataBaseConnect
-from app.handler.response_handler import C137Response
+from app.handler.new_redis_handler import redis_client
 from app.handler.script_handler import ScriptHandler
 from app.models.api_settings.suffix_settings import SuffixModel
-from app.handler.redis_handler import redis_client
-from app.schemas.api_case.api_request_temp import TempRequestSuffix
-from app.schemas.api_settings.suffix_schema import AddSuffixSchema, DeleteSuffixSchema, EnableSuffixSchema
-from app.utils.case_log import CaseLog
+from app.schemas.api_case.api_case_schemas import OrmFullCase, Orm2CaseSuffix
+from app.schemas.api_settings.suffix_schema import SchemaCaseSuffix
+from app.utils.time_utils import TimeUtils
 
 
-class SuffixServices:
-    def __init__(self, trace_id: str):
-        self.trace_id = trace_id
-        self.log = CaseLog()
-        self.g_var = {}
-        self.redis_key = trace_id
-
-    def record_log(self, redis_key: str):
-        pass
+class NewSuffixServices:
+    def __init__(self, env_id: int, user_id: int, case_id: int = None):
+        self.env_id = env_id
+        self.case_id = case_id
+        self.user_id = user_id
+        self.g_var = dict()
+        self.log = dict(
+            env_prefix=[],
+            case_prefix=[],
+            case_suffix=[],
+            env_suffix=[],
+        )
 
     @staticmethod
-    async def get_prefix(case_id: int = None, env_id: int = None):
-        prefix_info = await SuffixCrud.get_prefix(env_id, case_id)
+    async def get_prefix(
+        env_id: int = None, case_id: int = None, temp: List[SchemaCaseSuffix] = None
+    ) -> List[Union[SuffixModel, SchemaCaseSuffix]]:
+        if env_id is not None or case_id is not None:
+            prefix_info = await SuffixCrud.get_prefix(env_id, case_id)
+        else:
+            prefix_info = temp
         return prefix_info
 
     @staticmethod
-    async def get_suffix(case_id: int = None, env_id: int = None):
-        suffix_info = await SuffixCrud.get_suffix(env_id, case_id)
+    async def get_suffix(
+        env_id: int = None, case_id: int = None, temp: List[SchemaCaseSuffix] = None
+    ) -> List[Union[SuffixModel, SchemaCaseSuffix]]:
+        if env_id is not None or case_id is not None:
+            suffix_info = await SuffixCrud.get_suffix(env_id, case_id)
+        else:
+            suffix_info = temp
         return suffix_info
 
-    async def execute_delay(self, delay: int):
+    async def execute_method_delay(self, delay: int, log_type: str):
+        """执行延迟"""
         await asyncio.sleep(delay / 1000)
+        t = TimeUtils.get_current_time_without_year()
+        self.log[log_type].append(f"[{t}]: [延迟执行] -> {delay}ms")
 
-    async def execute_sql(self, sql_id: int, text: str):
+    async def execute_method_sql(self, sql_id: int, run_command: str, log_type: str, run_out_name: str = None):
+        """执行SQL语句"""
         sql_info = await CommonConfigCrud.query_sql_detail(sql_id)
         if not sql_info:
             raise CustomException(SQL_NOT_EXISTS)
@@ -58,99 +73,56 @@ class SuffixServices:
             db=sql_info.db_name,
         )
         async with c.cursor() as cursor:
-            await cursor.execute(text)
+            t = TimeUtils.get_current_time_without_year()
+            await cursor.execute(run_command)
             result = await cursor.fetchall()
+            self.log[log_type].append(f"[{t}]: [SQL] -> {run_command}")
+            if run_out_name:
+                self.g_var[run_out_name] = result[run_out_name]
             return result
 
-    async def execute_script(self, script_id: int):
-        script_info = await CommonConfigCrud.query_script_detail(script_id)
-        if not script_info:
-            raise CustomException(SCRIPT_NOT_EXISTS)
-        result = await ScriptHandler.python_executor(script_info.var_key, script_info.var_script)
-        self.g_var[script_info.var_key] = result[script_info.var_key]
-        await redis_client.set_case_var_load(self.redis_key, self.g_var)
+    async def execute_method_script(self, log_type: str, script: SchemaCaseSuffix = None):
+        print()
+        if script.script_id is not None:
+            script_info = await CommonConfigCrud.query_script_detail(script_id=script.script_id)
+            run_out_name, run_command = script_info.var_key, script_info.var_script
+        else:
+            run_out_name, run_command = script.run_out_name, script.run_command
+        result = await ScriptHandler.python_executor(run_out_name, run_command)
+        t = TimeUtils.get_current_time_without_year()
+        self.log[log_type].append(f"[{t}]: [Python] -> 设置{run_out_name} == {result[run_out_name]}")
+        self.g_var[run_out_name] = result[run_out_name]
         return result
 
-    async def execute_script_temp(self, script_info: TempRequestSuffix):
-        print("here2", script_info)
-        result = await ScriptHandler.python_executor(script_info.run_out_name, script_info.run_command)
-        self.g_var[script_info.run_out_name] = result[script_info.run_out_name]
-        await redis_client.set_case_var_load(self.redis_key, self.g_var)
-        return result
-
-    async def execute_suffix(self, model: Union[SuffixModel, TempRequestSuffix], log_type: str):
-        is_end = model.suffix_type == 2
-
+    async def _execute(self, model: Union[SuffixModel, SchemaCaseSuffix], log_type: str):
         if model.enable:
             if model.execute_type == 1:
-                self.log.log_append(f"执行脚本: {model.script_id}", log_type)
-                await self.execute_script_temp(model)
+                await self.execute_method_script(log_type=log_type, script=model)
             elif model.execute_type == 2:
-                self.log.log_append(f"执行sql: {model.sql_id} -> {model.run_command}", log_type)
-                await self.execute_sql(model.sql_id, model.run_command)
-                # elif item.suffix_type == 3:
-                #     await SuffixServices.execute_redis(item.suffix_content)
+                await self.execute_method_sql(model.sql_id, model.run_command, log_type, model.run_out_name)
+            elif model.execute_type == 3:
+                pass
             elif model.execute_type == 4:
-                self.log.log_append(f"执行延迟: 延迟{model.run_delay}ms执行", log_type)
-                await self.execute_delay(model.run_delay)
+                await self.execute_method_delay(model.run_delay, log_type)
+            else:
+                await self.execute_method_script(log_type, model.script_id)
+            await redis_client.set_case_log(user_id=self.user_id, value=self.log, case_id=self.case_id, is_update=True)
+            await redis_client.set_env_var(self.env_id, self.user_id, self.g_var)
 
-    async def execute_env_prefix(self, env_id: int):
-        prefix = await self.get_prefix(env_id=env_id)
-        if prefix:
-            for p in prefix:
-                await self.execute_suffix(p, "env_prefix")
-            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
-            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "env_prefix")
+    async def execute_env_prefix(self, is_prefix: bool):
+        if is_prefix:
+            collect_prefix = await self.get_prefix(env_id=self.env_id)
+        else:
+            collect_prefix = await self.get_suffix(env_id=self.env_id)
 
-    async def execute_env_suffix(self, env_id: int):
-        prefix = await self.get_suffix(env_id=env_id)
-        if prefix:
-            for p in prefix:
-                await self.execute_suffix(p, "env_suffix")
-            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
-            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "env_suffix")
+        for p in collect_prefix:
+            await self._execute(model=p, log_type="env_prefix" if is_prefix else "env_suffix")
 
-    async def execute_case_prefix(self, case_id: int):
-        prefix = await self.get_prefix(case_id=case_id)
-        if prefix:
-            for p in prefix:
-                await self.execute_suffix(p, "case_prefix")
-            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
-            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_prefix")
+    async def execute_case_prefix(self, is_prefix: bool, temp_prefix: List[Orm2CaseSuffix] = None):
+        if is_prefix:
+            collect_prefix = await self.get_prefix(case_id=self.case_id, temp=temp_prefix)
+        else:
+            collect_prefix = await self.get_suffix(case_id=self.case_id, temp=temp_prefix)
 
-    async def execute_case_suffix(self, case_id: int):
-        prefix = await self.get_suffix(case_id=case_id)
-        if prefix:
-            for p in prefix:
-                await self.execute_suffix(p, "case_prefix")
-            # await redis_client.set_case_var_load(self.redis_key, self.g_var)
-            await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_suffix")
-
-    async def execute_case_temp(self, tempPrefix: list[TempRequestSuffix]):
-        for p in tempPrefix:
-            await self.execute_suffix(p, "case_prefix")
-        # await redis_client.set_case_var_load(self.redis_key, self.g_var)
-        await redis_client.set_case_log_load(self.redis_key, self.log.logs, "case_suffix")
-
-    @staticmethod
-    async def add_suffix(data: AddSuffixSchema, create_user: int):
-        check = await SuffixCrud.query_suffix_name_exists(data.suffix_type, data.name, data.env_id, data.case_id)
-        if check:
-            raise CustomException(SUFFIX_IS_EXISTS)
-        if data.case_id and data.run_each_case is not None:
-            data.run_each_case = None
-        await SuffixCrud.add_suffix(create_user, **data.dict())
-
-    @staticmethod
-    async def delete_suffix(data: DeleteSuffixSchema, operator: int):
-        await SuffixCrud.delete_suffix(
-            suffix_id=data.suffix_id,
-            suffix_type=data.suffix_type,
-            operator=operator,
-            case_id=data.case_id,
-            env_id=data.env_id,
-        )
-
-    @staticmethod
-    async def enable_suffix(data: EnableSuffixSchema, operator: int):
-        await SuffixCrud.enable_suffix(suffix_id=data.suffix_id, enable=data.enable, operator=operator)
+        for p in collect_prefix:
+            await self._execute(model=p, log_type="case_prefix" if is_prefix else "case_suffix")

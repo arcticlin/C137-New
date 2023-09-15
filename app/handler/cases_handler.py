@@ -8,21 +8,18 @@ Description:
 import json
 from typing import List, Union
 import re
-
-from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.handler.new_redis_handler import redis_client
-from app.schemas.api_case.api_case_schema_new import SchemaRequestDebugCase
-
-# from app.handler.redis_handler import redis_client
-from app.schemas.api_case.api_request_temp import TempRequestApi
-from app.utils.case_log import CaseLog
+from app.schemas.api_case.api_case_schemas import OrmFullCase
 from app.handler.async_http_client import AsyncRequest
+from app.utils.time_utils import TimeUtils
 
 
 class CaseHandler:
-    def __init__(self, trace_id: str):
-        self.trace_id = trace_id
-        self.log = CaseLog()
+    def __init__(self, env_id: int, user_id: int = None, case_id: int = None):
+        self.env_id = env_id
+        self.user_id = user_id
+        self.caer_id = case_id
+        self.log = dict(var_replace=[])
 
     @staticmethod
     def set_url_by_path(url: str, path: List[dict]):
@@ -70,7 +67,7 @@ class CaseHandler:
         """
         获取变量
         """
-        obj = await redis_client.get_kv(self.trace_id)
+        obj = await redis_client.get_env_var(self.env_id, self.user_id)
 
         if obj is None:
             return None
@@ -78,19 +75,20 @@ class CaseHandler:
         return result
 
     async def parse_text(self, key: str):
+        t = TimeUtils.get_current_time_without_year()
         if isinstance(key, str) and "${" in key:
-            self.log.vars_append(f"尝试替换变量: {key}")
+            self.log["var_replace"].append(f"[{t}]: [参数替换] -> 获取El表达式变量: {key}")
             find_el = CaseHandler.get_el_exp(key)
             if find_el:
                 result = await self.get_var_from_redis(find_el)
                 if result:
-                    self.log.vars_append(f"替换变量成功: {key} -> {result}")
+                    self.log["var_replace"].append(f"[{t}]: [参数替换] -> 替换成功: {key} -> {result}")
                     replace_str_or_obj = CaseHandler.get_el_exp_exclude(key)
                     if replace_str_or_obj:
                         key = key.replace("${%s}" % find_el, str(result))
                         return key
                     return result
-                self.log.vars_append(f"替换变量失败: {key} -> {result}")
+                self.log["var_replace"].append(f"[{t}]: [参数替换] -> 替换失败: {key} -> {result}")
         return key
 
     async def parse_list(self, key: list):
@@ -138,22 +136,21 @@ class CaseHandler:
                 temp_dict[item["key"]] = await self.parse_text(item["value"])
         return temp_dict
 
-    async def case_pick_up(self, env_url: str, obj: SchemaRequestDebugCase):
+    async def case_pick_up(self, env_url: str, obj: OrmFullCase):
         url = obj.url_info.url
         method = obj.url_info.method
         headers = await self.parse_query([x.dict() for x in obj.header_info])
         query = await self.parse_query([x.dict() for x in obj.query_info])
         path = await self.parse_path([x.dict() for x in obj.path_info])
-
         body_type = obj.body_info.body_type
-        body = await self.parse_obj(obj.body_info.body) if obj.body_info.body and body_type != 0 else {}
+        body = await self.parse_obj(obj.body_info.body)
         url = self.set_url_with_env(env_url, url)
         url = self.set_url_by_path(url, path)
         return url, method, headers, body, body_type, path, query
 
-    async def case_executor(self, env_url: str, data: SchemaRequestDebugCase):
+    async def case_executor(self, env_url: str, data: OrmFullCase):
         url, method, headers, body, body_type, path, query = await self.case_pick_up(env_url, data)
-        # await redis_client.set_case_log_load(self.trace_id, self.log.logs, "case_vars")
+        await redis_client.set_case_log(user_id=self.user_id, value=self.log, case_id=self.caer_id, is_update=True)
         r = await AsyncRequest.package_request(
             url=url,
             body_type=body_type,
