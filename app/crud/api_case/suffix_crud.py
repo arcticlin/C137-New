@@ -13,6 +13,7 @@ from app.models.api_settings.suffix_settings import SuffixModel
 from app.core.db_connector import async_session
 from sqlalchemy import text, select, and_, or_, Row, RowMapping, func
 from app.exceptions.commom_exception import CustomException
+from app.schemas.api_case.api_case_schema_new_new import CaseSuffixAdd
 from app.schemas.api_settings.suffix_schema import SchemaCaseSuffix
 
 
@@ -172,7 +173,7 @@ class SuffixCrud:
 
     @staticmethod
     async def add_suffix_form_with_session(
-        session, form: list[SchemaCaseSuffix], creator: int, case_id: int = None, env_id: int = None
+        session, form: list[CaseSuffixAdd], creator: int, case_id: int = None, env_id: int = None
     ):
         await DatabaseBulk.bulk_add_data(
             session,

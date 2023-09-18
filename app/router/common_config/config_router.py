@@ -19,7 +19,7 @@ from app.services.cconfig.cconfig_services import CommonConfigServices
 from app.handler.response_handler import C137Response
 from app.handler.db_handler import DataBaseConnect
 from app.schemas.cconfig.env_schema import EnvDetailResponse
-from app.services.api_case.suffix_services import SuffixServices
+
 
 cconfig = APIRouter()
 
@@ -45,22 +45,22 @@ async def add_env(form: EnvAddRequest, user=Depends(Permission())):
     return C137Response.success(message="添加成功")
 
 
-@cconfig.post("/suffix/add", summary="新增前后置")
-async def add_suffix(form: AddSuffixSchema, user=Depends(Permission())):
-    await SuffixServices.add_suffix(form, user["user_id"])
-    return C137Response.success(message="添加成功")
-
-
-@cconfig.post("/suffix/delete", summary="删除前后置")
-async def delete_suffix(data: DeleteSuffixSchema, user=Depends(Permission())):
-    await SuffixServices.delete_suffix(data, user["user_id"])
-    return C137Response.success(message="删除成功")
-
-
-@cconfig.post("/suffix/enable", summary="删除前后置")
-async def delete_suffix(data: EnableSuffixSchema, user=Depends(Permission())):
-    await SuffixServices.enable_suffix(data, user["user_id"])
-    return C137Response.success(message="删除成功")
+# @cconfig.post("/suffix/add", summary="新增前后置")
+# async def add_suffix(form: AddSuffixSchema, user=Depends(Permission())):
+#     await SuffixServices.add_suffix(form, user["user_id"])
+#     return C137Response.success(message="添加成功")
+#
+#
+# @cconfig.post("/suffix/delete", summary="删除前后置")
+# async def delete_suffix(data: DeleteSuffixSchema, user=Depends(Permission())):
+#     await SuffixServices.delete_suffix(data, user["user_id"])
+#     return C137Response.success(message="删除成功")
+#
+#
+# @cconfig.post("/suffix/enable", summary="删除前后置")
+# async def delete_suffix(data: EnableSuffixSchema, user=Depends(Permission())):
+#     await SuffixServices.enable_suffix(data, user["user_id"])
+#     return C137Response.success(message="删除成功")
 
 
 @cconfig.post("/env/update/{env_id}", summary="更新环境")

@@ -12,6 +12,7 @@ from app.models.api_settings.assert_settings import AssertModel
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_, text
 
+from app.schemas.api_case.api_case_schema_new_new import CaseAssertAdd
 from app.schemas.api_settings.assert_schema import SchemaCaseAssert
 
 
@@ -44,7 +45,7 @@ class AssertCurd:
 
     @staticmethod
     async def add_assert_form_with_session(
-        session, form: list[SchemaCaseAssert], creator: int, case_id: int = None, env_id: int = None
+        session, form: list[CaseAssertAdd], creator: int, case_id: int = None, env_id: int = None
     ):
         await DatabaseBulk.bulk_add_data(
             session,

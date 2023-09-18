@@ -18,6 +18,7 @@ from app.crud.api_case.extract_crud import ExtractCrud
 from app.crud.api_case.suffix_crud import SuffixCrud
 from app.exceptions.commom_exception import CustomException
 from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
+from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd, CaseBasicInfoUpdate
 from app.utils.new_logger import logger
 from app.models.apicase.api_case import ApiCaseModel
 from app.models.apicase.api_path import ApiPathModel
@@ -194,7 +195,7 @@ class ApiCaseCrud:
             return result.scalars().first()
 
     @staticmethod
-    async def add_case_form(form: SchemaRequestAddCase, creator: int):
+    async def add_case_form(form: CaseFullAdd, creator: int):
         # 检查目录用例名是否存在
         async with async_session() as session:
             async with session.begin():
@@ -232,3 +233,33 @@ class ApiCaseCrud:
                     await session.rollback()
                     raise CustomException((500, 50001, f"数据库操作失败, {e}"))
             return case_id
+
+    @staticmethod
+    async def update_case_form(case_id: int, form: CaseFullAdd, creator: int):
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    await ApiCaseCrud.update_case_with_session(session, case_id, form, creator)
+                    await ApiPathCrud.update_params_form_with_session(session, form.path_info, creator, case_id=case_id)
+                    await ApiPathCrud.update_params_form_with_session(
+                        session, form.query_info, creator, case_id=case_id
+                    )
+                    await ApiHeadersCrud.update_header_form_with_session(
+                        session, form.header_info, creator, case_id=case_id
+                    )
+                    await SuffixCrud.update_suffix_form_with_session(
+                        session, form.prefix_info, creator, case_id=case_id
+                    )
+                    await SuffixCrud.update_suffix_form_with_session(
+                        session, form.suffix_info, creator, case_id=case_id
+                    )
+                    await AssertCurd.update_assert_form_with_session(
+                        session, form.assert_info, creator, case_id=case_id
+                    )
+                    await ExtractCrud.update_extract_form_with_session(
+                        session, form.extract_info, creator, case_id=case_id
+                    )
+                    await session.commit()
+                except Exception as e:
+                    await session.rollback()
+                    raise CustomException((500, 50001, f"数据库操作失败, {e}"))

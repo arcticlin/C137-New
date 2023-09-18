@@ -10,7 +10,7 @@ from app.models.apicase.api_path import ApiPathModel
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_
 
-from app.schemas.api_case.api_case_schema_new import SchemaCaseParams
+from app.schemas.api_case.api_case_schema_new_new import CaseParamsAdd
 
 
 class ApiPathCrud:
@@ -27,7 +27,7 @@ class ApiPathCrud:
 
     @staticmethod
     async def add_params_form_with_session(
-        session, form: list[SchemaCaseParams], creator: int, case_id: int = None, env_id: int = None
+        session, form: list[CaseParamsAdd], creator: int, case_id: int = None, env_id: int = None
     ):
         await DatabaseBulk.bulk_add_data(
             session,
@@ -41,7 +41,7 @@ class ApiPathCrud:
         await session.flush()
 
     @staticmethod
-    async def add_params_form(form: list[SchemaCaseParams], creator: int, case_id: int = None, env_id: int = None):
+    async def add_params_form(form: list[CaseParamsAdd], creator: int, case_id: int = None, env_id: int = None):
         async with async_session() as session:
             async with session.begin():
                 await DatabaseBulk.bulk_add_data(

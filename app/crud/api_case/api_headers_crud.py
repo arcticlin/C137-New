@@ -10,7 +10,8 @@ from app.models.apicase.api_headers import ApiHeadersModel
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_
 
-from app.schemas.api_case.api_case_schema_new import SchemaCaseHeaders
+
+from app.schemas.api_case.api_case_schema_new_new import CaseHeaderAdd
 
 
 class ApiHeadersCrud:
@@ -26,7 +27,7 @@ class ApiHeadersCrud:
             return smtm_p.scalars().all()
 
     @staticmethod
-    async def add_header_form(form: list[SchemaCaseHeaders], creator: int, case_id: int = None, env_id: int = None):
+    async def add_header_form(form: list[CaseHeaderAdd], creator: int, case_id: int = None, env_id: int = None):
         async with async_session() as session:
             async with session.begin():
                 await DatabaseBulk.bulk_add_data(
@@ -42,7 +43,7 @@ class ApiHeadersCrud:
 
     @staticmethod
     async def add_header_form_with_session(
-        session, form: list[SchemaCaseHeaders], creator: int, case_id: int = None, env_id: int = None
+        session, form: list[CaseHeaderAdd], creator: int, case_id: int = None, env_id: int = None
     ):
         await DatabaseBulk.bulk_add_data(
             session,

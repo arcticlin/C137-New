@@ -5,6 +5,8 @@ Author: bot
 Created: 2023/8/2
 Description:
 """
+import json
+
 from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.crud.api_case.assert_crud import AssertCurd
 from app.crud.api_case.extract_crud import ExtractCrud
@@ -14,6 +16,7 @@ from app.exceptions.case_exp import *
 from app.handler.new_redis_handler import redis_client
 from app.handler.response_handler import C137Response
 from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
+from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd, CaseFullUpdate, CaseFullOut
 from app.schemas.api_case.api_case_schemas import (
     OrmFullCase,
     Orm2CaseBaseInfo,
@@ -30,6 +33,7 @@ from app.services.api_case.assert_service import AssertService
 from app.services.api_case.extract_service import ExtractService
 from app.services.api_case.suffix_services import NewSuffixServices
 from app.handler.cases_handler import CaseHandler
+from deepdiff import DeepDiff
 
 
 class ApiCaseServices:
@@ -71,6 +75,16 @@ class ApiCaseServices:
         temp.extract_info = [C137Response.orm_to_pydantic(x, Orm2CaseExtract).dict() for x in extract_info]
 
         return temp
+
+    @staticmethod
+    def diff_form(update_form: dict, src_form: dict):
+        diff_ = {}
+        for key, value in update_form.items():
+            if value == src_form[key]:
+                continue
+            else:
+                diff_[key] = value
+        return diff_
 
     @staticmethod
     async def temp_request(data: OrmFullCase, operator: int):
@@ -119,9 +133,15 @@ class ApiCaseServices:
         return response
 
     @staticmethod
-    async def add_case_form(form: SchemaRequestAddCase, creator: int):
+    async def add_case(form: CaseFullAdd, creator: int):
         repeat = await ApiCaseCrud.check_case_exists(form.directory_id, form.basic_info.name, form.url_info.method)
         if repeat:
             raise CustomException(CASE_EXISTS)
         case_id = await ApiCaseCrud.add_case_form(form, creator)
         return case_id
+
+    @staticmethod
+    async def update_case(form: CaseFullUpdate, operator: int):
+        source_case = await ApiCaseServices.query_case_details(form.case_id)
+        diff_ = ApiCaseServices.diff_form(form.dict(), source_case.dict())
+        print(diff_)

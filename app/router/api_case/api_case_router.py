@@ -11,6 +11,7 @@ from fastapi import APIRouter, Depends
 
 from app.handler.response_handler import C137Response
 from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase, SchemaRequestDebugCase
+from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd, CaseFullUpdate
 from app.schemas.api_case.api_case_schemas import OrmFullCase
 from app.schemas.api_case.api_path_schema import *
 from app.schemas.api_case.api_headers_schema import *
@@ -38,10 +39,10 @@ async def get_api_case(case_id: int):
     return C137Response.success(data=result)
 
 
-@case.post("/add_form", summary="添加用例")
-async def add_api_case_form(form: SchemaRequestAddCase, user=Depends(Permission())):
-    case_id = await ApiCaseServices.add_case_form(form, user["user_id"])
-    return C137Response.success(message="添加成功", data={"case_id": case_id})
+@case.post("/add", summary="添加用例")
+async def add_case(data: CaseFullAdd, user=Depends(Permission())):
+    case_id = await ApiCaseServices.add_case(data, user["user_id"])
+    return C137Response.success(data={"case_id": case_id})
 
 
 @case.delete("/delete", summary="删除用例")
@@ -51,8 +52,9 @@ async def delete_api_case(data: DeleteApiCaseRequest, user=Depends(Permission())
 
 
 @case.put("/update", summary="更新用例")
-async def update_api_case():
-    await ApiCaseServices.query_case_details(2)
+async def update_api_case(form: CaseFullUpdate, user=Depends(Permission())):
+    await ApiCaseServices.update_case(form, user["user_id"])
+    return C137Response.success(message="更新成功")
 
 
 @case.post("/request", summary="调试请求用例")
