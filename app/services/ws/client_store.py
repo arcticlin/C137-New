@@ -5,7 +5,8 @@ Author: bot
 Created: 2023/9/19
 Description:
 """
-from typing import Set
+from typing import Set, Dict
 from fastapi import WebSocket
 
-connected_clients: Set[WebSocket] = set()
+# connected_clients: Set[WebSocket] = set()
+connected_clients: Dict[str, WebSocket] = {}

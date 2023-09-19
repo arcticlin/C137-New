@@ -16,6 +16,7 @@ def register_middleware(app: FastAPI) -> None:
         "http://127.0.0.1:5173",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://127.0.0.1:58891",
         # "http://116.21.70.238:3000",
     ]
     # CORS

@@ -45,3 +45,8 @@ class UserToken:
             raise CustomException(TOKEN_IS_EXPIRED)
         except Exception as e:
             raise CustomException(TOKEN_IS_INVALID)
+
+    @staticmethod
+    def get_user_id_from_token(token: str) -> str:
+        token_info = UserToken.parse_token(token)
+        return str(token_info["user_id"])

@@ -16,23 +16,25 @@ from app.services.ws.client_store import connected_clients
 ws = APIRouter()
 
 
-# @ws.websocket("/ws/{token}", name="websocket")
-# async def websocket_endpoint(websocket: WebSocket, token: str):
-#     try:
-#         # UserToken.parse_token(token)
-#         await websocket.accept()
-#         print("11")
-#         if websocket not in connected_clients:
-#             await websocket.send_text("Welcome to websocket")
-#         connected_clients.add(websocket)
-#         while True:
-#             data = await websocket.receive_text()
-#             for client in connected_clients:
-#                 await client.send_text(data)
-#     except WebSocketDisconnect:
-#         connected_clients.remove(websocket)
-#         await websocket.close()
-#     except Exception as e:
-#         connected_clients.remove(websocket)
-#         await websocket.close(code=1000)
-#         raise e
+@ws.websocket("/{token}")
+async def websocket_endpoint(websocket: WebSocket, token: str):
+    user_id = ""
+    try:
+        UserToken.parse_token(token)
+        user_id = UserToken.get_user_id_from_token(token)
+        await websocket.accept()
+        if websocket not in connected_clients:
+            await websocket.send_text("Welcome to websocket")
+        connected_clients[user_id] = websocket
+        while True:
+            data = await websocket.receive_text()
+            for client in connected_clients.keys():
+                await connected_clients[client].send_text(data)
+    except WebSocketDisconnect as e:
+        pass
+    except Exception as e:
+        pass
+    finally:
+        if connected_clients.__contains__(user_id):
+            connected_clients.pop(user_id)
+        print(connected_clients)
