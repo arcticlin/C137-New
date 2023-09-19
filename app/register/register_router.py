@@ -14,9 +14,11 @@ from app.router.users.user_center import uc
 from app.router.api_case.api_case_router import case
 
 from app.router.common_config.config_router import cconfig
+from app.router.ws.ws import ws
 
 
 def register_router(app: FastAPI):
+    app.include_router(ws, prefix="/ws", tags=["websocket"])
     app.include_router(auth, prefix="/auth", tags=["用户中心"])
     app.include_router(project, prefix="/project", tags=["项目"])
     app.include_router(directory, prefix="/directory", tags=["目录"])
