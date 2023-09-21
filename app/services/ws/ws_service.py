@@ -14,3 +14,7 @@ class WsService:
     async def send_message(message: str, client: WebSocket = None):
         for client in connected_clients:
             await client.send_text(message)
+
+    @staticmethod
+    def success_connect():
+        return {"type": "connected", "status": "success"}

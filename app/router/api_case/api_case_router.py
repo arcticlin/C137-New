@@ -63,3 +63,8 @@ async def debug_temp_case(data: OrmFullCase, user=Depends(Permission())):
     print("1")
     result = await ApiCaseServices.temp_request(data, user["user_id"])
     return C137Response.success(data=result, headers={"trace_id": random_uid})
+
+
+@case.post("/timer", summary="定时任务")
+async def timer_runner():
+    pass
