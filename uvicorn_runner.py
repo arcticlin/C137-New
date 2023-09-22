@@ -7,10 +7,11 @@ Description:
 """
 import os, logging, sys, inspect
 
-from uvicorn import Config, Server
+from uvicorn import Config, Server, main
 from uvicorn.supervisors import ChangeReload
 from base_config import Config as BConfig
 from app.utils.new_logger import logger
+
 
 LOG_LEVEL = logging.getLevelName(os.environ.get("LOG_LEVEL", "DEBUG"))
 JSON_LOGS = True if os.environ.get("JSON_LOGS", "0") == "1" else False
@@ -77,7 +78,9 @@ def run(host="0.0.0.0", port=8080, log_level=LOG_LEVEL, json_logs=JSON_LOGS, rel
         log_level=log_level,
         reload=reload,
     )
+
     server = Server(config)
+
     setup_logging()
 
     if reload:

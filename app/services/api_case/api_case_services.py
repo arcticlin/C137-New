@@ -14,6 +14,7 @@ from app.crud.api_case.suffix_crud import SuffixCrud
 from app.exceptions.commom_exception import CustomException
 from app.exceptions.case_exp import *
 from app.handler.new_redis_handler import redis_client
+from app.handler.api_redis_handle import RedisCli
 from app.handler.response_handler import C137Response
 from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
 from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd, CaseFullUpdate, CaseFullOut
@@ -33,6 +34,7 @@ from app.services.api_case.assert_service import AssertService
 from app.services.api_case.extract_service import ExtractService
 from app.services.api_case.suffix_services import NewSuffixServices
 from app.handler.cases_handler import CaseHandler
+from app.services.api_case.new_suffix_service import SuffixService
 from deepdiff import DeepDiff
 
 
@@ -73,7 +75,6 @@ class ApiCaseServices:
         temp.suffix_info = [C137Response.orm_to_pydantic(x, Orm2CaseSuffix).dict() for x in suffix_info]
         temp.assert_info = [C137Response.orm_to_pydantic(x, Orm2CaseAssert).dict() for x in assert_info]
         temp.extract_info = [C137Response.orm_to_pydantic(x, Orm2CaseExtract).dict() for x in extract_info]
-
         return temp
 
     @staticmethod
@@ -87,50 +88,54 @@ class ApiCaseServices:
         return diff_
 
     @staticmethod
-    async def temp_request(data: OrmFullCase, operator: int):
-        case = CaseHandler(env_id=data.env_id, case_id=data.case_id, user_id=operator)
-        await redis_client.init_case_log_body(operator, data.case_id)
-        suffix = NewSuffixServices(data.env_id, operator, None)
+    # async def temp_request(data: OrmFullCase, operator: int):
+    #     case = CaseHandler(env_id=data.env_id, case_id=data.case_id, user_id=operator)
+    #     await redis_client.init_case_log_body(operator, data.case_id)
+    #     suffix = NewSuffixServices(data.env_id, operator, None)
+    #
+    #     # 获取环境信息
+    #     env_url = await ApiCaseCrud.query_env_info(data.env_id)
+    #     # 执行环境前置
+    #     await suffix.execute_env_prefix(is_prefix=True)
+    #     # 执行用例前置
+    #     await suffix.execute_case_prefix(is_prefix=True, temp_prefix=data.prefix_info)
+    #
+    #     # 执行用例信息(替换变量)
+    #     response = await case.case_executor(env_url, data)
+    #
+    #     response["trace_id"] = f"c:c_temp_{operator}"
+    #
+    #     # 执行用例后置
+    #     await suffix.execute_case_prefix(is_prefix=False, temp_prefix=data.suffix_info)
+    #     # 实例化断言模块
+    #     asserts = AssertService(env_id=data.env_id, user_id=operator, async_response=response, case_id=data.case_id)
+    #     # 执行环境断言
+    #     env_result = await asserts.assert_from_env()
+    #     # 执行用例断言
+    #     case_result = await asserts.assert_from_case(data=data.assert_info)
+    #     _flag = asserts.assert_response_result(env_result, case_result)
+    #     if len(env_result) == 0 and len(case_result) == 0:
+    #         if response["status_code"] != 200:
+    #             _flag = [False]
+    #         if response["json_format"]:
+    #             if response["response"].__contains__("code"):
+    #                 if response["response"]["code"] != 0:
+    #                     _flag = [False]
+    #     response["assert_result"] = {
+    #         "env_assert": env_result,
+    #         "case_assert": case_result,
+    #         "final_result": False not in _flag,
+    #     }
+    #     # 执行提取参数
+    #     extract = ExtractService(env_id=data.env_id, user_id=operator, async_response=response, case_id=data.case_id)
+    #     extract_result = await extract.extract(extract_data=data.extract_info)
+    #     response["extract_result"] = extract_result
+    #     response["log"] = await redis_client.get_case_log(operator, data.case_id)
+    #     return response
 
-        # 获取环境信息
-        env_url = await ApiCaseCrud.query_env_info(data.env_id)
-        # 执行环境前置
-        await suffix.execute_env_prefix(is_prefix=True)
-        # 执行用例前置
-        await suffix.execute_case_prefix(is_prefix=True, temp_prefix=data.prefix_info)
-
-        # 执行用例信息(替换变量)
-        response = await case.case_executor(env_url, data)
-
-        response["trace_id"] = f"c:c_temp_{operator}"
-
-        # 执行用例后置
-        await suffix.execute_case_prefix(is_prefix=False, temp_prefix=data.suffix_info)
-        # 实例化断言模块
-        asserts = AssertService(env_id=data.env_id, user_id=operator, async_response=response, case_id=data.case_id)
-        # 执行环境断言
-        env_result = await asserts.assert_from_env()
-        # 执行用例断言
-        case_result = await asserts.assert_from_case(data=data.assert_info)
-        _flag = asserts.assert_response_result(env_result, case_result)
-        if len(env_result) == 0 and len(case_result) == 0:
-            if response["status_code"] != 200:
-                _flag = [False]
-            if response["json_format"]:
-                if response["response"].__contains__("code"):
-                    if response["response"]["code"] != 0:
-                        _flag = [False]
-        response["assert_result"] = {
-            "env_assert": env_result,
-            "case_assert": case_result,
-            "final_result": False not in _flag,
-        }
-        # 执行提取参数
-        extract = ExtractService(env_id=data.env_id, user_id=operator, async_response=response, case_id=data.case_id)
-        extract_result = await extract.extract(extract_data=data.extract_info)
-        response["extract_result"] = extract_result
-        response["log"] = await redis_client.get_case_log(operator, data.case_id)
-        return response
+    @staticmethod
+    async def case_request(case_id: int, operator: int):
+        pass
 
     @staticmethod
     async def add_case(form: CaseFullAdd, creator: int):
@@ -145,3 +150,27 @@ class ApiCaseServices:
         source_case = await ApiCaseServices.query_case_details(form.case_id)
         diff_ = ApiCaseServices.diff_form(form.dict(), source_case.dict())
         print(diff_)
+
+    @staticmethod
+    async def run_single_case(trace_id: str, env_id: int, case_id: int):
+        # 1. 检查环境获取是否存在异常
+        env_url = await ApiCaseCrud.query_env_info(env_id)
+        # 2. 检查用例获取是否存在异常
+        case_info = await ApiCaseServices.query_case_details(case_id)
+        # 3. 初始化Redis连接 + Suffix模块 + Assert模块
+        rds = RedisCli(trace_id)
+        suffix = SuffixService(env_id, trace_id, case_id, is_temp=False)
+        # 4. 初始化环境Redis, e:e_{env_id}_{trace_id} = {var: {}, log: {}}
+        await rds.init_env_key(env_id)
+        # 5. 初始化用例Redis, c:c_{case_id}_{trace_id} = {var: {}, log: {}}
+        await rds.init_case_key(case_id)
+        # 6. 初始化前后置模块
+        # 5. 执行环境前置,并将日志和提取的参数存入环境Redis
+        await suffix.execute_env_prefix(is_prefix=True)
+        # 6. 执行用例前置,并将日志和提取的参数存入用例Redis
+        # 7. 执行用例,并将日志和提取的参数存入用例Redis
+        # 8. 执行用例后置,并将日志和提取的参数存入用例Redis
+        # 9. 执行环境后置,并将日志和提取的参数存入环境Redis
+        # 10. 执行断言,并将断言结果存入用例Redis
+        # 11. 执行提取参数,并将提取结果存入用例Redis
+        pass

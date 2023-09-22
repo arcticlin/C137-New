@@ -124,6 +124,7 @@ if __name__ == "__main__":
         "errorlog": "-",
         "worker_class": "uvicorn.workers.UvicornWorker",
         "logger_class": StubbedGunicornLogger,
+        "reload": True,
     }
 
     StandaloneApplication(app, options).run()

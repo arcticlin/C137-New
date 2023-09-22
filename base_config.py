@@ -65,6 +65,10 @@ class BasicConfig(BaseSettings):
     title: str = "C137"
     SERVER_PORT: int
 
+    # Celery配置
+    CELERY_BROKER_URL: str
+    CELERY_STATUS_BACKEND: str
+
 
 class DevConfig(BasicConfig):
     # model_config = SettingsConfigDict(
@@ -105,9 +109,7 @@ if get_env_from_sys == "docker":
 else:
     Config = DevConfig()
 
-Config.SQLALCHEMY_URI = (
-    f"mysql+mysqlconnector://{Config.MYSQL_USER}:{Config.MYSQL_PWD}" f"@{Config.MYSQL_HOST}:{Config.MYSQL_PORT}"
-)
+Config.SQLALCHEMY_URI = f"mysql+mysqlconnector://{Config.MYSQL_USER}:{Config.MYSQL_PWD}@{Config.MYSQL_HOST}:{Config.MYSQL_PORT}/{Config.MYSQL_DBNAME}"
 
 # 给SQLALCHEMY_URI赋值
 Config.ASYNC_SQLALCHEMY_URI = (
