@@ -95,10 +95,7 @@ class SuffixService:
         result = await ScriptHandler.python_executor(run_out_name, run_command)
         return result
 
-    async def _execute(
-        self,
-        model: Union[SuffixModel, SchemaCaseSuffix],
-    ):
+    async def _execute(self, model: Union[SuffixModel, SchemaCaseSuffix]):
         if model.env_id:
             if not model.run_each_case:
                 log_ = self.env_log["env_prefix" if model.suffix_type == 1 else "env_suffix"]
@@ -139,10 +136,10 @@ class SuffixService:
                 await self.rds.set_env_log(self.env_id, self.env_log)
             else:
                 await self.rds.set_case_log(self.case_id, self.case_log)
-                await self.rds.set_case_var(self.case_id, self.case_log)
+                await self.rds.set_case_var(self.case_id, self.case_var)
         else:
             await self.rds.set_case_log(self.case_id, self.case_log)
-            await self.rds.set_case_var(self.case_id, self.case_log)
+            await self.rds.set_case_var(self.case_id, self.case_var)
 
     async def execute_env_prefix(self, is_prefix: bool):
         if is_prefix:
@@ -151,14 +148,20 @@ class SuffixService:
             collect_prefix = await self.get_suffix(env_id=self.env_id)
 
         for p in collect_prefix:
-            print(C137Response.orm_to_dict(p))
-            await self._execute(model=p)
+            if not p.run_each_case:
+                await self._execute(model=p)
 
     async def execute_case_prefix(self, is_prefix: bool, temp_prefix: List[Orm2CaseSuffix] = None):
+        if is_prefix:
+            collect_e_prefix = await self.get_prefix(env_id=self.env_id)
+        else:
+            collect_e_prefix = await self.get_suffix(env_id=self.env_id)
         if is_prefix:
             collect_prefix = await self.get_prefix(case_id=self.case_id, temp=temp_prefix)
         else:
             collect_prefix = await self.get_suffix(case_id=self.case_id, temp=temp_prefix)
-
+        for p in collect_e_prefix:
+            if p.run_each_case:
+                await self._execute(model=p)
         for p in collect_prefix:
             await self._execute(model=p)

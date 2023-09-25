@@ -63,7 +63,8 @@ async def debug_temp_case(data: OrmFullCase, user=Depends(Permission())):
 @case.get("/timer", summary="定时任务")
 async def timer_runner():
     random_uid = str(uuid.uuid4())
-    await ApiCaseServices.run_single_case(random_uid, 5, 29)
+    response = await ApiCaseServices.run_single_case(random_uid, 5, 1)
+    return C137Response.success(data=response)
 
 
 @case.get("/{case_id}", summary="查询用例详情")

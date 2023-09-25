@@ -6,6 +6,7 @@ Created: 2023/9/22
 Description:
 """
 import json
+from typing import Union
 
 from redis import asyncio as aioredis
 from redis.asyncio import Redis
@@ -58,7 +59,7 @@ class RedisCli(Redis):
             logger.error(f"Redis连接异常: {e}")
             sys.exit()
 
-    async def get_kv(self, key: str):
+    async def get_kv(self, key: str) -> dict:
         """获取键值对"""
         value = await self.get(key)
         try:
@@ -85,7 +86,7 @@ class RedisCli(Redis):
 
     async def init_case_key(self, case_id: int):
         rk = self.get_case_rk(case_id)
-        body = dict(var={}, log=[])
+        body = dict(var={}, log=dict())
         await self.set_kv(rk, body, expired=7200)
 
     async def set_env_var(self, env_id: int, value: dict):
@@ -103,9 +104,22 @@ class RedisCli(Redis):
     async def set_case_var(self, case_id: int, value: dict):
         rk = self.get_case_rk(case_id)
         var = await self.get_kv(rk)
-        await self.set_kv(rk, {**var, **value}, expired=7200)
+        var["var"].update(value)
+        await self.set_kv(rk, var, expired=7200)
 
     async def set_case_log(self, case_id: int, value: dict):
         rk = self.get_case_rk(case_id)
         var = await self.get_kv(rk)
-        await self.set_kv(rk, {**var, **value}, expired=7200)
+        var["log"].update(value)
+        await self.set_kv(rk, var, expired=7200)
+
+    async def get_var_value(
+        self, var_key: str, env_id: int = None, case_id: Union[str, int] = None, is_env: bool = True
+    ):
+        if is_env:
+            rk = self.get_env_rk(env_id)
+        else:
+            rk = self.get_case_rk(case_id)
+
+        get_value_from_redis = await self.get_kv(rk)
+        return get_value_from_redis.get("var", {}).get(var_key, None)

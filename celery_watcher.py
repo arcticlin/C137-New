@@ -23,16 +23,18 @@ def restart_worker():
 
 class CeleryTaskFileHandler(FileSystemEventHandler):
     def on_modified(self, event):
+        print("1", event)
+        print("2", event.src_path)
         if event.src_path.endswith(task_module_file):
             restart_worker()
 
 
 if __name__ == "__main__":
-    worker_thread = threading.Thread(target=restart_worker)
-    worker_thread.start()
+    # worker_thread = threading.Thread(target=restart_worker)
+    # worker_thread.start()
     event_handler = CeleryTaskFileHandler()
     observer = Observer()
-    observer.schedule(event_handler, path=".", recursive=False)
+    observer.schedule(event_handler, path=task_module_file, recursive=False)
     observer.start()
 
     try:
@@ -41,3 +43,5 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
+
+#  watchmedo auto-restart --directory=./app/router/jobs  --pattern=jobs.py --recursive -- celery -A app.router.jobs.jobs worker --loglevel=info

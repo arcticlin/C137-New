@@ -2,19 +2,21 @@ import re
 
 import jsonpath
 
+from app.handler.api_redis_handle import RedisCli
 from app.handler.async_http_client import AsyncRequest
 from app.handler.new_redis_handler import redis_client
 from app.schemas.api_case.api_case_schemas import Orm2CaseExtract
 
 
 class ExtractService:
-    def __init__(self, env_id: int, user_id: int, async_response: dict, case_id: int = None):
+    def __init__(self, env_id: int, trace_id: str, async_response: dict, case_id: int = None):
         self.env_id = env_id
-        self.user_id = user_id
+        self.trace_id = trace_id
         self.case_id = case_id
         self.async_response = async_response
         self.log = dict(extract=[])
         self.g_var = dict()
+        self.rds = RedisCli(trace_id)
 
     @staticmethod
     async def extract_with_re(src: str, exp: str, out_name: str, index: int = None):
@@ -73,7 +75,7 @@ class ExtractService:
                     }
                 )
 
-                self.log["extract"].append(f"提取响应生成变量: {e.extract_out_name}")
+                self.log["extract"].append(f"提取响应生成变量: {e.extract_out_name} = {result[e.extract_out_name]}")
                 self.g_var[e.extract_out_name] = result[e.extract_out_name]
             else:
                 temp_result.append(
@@ -83,8 +85,8 @@ class ExtractService:
                         "extract_value": None,
                     }
                 )
-                self.log["extract"].append(f"提取响应生成变量: {e.extract_out_name}")
+                self.log["extract"].append(f"提取响应生成变量: {e.extract_out_name} = None ")
                 self.g_var[e.extract_out_name] = None
-        await redis_client.set_case_log(user_id=self.user_id, value=self.log, case_id=self.case_id, is_update=True)
-        await redis_client.set_env_var(env_id=self.env_id, value=self.g_var, user_id=self.user_id)
+        await self.rds.set_case_log(self.case_id, self.log)
+        await self.rds.set_case_var(self.case_id, self.g_var)
         return temp_result

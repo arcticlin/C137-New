@@ -7,6 +7,7 @@ Description:
 """
 import asyncio
 import time
+import uuid
 
 from fastapi import APIRouter
 from celery import Celery
@@ -25,19 +26,19 @@ def my_celery_task():
     # 在任务内部执行协程
     async def my_coroutine():
         # 协程的逻辑
-        r = await ApiCaseServices.query_case_details(1)
-        print("测试重启!!!??")
-        return r.dict()
+        random_uid = str(uuid.uuid4())
+        await asyncio.sleep(10)
+        response = await ApiCaseServices.run_single_case(random_uid, 5, 1)
+        return random_uid
 
     # 执行协程并获取结果
     loop = asyncio.get_event_loop()
     result = loop.run_until_complete(my_coroutine())
-
     # 返回结果
     return result
 
 
-@jobs.get("/run/2")
+@jobs.get("/run")
 async def test_runners():
     result = my_celery_task.delay()
     return {"task_id": result.id, "status": "Task is running"}

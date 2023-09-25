@@ -52,7 +52,7 @@ class ApiCaseServices:
         await ApiCaseCrud.delete_api_case(case_id=case_id, operator=operator, path_id=path_id, headers_id=headers_id)
 
     @staticmethod
-    async def query_case_details(case_id: int):
+    async def query_case_details(case_id: int) -> OrmFullCase:
         temp = OrmFullCase()
         case_detail, case_path, case_header = await ApiCaseCrud.query_case_detail(case_id)
         prefix_info, suffix_info = await SuffixCrud.get_prefix(case_id=case_id), await SuffixCrud.get_suffix(
@@ -65,16 +65,26 @@ class ApiCaseServices:
             raise CustomException(CASE_NOT_EXISTS)
         temp.case_id = case_id
         temp.directory_id = case_detail.directory_id
-        temp.basic_info = C137Response.orm_to_pydantic(case_detail, Orm2CaseBaseInfo).dict()
-        temp.url_info = C137Response.orm_to_pydantic(case_detail, Orm2CaseUrl).dict()
-        temp.body_info = C137Response.orm_to_pydantic(case_detail, Orm2CaseBody).dict()
-        temp.query_info = [C137Response.orm_to_pydantic(x, Orm2CaseParams).dict() for x in case_path if x.types == 1]
-        temp.path_info = [C137Response.orm_to_pydantic(x, Orm2CaseParams).dict() for x in case_path if x.types == 2]
-        temp.header_info = [C137Response.orm_to_pydantic(x, Orm2CaseHeader).dict() for x in case_header]
-        temp.prefix_info = [C137Response.orm_to_pydantic(x, Orm2CaseSuffix).dict() for x in prefix_info]
-        temp.suffix_info = [C137Response.orm_to_pydantic(x, Orm2CaseSuffix).dict() for x in suffix_info]
-        temp.assert_info = [C137Response.orm_to_pydantic(x, Orm2CaseAssert).dict() for x in assert_info]
-        temp.extract_info = [C137Response.orm_to_pydantic(x, Orm2CaseExtract).dict() for x in extract_info]
+        # temp.basic_info = C137Response.orm_to_pydantic(case_detail, Orm2CaseBaseInfo).dict()
+        # temp.url_info = C137Response.orm_to_pydantic(case_detail, Orm2CaseUrl).dict()
+        # temp.body_info = C137Response.orm_to_pydantic(case_detail, Orm2CaseBody).dict()
+        # temp.query_info = [C137Response.orm_to_pydantic(x, Orm2CaseParams).dict() for x in case_path if x.types == 1]
+        # temp.path_info = [C137Response.orm_to_pydantic(x, Orm2CaseParams).dict() for x in case_path if x.types == 2]
+        # temp.header_info = [C137Response.orm_to_pydantic(x, Orm2CaseHeader).dict() for x in case_header]
+        # temp.prefix_info = [C137Response.orm_to_pydantic(x, Orm2CaseSuffix).dict() for x in prefix_info]
+        # temp.suffix_info = [C137Response.orm_to_pydantic(x, Orm2CaseSuffix).dict() for x in suffix_info]
+        # temp.assert_info = [C137Response.orm_to_pydantic(x, Orm2CaseAssert).dict() for x in assert_info]
+        # temp.extract_info = [C137Response.orm_to_pydantic(x, Orm2CaseExtract).dict() for x in extract_info]
+        temp.basic_info = C137Response.orm_to_pydantic(case_detail, Orm2CaseBaseInfo)
+        temp.url_info = C137Response.orm_to_pydantic(case_detail, Orm2CaseUrl)
+        temp.body_info = C137Response.orm_to_pydantic(case_detail, Orm2CaseBody)
+        temp.query_info = [C137Response.orm_to_pydantic(x, Orm2CaseParams) for x in case_path if x.types == 2]
+        temp.path_info = [C137Response.orm_to_pydantic(x, Orm2CaseParams) for x in case_path if x.types == 1]
+        temp.header_info = [C137Response.orm_to_pydantic(x, Orm2CaseHeader) for x in case_header]
+        temp.prefix_info = [C137Response.orm_to_pydantic(x, Orm2CaseSuffix) for x in prefix_info]
+        temp.suffix_info = [C137Response.orm_to_pydantic(x, Orm2CaseSuffix) for x in suffix_info]
+        temp.assert_info = [C137Response.orm_to_pydantic(x, Orm2CaseAssert) for x in assert_info]
+        temp.extract_info = [C137Response.orm_to_pydantic(x, Orm2CaseExtract) for x in extract_info]
         return temp
 
     @staticmethod
@@ -153,24 +163,40 @@ class ApiCaseServices:
 
     @staticmethod
     async def run_single_case(trace_id: str, env_id: int, case_id: int):
+        rds = RedisCli(trace_id)
+        await rds.init_env_key(env_id)
         # 1. 检查环境获取是否存在异常
         env_url = await ApiCaseCrud.query_env_info(env_id)
-        # 2. 检查用例获取是否存在异常
-        case_info = await ApiCaseServices.query_case_details(case_id)
-        # 3. 初始化Redis连接 + Suffix模块 + Assert模块
-        rds = RedisCli(trace_id)
-        suffix = SuffixService(env_id, trace_id, case_id, is_temp=False)
-        # 4. 初始化环境Redis, e:e_{env_id}_{trace_id} = {var: {}, log: {}}
-        await rds.init_env_key(env_id)
-        # 5. 初始化用例Redis, c:c_{case_id}_{trace_id} = {var: {}, log: {}}
-        await rds.init_case_key(case_id)
-        # 6. 初始化前后置模块
-        # 5. 执行环境前置,并将日志和提取的参数存入环境Redis
-        await suffix.execute_env_prefix(is_prefix=True)
-        # 6. 执行用例前置,并将日志和提取的参数存入用例Redis
-        # 7. 执行用例,并将日志和提取的参数存入用例Redis
-        # 8. 执行用例后置,并将日志和提取的参数存入用例Redis
-        # 9. 执行环境后置,并将日志和提取的参数存入环境Redis
-        # 10. 执行断言,并将断言结果存入用例Redis
-        # 11. 执行提取参数,并将提取结果存入用例Redis
-        pass
+        for idd in [1, 29]:
+            # 2. 检查用例获取是否存在异常
+            case_info = await ApiCaseServices.query_case_details(idd)
+            # 3. 初始化Redis连接 + Case模块 + Suffix模块 + Assert模块
+
+            suffix = SuffixService(env_id, trace_id, idd, is_temp=False)
+            case = CaseHandler(env_id=env_id, case_id=idd, trace_id=trace_id)
+
+            # 4. 初始化环境Redis, e:e_{env_id}_{trace_id} = {var: {}, log: {}}
+
+            # 5. 初始化用例Redis, c:c_{case_id}_{trace_id} = {var: {}, log: {}}
+            await rds.init_case_key(idd)
+            # 6. 初始化前后置模块
+            # 5. 执行环境前置,并将日志和提取的参数存入环境Redis
+            await suffix.execute_env_prefix(is_prefix=True)
+            # 6. 执行用例前置,并将日志和提取的参数存入用例Redis
+            await suffix.execute_case_prefix(is_prefix=True)
+            # 7. 执行用例,并将日志和提取的参数存入用例Redis
+            response = await case.case_executor(env_url, case_info)
+            # 8. 执行用例后置,并将日志和提取的参数存入用例Redis
+            await suffix.execute_case_prefix(is_prefix=False)
+            # 9. 执行环境后置,并将日志和提取的参数存入环境Redis
+            await suffix.execute_env_prefix(is_prefix=False)
+            # 10. 执行断言,并将断言结果存入用例Redis
+            assert_ = AssertService(env_id=env_id, trace_id=trace_id, case_id=idd, async_response=response)
+            extract_ = ExtractService(env_id=env_id, trace_id=trace_id, case_id=idd, async_response=response)
+            await assert_.assert_from_case(case_info.assert_info)
+            await assert_.assert_from_env()
+            # 11. 执行提取参数,并将提取结果存入用例Redis
+            await extract_.extract(case_info.extract_info)
+            # return response
+            print(response)
+        return {}
