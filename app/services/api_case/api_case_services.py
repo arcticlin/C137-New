@@ -6,6 +6,8 @@ Created: 2023/8/2
 Description:
 """
 import json
+import time
+from typing import List
 
 from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.crud.api_case.assert_crud import AssertCurd
@@ -36,6 +38,7 @@ from app.services.api_case.suffix_services import NewSuffixServices
 from app.handler.cases_handler import CaseHandler
 from app.services.api_case.new_suffix_service import SuffixService
 from deepdiff import DeepDiff
+from app.crud.api_case.api_report_crud import ApiResultCrud, ApiReportCrud
 
 
 class ApiCaseServices:
@@ -167,36 +170,99 @@ class ApiCaseServices:
         await rds.init_env_key(env_id)
         # 1. 检查环境获取是否存在异常
         env_url = await ApiCaseCrud.query_env_info(env_id)
-        for idd in [1, 29]:
-            # 2. 检查用例获取是否存在异常
-            case_info = await ApiCaseServices.query_case_details(idd)
-            # 3. 初始化Redis连接 + Case模块 + Suffix模块 + Assert模块
 
-            suffix = SuffixService(env_id, trace_id, idd, is_temp=False)
-            case = CaseHandler(env_id=env_id, case_id=idd, trace_id=trace_id)
+        # 2. 检查用例获取是否存在异常
+        case_info = await ApiCaseServices.query_case_details(case_id)
+        # 3. 初始化Redis连接 + Case模块 + Suffix模块 + Assert模块
 
-            # 4. 初始化环境Redis, e:e_{env_id}_{trace_id} = {var: {}, log: {}}
+        suffix = SuffixService(env_id, trace_id, case_id, is_temp=False)
+        case = CaseHandler(env_id=env_id, case_id=case_id, trace_id=trace_id)
 
-            # 5. 初始化用例Redis, c:c_{case_id}_{trace_id} = {var: {}, log: {}}
-            await rds.init_case_key(idd)
-            # 6. 初始化前后置模块
-            # 5. 执行环境前置,并将日志和提取的参数存入环境Redis
-            await suffix.execute_env_prefix(is_prefix=True)
-            # 6. 执行用例前置,并将日志和提取的参数存入用例Redis
-            await suffix.execute_case_prefix(is_prefix=True)
-            # 7. 执行用例,并将日志和提取的参数存入用例Redis
-            response = await case.case_executor(env_url, case_info)
-            # 8. 执行用例后置,并将日志和提取的参数存入用例Redis
-            await suffix.execute_case_prefix(is_prefix=False)
-            # 9. 执行环境后置,并将日志和提取的参数存入环境Redis
-            await suffix.execute_env_prefix(is_prefix=False)
-            # 10. 执行断言,并将断言结果存入用例Redis
-            assert_ = AssertService(env_id=env_id, trace_id=trace_id, case_id=idd, async_response=response)
-            extract_ = ExtractService(env_id=env_id, trace_id=trace_id, case_id=idd, async_response=response)
-            await assert_.assert_from_case(case_info.assert_info)
-            await assert_.assert_from_env()
-            # 11. 执行提取参数,并将提取结果存入用例Redis
-            await extract_.extract(case_info.extract_info)
-            # return response
-            print(response)
+        # 4. 初始化环境Redis, e:e_{env_id}_{trace_id} = {var: {}, log: {}}
+
+        # 5. 初始化用例Redis, c:c_{case_id}_{trace_id} = {var: {}, log: {}}
+        await rds.init_case_key(case_id)
+        # 6. 初始化前后置模块
+        # 5. 执行环境前置,并将日志和提取的参数存入环境Redis
+        await suffix.execute_env_prefix(is_prefix=True)
+        # 6. 执行用例前置,并将日志和提取的参数存入用例Redis
+        await suffix.execute_case_prefix(is_prefix=True)
+        # 7. 执行用例,并将日志和提取的参数存入用例Redis
+        response = await case.case_executor(env_url, case_info)
+        # 8. 执行用例后置,并将日志和提取的参数存入用例Redis
+        await suffix.execute_case_prefix(is_prefix=False)
+        # 9. 执行环境后置,并将日志和提取的参数存入环境Redis
+        await suffix.execute_env_prefix(is_prefix=False)
+        # 10. 执行断言,并将断言结果存入用例Redis
+        assert_ = AssertService(env_id=env_id, trace_id=trace_id, case_id=case_id, async_response=response)
+        extract_ = ExtractService(env_id=env_id, trace_id=trace_id, case_id=case_id, async_response=response)
+        await assert_.assert_from_case(case_info.assert_info)
+        await assert_.assert_from_env()
+        # 11. 执行提取参数,并将提取结果存入用例Redis
+        await extract_.extract(case_info.extract_info)
+        # return response
+        print(response)
         return {}
+
+    @staticmethod
+    async def run_case_suite(trace_id: str, env_id: int, case_id: List[int]):
+        rds = RedisCli(trace_id)
+        await rds.init_env_key(env_id)
+        # 1. 检查环境获取是否存在异常
+        env_url = await ApiCaseCrud.query_env_info(env_id)
+        total = len(case_id)
+        report_id = await ApiReportCrud.init_api_report(trace_id, total)
+        count_result = {"success": 0, "failed": 0, "xfail": 0, "skip": 0, "duration": 0}
+        start_time = time.time()
+        for e_id in case_id:
+            response = {}
+            try:
+                # 2. 检查用例获取是否存在异常
+                case_info = await ApiCaseServices.query_case_details(e_id)
+                # 3. 初始化Redis连接 + Case模块 + Suffix模块 + Assert模块
+
+                suffix = SuffixService(env_id, trace_id, e_id, is_temp=False)
+                case = CaseHandler(env_id=env_id, case_id=e_id, trace_id=trace_id)
+
+                # 4. 初始化环境Redis, e:e_{env_id}_{trace_id} = {var: {}, log: {}}
+
+                # 5. 初始化用例Redis, c:c_{case_id}_{trace_id} = {var: {}, log: {}}
+                await rds.init_case_key(e_id)
+                # 6. 初始化前后置模块
+                # 5. 执行环境前置,并将日志和提取的参数存入环境Redis
+                await suffix.execute_env_prefix(is_prefix=True)
+                # 6. 执行用例前置,并将日志和提取的参数存入用例Redis
+                await suffix.execute_case_prefix(is_prefix=True)
+                # 7. 执行用例,并将日志和提取的参数存入用例Redis
+                response = await case.case_executor(env_url, case_info)
+                # 8. 执行用例后置,并将日志和提取的参数存入用例Redis
+                await suffix.execute_case_prefix(is_prefix=False)
+                # 9. 执行环境后置,并将日志和提取的参数存入环境Redis
+                await suffix.execute_env_prefix(is_prefix=False)
+                # 10. 执行断言,并将断言结果存入用例Redis
+                assert_ = AssertService(env_id=env_id, trace_id=trace_id, case_id=e_id, async_response=response)
+                extract_ = ExtractService(env_id=env_id, trace_id=trace_id, case_id=e_id, async_response=response)
+                case_result = await assert_.assert_from_case(case_info.assert_info)
+                env_result = await assert_.assert_from_env()
+                # 11. 执行提取参数,并将提取结果存入用例Redis
+                _flag = assert_.assert_response_result(env_result, case_result)
+                extract_result = await extract_.extract(case_info.extract_info)
+                response["extract_result"] = extract_result
+                response["assert_result"] = {
+                    "env_assert": env_result,
+                    "case_assert": case_result,
+                    "final_result": False not in _flag,
+                }
+                print("123123", response)
+                if False not in _flag:
+                    count_result["success"] += 1
+                else:
+                    count_result["failed"] += 1
+            except Exception as e:
+                count_result["failed"] += 1
+            finally:
+                await ApiResultCrud.insert_api_result(trace_id, e_id, response)
+
+        end_time = time.time()
+        count_result["duration"] = round(end_time - start_time, 1)
+        await ApiReportCrud.update_api_report(report_id, count_result)
