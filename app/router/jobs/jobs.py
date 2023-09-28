@@ -40,7 +40,7 @@ def my_celery_task(env_id: int, case_id: List[int]) -> AsyncResult:
 
 @jobs.get("/run")
 async def test_runners():
-    result = my_celery_task.delay()
+    result = my_celery_task.delay(env_id=5, case_id=[1, 29])
     return {"task_id": result.id, "status": "Task is running"}
 
 
