@@ -21,6 +21,7 @@ from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.schemas.api_case.api_request_temp import TempRequestApi
 from app.services.api_case.api_case_services import ApiCaseServices
 import uuid
+from app.handler.api_redis_handle import RedisCli
 
 
 case = APIRouter()
@@ -31,12 +32,6 @@ case = APIRouter()
 #     result = await ApiCaseServices.query_case_detail(case_id)
 #
 #     return C137Response.success(data=result)
-
-
-@case.get("/{case_id}", summary="查询用例详情")
-async def get_api_case(case_id: int):
-    result = await ApiCaseServices.query_case_details(case_id)
-    return C137Response.success(data=result)
 
 
 @case.post("/add", summary="添加用例")
@@ -63,3 +58,16 @@ async def debug_temp_case(data: OrmFullCase, user=Depends(Permission())):
     print("1")
     result = await ApiCaseServices.temp_request(data, user["user_id"])
     return C137Response.success(data=result, headers={"trace_id": random_uid})
+
+
+@case.get("/timer", summary="定时任务")
+async def timer_runner():
+    random_uid = str(uuid.uuid4())
+    response = await ApiCaseServices.run_case_suite(random_uid, 5, [1, 29])
+    return C137Response.success(data=response)
+
+
+@case.get("/{case_id}", summary="查询用例详情")
+async def get_api_case(case_id: int):
+    result = await ApiCaseServices.query_case_details(case_id)
+    return C137Response.success(data=result)

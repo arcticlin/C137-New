@@ -22,3 +22,4 @@ from app.models.api_settings.assert_settings import AssertModel
 from app.models.api_settings.extract_settings import ExtractModel
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.models.api_settings.env_settings import EnvModel
+from app.models.apicase.api_report import ApiReportModel

@@ -6,18 +6,20 @@ import jsonpath
 
 from app.crud.api_case.assert_crud import AssertCurd
 from app.handler.async_http_client import AsyncRequest
-from app.handler.new_redis_handler import redis_client
+
 from app.schemas.api_case.api_case_schemas import Orm2CaseAssert
 from app.utils.time_utils import TimeUtils
+from app.handler.api_redis_handle import RedisCli
 
 
 class AssertService:
-    def __init__(self, env_id: int, user_id: int, async_response: dict, case_id: int = None):
+    def __init__(self, env_id: int, trace_id: str, async_response: dict, case_id: int = None):
         self.env_id = env_id
-        self.user_id = user_id
+        self.trace_id = trace_id
         self.case_id = case_id
         self.async_response = async_response
         self.log = dict(env_assert=[], case_assert=[])
+        self.rds = RedisCli(trace_id)
 
     @staticmethod
     def _equal(actual: int, expect: Union[str, list], is_equal: bool = True) -> dict:
@@ -116,82 +118,63 @@ class AssertService:
         # 9: start-with 10: end-with
         # 11: Re_Gex 12:Json-Path
         t = TimeUtils.get_current_time_without_year()
+        if log_type == "env_assert":
+            log = self.log["env_assert"]
+
+        else:
+            log = self.log["case_assert"]
         if assert_info.assert_type == 1:
             # 相等
             result = self._equal(src, assert_info.assert_value, True)
 
-            self.log[log_type].append(
-                f"[{t}]: [断言-相等] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-相等] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 2:
             result = self._equal(src, assert_info.assert_value, False)
-            self.log[log_type].append(
-                f"[{t}]: [断言-不相等] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-不相等] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 3:
             result = self._ge(src, assert_info.assert_value)
-            self.log[log_type].append(
-                f"[{t}]: [断言-大于等于] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-大于等于] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 4:
             result = self._ge(src, assert_info.assert_value, False)
 
-            self.log[log_type].append(
-                f"[{t}]: [断言-小于等于] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-小于等于] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 5:
             result = self._in_list(src, assert_info.assert_value)
-            self.log[log_type].append(
-                f"[{t}]: [断言-存在数组中] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-存在数组中] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 6:
             result = self._in_list(src, assert_info.assert_value, False)
-            self.log[log_type].append(
-                f"[{t}]: [断言-不存在数组中] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-不存在数组中] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 7:
             result = self._contains(src, assert_info.assert_value)
-            self.log[log_type].append(
-                f"[{t}]: [断言-包含在内] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-包含在内] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 8:
             result = self._contains(src, assert_info.assert_value, False)
-            self.log[log_type].append(
-                f"[{t}]: [断言-不包含在内] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-不包含在内] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 9:
             result = self._start_with(src, assert_info.assert_value)
-            self.log[log_type].append(
-                f"[{t}]: [断言-以XX开头] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-以XX开头] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 10:
             result = self._start_with(src, assert_info.assert_value, False)
-            self.log[log_type].append(
-                f"[{t}]: [断言-以XX结尾] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-以XX结尾] -> 实际: {src} 期望: {assert_info.assert_value} 结果: {result['result']}")
 
         elif assert_info.assert_type == 11:
             result = self._re(src, assert_info.assert_exp, assert_info.assert_value)
-            self.log[log_type].append(
-                f"[{t}]: [断言-匹配到RE表达式] -> 实际: {src} 期望: {assert_info.assert_exp} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-匹配到RE表达式] -> 实际: {src} 期望: {assert_info.assert_exp} 结果: {result['result']}")
 
         else:
             result = self._jsonpath(src, assert_info.assert_exp, assert_info.assert_value)
-            self.log[log_type].append(
-                f"[{t}]: [断言-匹配到JP表达式] -> 实际: {src} 期望: {assert_info.assert_exp} 结果: {result['result']}"
-            )
+            log.append(f"[{t}]: [断言-匹配到JP表达式] -> 实际: {src} 期望: {assert_info.assert_exp} 结果: {result['result']}")
 
-        await redis_client.set_case_log(user_id=self.user_id, value=self.log, case_id=self.case_id, is_update=True)
+        await self.rds.set_case_log(case_id=self.case_id, value=self.log)
         result["name"] = assert_info.name
         result["assert_from"] = assert_info.assert_from
         result["assert_type"] = assert_info.assert_type

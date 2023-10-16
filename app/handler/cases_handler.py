@@ -8,18 +8,20 @@ Description:
 import json
 from typing import List, Union
 import re
-from app.handler.new_redis_handler import redis_client
+from app.handler.api_redis_handle import RedisCli
 from app.schemas.api_case.api_case_schemas import OrmFullCase
 from app.handler.async_http_client import AsyncRequest
 from app.utils.time_utils import TimeUtils
 
 
 class CaseHandler:
-    def __init__(self, env_id: int, user_id: int = None, case_id: int = None):
+    def __init__(self, env_id: int, trace_id: str, user_id: int = None, case_id: int = None):
         self.env_id = env_id
         self.user_id = user_id
-        self.caer_id = case_id
+        self.case_id = "temp" if case_id is None else case_id
+        self.trace_id = trace_id
         self.log = dict(var_replace=[])
+        self.rds = RedisCli(trace_id)
 
     @staticmethod
     def set_url_by_path(url: str, path: List[dict]):
@@ -67,12 +69,14 @@ class CaseHandler:
         """
         获取变量
         """
-        obj = await redis_client.get_env_var(self.env_id, self.user_id)
+        # 先从环境提取,再从用例提取
 
-        if obj is None:
-            return None
-        result = obj.get(key, None)
-        return result
+        env_obj = await self.rds.get_var_value(key, self.env_id, self.case_id, True)
+        case_obj = await self.rds.get_var_value(key, self.env_id, self.case_id, False)
+
+        if case_obj:
+            return case_obj
+        return env_obj
 
     async def parse_text(self, key: str):
         t = TimeUtils.get_current_time_without_year()
@@ -137,20 +141,23 @@ class CaseHandler:
         return temp_dict
 
     async def case_pick_up(self, env_url: str, obj: OrmFullCase):
+        print("11", obj)
+        print("22", obj.url_info)
+        print("33", type(obj.url_info))
         url = obj.url_info.url
         method = obj.url_info.method
         headers = await self.parse_query([x.dict() for x in obj.header_info])
         query = await self.parse_query([x.dict() for x in obj.query_info])
         path = await self.parse_path([x.dict() for x in obj.path_info])
         body_type = obj.body_info.body_type
-        body = await self.parse_obj(obj.body_info.body)
+        body = await self.parse_obj(obj.body_info.body) if body_type != 0 else ""
         url = self.set_url_with_env(env_url, url)
         url = self.set_url_by_path(url, path)
         return url, method, headers, body, body_type, path, query
 
     async def case_executor(self, env_url: str, data: OrmFullCase):
         url, method, headers, body, body_type, path, query = await self.case_pick_up(env_url, data)
-        await redis_client.set_case_log(user_id=self.user_id, value=self.log, case_id=self.caer_id, is_update=True)
+        await self.rds.set_case_log(data.case_id, self.log)
         r = await AsyncRequest.package_request(
             url=url,
             body_type=body_type,

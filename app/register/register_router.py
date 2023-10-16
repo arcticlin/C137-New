@@ -15,11 +15,13 @@ from app.router.api_case.api_case_router import case
 
 from app.router.common_config.config_router import cconfig
 from app.router.ws.ws import ws
+from app.router.jobs.jobs import jobs
 
 
 def register_router(app: FastAPI):
-    app.include_router(ws, prefix="/ws")
+    app.include_router(ws)
     app.include_router(auth, prefix="/auth", tags=["用户中心"])
+    app.include_router(jobs, prefix="/jobs", tags=["定时任务"])
     app.include_router(project, prefix="/project", tags=["项目"])
     app.include_router(directory, prefix="/directory", tags=["目录"])
     app.include_router(admin, prefix="/admin", tags=["管理员"])
