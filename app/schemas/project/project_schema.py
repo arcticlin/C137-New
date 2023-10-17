@@ -70,8 +70,9 @@ class ProjectListShow(BaseModel):
     create_user: int = Field(..., title="创建人")
     updated_at: int = Field(..., title="更新时间")
     created_at: int = Field(..., title="创建时间")
-    case_count: int = Field(0, title="用例数量")
-    member_count: int = Field(0, title="成员数量")
+    total_case: int = Field(0, title="用例数量")
+    new_case_today: int = Field(0, title="今日新增")
+    members: int = Field(0, title="成员数量")
 
 
 class ProjectListResponse(CommonResponse):

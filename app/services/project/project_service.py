@@ -81,6 +81,7 @@ class ProjectService:
                 public,
                 project_avatar,
                 case_count,
+                today_case,
                 member_count,
             ) = item
             temp.append(
@@ -92,8 +93,9 @@ class ProjectService:
                     "updated_at": update_time,
                     "public": public,
                     "project_avatar": project_avatar,
-                    "case_count": case_count,
-                    "member_count": member_count,
+                    "total_case": case_count,
+                    "new_case_today": today_case,
+                    "members": member_count,
                 }
             )
         return temp
