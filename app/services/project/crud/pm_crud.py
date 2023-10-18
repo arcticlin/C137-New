@@ -4,8 +4,8 @@ from app.utils.new_logger import logger
 from app.core.db_connector import async_session
 from app.models.project.project_member import ProjectMemberModel
 
-from sqlalchemy import select, text, and_, Row, RowMapping
-from app.handler.db_bulk import DatabaseBulk
+from sqlalchemy import select, text, and_
+from app.handler.db_tool.db_bulk import DatabaseBulk
 
 
 class ProjectMCrud:
@@ -35,7 +35,7 @@ class ProjectMCrud:
                     LEFT JOIN project_member pm on p.project_id = pm.project_id AND pm.user_id= :user_id
                     WHERE p.project_id = :project_id AND p.deleted_at = 0 AND (p.create_user = :user_id OR pm.role=3)
                 ) as is_creator
-                
+
                 """
             )
             result = await session.execute(smtm, {"project_id": project_id, "user_id": user_id})
