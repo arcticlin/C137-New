@@ -7,7 +7,7 @@ Description:
 """
 import aiohttp
 
-from app.exceptions.commom_exception import CustomException
+from app.exceptions.custom_exception import CustomException
 from app.exceptions.oss_exp_510 import GET_TOKEN_FAILED
 from base_config import Config
 from aiohttp import ClientSession

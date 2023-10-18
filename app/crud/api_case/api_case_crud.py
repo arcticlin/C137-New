@@ -16,7 +16,7 @@ from app.crud.api_case.api_path_crud import ApiPathCrud
 from app.crud.api_case.assert_crud import AssertCurd
 from app.crud.api_case.extract_crud import ExtractCrud
 from app.crud.api_case.suffix_crud import SuffixCrud
-from app.exceptions.commom_exception import CustomException
+from app.exceptions.custom_exception import CustomException
 from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
 from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd, CaseBasicInfoUpdate
 from app.utils.new_logger import logger

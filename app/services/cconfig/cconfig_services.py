@@ -13,7 +13,7 @@ from app.schemas.cconfig.redis_schema import *
 from app.schemas.cconfig.script_schema import *
 from app.exceptions.cconfig_exp import *
 from app.crud.cconfig.cconfig_crud import CommonConfigCrud
-from app.exceptions.commom_exception import CustomException
+from app.exceptions.custom_exception import CustomException
 from app.handler.script_handler import ScriptHandler
 from app.handler.db_handler import DataBaseConnect
 from app.crud.api_case.suffix_crud import SuffixCrud

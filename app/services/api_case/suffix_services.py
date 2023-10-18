@@ -11,7 +11,7 @@ from typing import List, Union
 from app.crud.api_case.suffix_crud import SuffixCrud
 from app.crud.cconfig.cconfig_crud import CommonConfigCrud
 from app.exceptions.cconfig_exp import SQL_NOT_EXISTS
-from app.exceptions.commom_exception import CustomException
+from app.exceptions.custom_exception import CustomException
 from app.handler.db_handler import DataBaseConnect
 from app.handler.new_redis_handler import redis_client
 from app.handler.script_handler import ScriptHandler

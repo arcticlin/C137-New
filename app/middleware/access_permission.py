@@ -1,18 +1,11 @@
-# coding=utf-8
-"""
-File: access_permission.py
-Author: bot
-Created: 2023/7/27
-Description:
-"""
 from fastapi.security import APIKeyHeader
 from base_config import Config
 from fastapi import Depends
-from app.exceptions.commom_exception import CustomException
-from app.exceptions.auth_exp import *
-from app.handler.token_handler import UserToken
+from app.exceptions.custom_exception import CustomException
+from app.exceptions.auth_exp_410 import *
+from app.handler.auth.token_handler import UserToken
 from datetime import datetime
-from app.handler.redis_handler import redis_client
+from app.handler.redis.rds_client import RedisCli
 
 
 class Permission:
@@ -21,6 +14,7 @@ class Permission:
     def __init__(self, role: int = Config.U_MEMBER, refresh: bool = False):
         self.role = role
         self.refresh = refresh
+        self.rds = RedisCli()
 
     async def __call__(self, token: str = Depends(oauth_scheme)):
         if not token:
@@ -36,11 +30,12 @@ class Permission:
 
         # 强验证Token, 当不存在Redis里就无法通过Token验证
         if Config.TOKEN_STRONG_VERIFY:
-            redis_token = await redis_client.get(f"ut:user_token_{user_info['user_id']}")
-            if redis_token is None:
+            redis_token = await self.rds.get_key_value_as_json(f"ut:user_token_{user_info['user_id']}")
+
+            if redis_token is None or redis_token == {}:
                 raise CustomException(TOKEN_IS_INVALID)
-            if token != redis_token:
-                await redis_client.delete(f"ut:user_token_{user_info['user_id']}")
+            if token != redis_token["token"]:
+                await self.rds.delete(f"ut:user_token_{user_info['user_id']}")
                 raise CustomException(TOKEN_IS_INVALID)
 
         # 超时Token校验

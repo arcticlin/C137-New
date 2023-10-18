@@ -8,7 +8,7 @@ Description:
 from typing import List
 
 from app.crud.api_case.api_case_crud import ApiCaseCrud
-from app.exceptions.commom_exception import CustomException
+from app.exceptions.custom_exception import CustomException
 from app.handler.response_handler import C137Response
 from app.handler.script_handler import ScriptHandler
 from app.services.api_case.suffix_services import SuffixServices

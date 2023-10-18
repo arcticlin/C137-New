@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-File: db_handler.py
+File: db_tool.py
 Author: bot
 Created: 2023/8/7
 Description:
@@ -10,7 +10,7 @@ from app.exceptions.custom_exception import CustomException
 from aiomysql import Connection
 
 
-class DataBaseConnect:
+class MultiDbConnector:
     @staticmethod
     async def mysql_connection(
         host: str,
@@ -27,7 +27,7 @@ class DataBaseConnect:
 
     @staticmethod
     async def mysql_ping(host: str, username: str, password: str = None, db: str = None, port: int = 3306):
-        connection = await DataBaseConnect.mysql_connection(host, username, password, db, port)
+        connection = await MultiDbConnector.mysql_connection(host, username, password, db, port)
         connection.close()
 
     @staticmethod

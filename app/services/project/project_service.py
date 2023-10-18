@@ -3,7 +3,7 @@ from datetime import datetime
 
 from app.crud.project.project_crud import ProjectCrud
 from app.crud.project.project_directory_crud import PDirectoryCrud
-from app.exceptions.commom_exception import CustomException
+from app.exceptions.custom_exception import CustomException
 from app.handler.response_handler import C137Response
 from app.schemas.project.pd_schema import AddPDirectoryRequest, DeletePDirectoryRequest
 from app.schemas.project.project_schema import AddProjectRequest, UpdateProjectRequest, AddProjectMemberRequest

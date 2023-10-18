@@ -13,7 +13,7 @@ from app.crud.api_case.api_case_crud import ApiCaseCrud
 from app.crud.api_case.assert_crud import AssertCurd
 from app.crud.api_case.extract_crud import ExtractCrud
 from app.crud.api_case.suffix_crud import SuffixCrud
-from app.exceptions.commom_exception import CustomException
+from app.exceptions.custom_exception import CustomException
 from app.exceptions.case_exp import *
 from app.handler.new_redis_handler import redis_client
 from app.handler.api_redis_handle import RedisCli

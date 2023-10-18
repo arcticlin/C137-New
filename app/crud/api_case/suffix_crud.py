@@ -12,7 +12,7 @@ from app.handler.db_bulk import DatabaseBulk
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.core.db_connector import async_session
 from sqlalchemy import text, select, and_, or_, Row, RowMapping, func
-from app.exceptions.commom_exception import CustomException
+from app.exceptions.custom_exception import CustomException
 from app.schemas.api_case.api_case_schema_new_new import CaseSuffixAdd
 from app.schemas.api_settings.suffix_schema import SchemaCaseSuffix
 

@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-File: commom_exception.py
+File: custom_exception.py
 Author: bot
 Created: 2023/7/25
 Description:

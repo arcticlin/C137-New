@@ -9,11 +9,12 @@ import hashlib
 from datetime import datetime, timedelta
 import jwt
 from jwt.exceptions import ExpiredSignatureError
-from app.exceptions.auth_exp import *
+from app.exceptions.auth_exp_410 import *
 from app.exceptions.custom_exception import CustomException
 from typing import Dict
+
 from base_config import Config
-from app.utils.new_logger import logger
+from loguru import logger
 
 
 class UserToken:

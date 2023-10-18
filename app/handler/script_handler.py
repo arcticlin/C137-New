@@ -14,7 +14,7 @@ Description:
 """
 import re, ast, builtins, asyncio, sys
 
-from app.exceptions.commom_exception import CustomException
+from app.exceptions.custom_exception import CustomException
 
 
 class ScriptHandler:
