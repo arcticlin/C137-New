@@ -69,6 +69,11 @@ class BasicConfig(BaseSettings):
     CELERY_BROKER_URL: str
     CELERY_STATUS_BACKEND: str
 
+    # 图床配置
+    IMG_HOST: str
+    IMG_ACCOUNT: str
+    IMG_PWD: str
+
 
 class DevConfig(BasicConfig):
     # model_config = SettingsConfigDict(

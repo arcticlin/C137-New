@@ -15,10 +15,11 @@ from app.utils.new_logger import logger
 
 
 class CustomException(Exception):
-    def __init__(self, exception_error: tuple[int, int, str]) -> None:
+    def __init__(self, exception_error: tuple[int, int, str], addition_info: str = None) -> None:
         self.status_code = exception_error[0]
         self.internal_code = exception_error[1]
         self.error_message = exception_error[2]
+        self.addition_info = addition_info
 
     def __repr__(self) -> str:
         class_name = self.__class__.__name__
@@ -29,7 +30,12 @@ async def custom_exception_handler(request: Request, exc: CustomException):
     logger.error(f"请求异常: {json.dumps(exc.error_message, ensure_ascii=False, indent=2)}")
     return JSONResponse(
         status_code=exc.status_code,
-        content=jsonable_encoder({"code": exc.internal_code, "error_msg": f"{exc.error_message}"}),
+        content=jsonable_encoder(
+            {
+                "code": exc.internal_code,
+                "error_msg": f"{exc.error_message}{'' if exc.addition_info is None else f':({exc.addition_info})'})",
+            }
+        ),
     )
 
 
