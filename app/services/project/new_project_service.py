@@ -135,3 +135,28 @@ class ProjectService:
         await ProjectMCrud.remove_member(project_id, member_id, operator)
         await WsService.ws_notify_update_project_list([member_id])
         await WsService.ws_notify_message([member_id], f"你被移除项目: {project_id}")
+
+    @staticmethod
+    async def update_member(project_id: int, member_id: int, member_role: int, operator: int):
+        logger.debug(f"更新项目: {project_id}成员, 成员: {member_id}")
+        if not await ProjectCrud.user_has_permission(project_id, operator):
+            raise CustomException(PROJECT_NOT_CREATOR)
+        if await ProjectMCrud.member_is_creator(project_id, member_id):
+            raise CustomException(PROJECT_MEMBER_NOT_ALLOW_UPDATE_CREATOR)
+        if not await ProjectMCrud.exists_member(project_id, member_id):
+            raise CustomException(PROJECT_MEMBER_NOT_EXISTS)
+        if member_role == 3:
+            raise CustomException(PROJECT_MEMBER_NOT_ALLOW_TO_CREATOR)
+        await ProjectMCrud.update_member(project_id, member_id, member_role, operator)
+
+    @staticmethod
+    async def member_exit(project_id: int, operator: int):
+        logger.debug(f"退出项目: {project_id}成员, 成员: {operator}")
+        if await ProjectMCrud.member_is_creator(project_id, operator):
+            raise CustomException(PROJECT_MEMBER_NOT_ALLOW_EXIT_CREATOR)
+        if not await ProjectMCrud.exists_member(project_id, operator):
+            raise CustomException(PROJECT_MEMBER_NOT_EXISTS)
+        await ProjectMCrud.exit_member(project_id, operator)
+        # 通知更新
+        pm_list = await ProjectMCrud.query_pm_with_id(project_id)
+        await WsService.ws_notify_update_project_list(pm_list)

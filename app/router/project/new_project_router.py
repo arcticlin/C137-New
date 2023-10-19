@@ -24,8 +24,9 @@ project = APIRouter()
 
 
 @project.get("/list", summary="获取项目列表, 我创建+我参与的+公开的", response_model=ResponseProjectList)
-async def get_project_list():
-    return {"code": 0, "message": "success", "data": []}
+async def get_project_list(user_id=Depends(Permission())):
+    result = await ProjectService.get_project_list(user_id["user_id"])
+    return C137Response.success(data=result, total=len(result))
 
 
 @project.post("/new", summary="创建项目", response_model=ResponseProjectNew)
@@ -70,14 +71,13 @@ async def remove_member(project_id: int, user_id: int, user_info=Depends(Permiss
     return C137Response.success(message="删除成功")
 
 
-#
-# @project.put("/{project_id}/member/update", summary="更新成员权限", response_model=CommonResponse)
-# async def update_member_role(project_id: int, data: ProjectAssignMemberRequest, user_info=Depends(Permission())):
-#     await ProjectService.update_member(project_id, data.user_id, data.role, operator=user_info["user_id"])
-#     return C137Response.success(message="更新成功")
-#
-#
-# @project.put("/{project_id}/member/quit", summary="退出项目", response_model=CommonResponse)
-# async def exit_project(project_id: int, user_info=Depends(Permission())):
-#     await ProjectService.member_exit(project_id, user_info["user_id"])
-#     return C137Response.success(message="退出成功")
+@project.put("/{project_id}/member/update", summary="更新成员权限", response_model=CommonResponse)
+async def update_member_role(project_id: int, data: ProjectAssignMemberRequest, user_info=Depends(Permission())):
+    await ProjectService.update_member(project_id, data.user_id, data.role, operator=user_info["user_id"])
+    return C137Response.success(message="更新成功")
+
+
+@project.put("/{project_id}/member/quit", summary="退出项目", response_model=CommonResponse)
+async def exit_project(project_id: int, user_info=Depends(Permission())):
+    await ProjectService.member_exit(project_id, user_info["user_id"])
+    return C137Response.success(message="退出成功")
