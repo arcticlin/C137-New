@@ -8,10 +8,11 @@ Description:
 from fastapi import APIRouter, FastAPI
 
 from app.router.auth.auth_router import auth
-from app.router.project.new_project_router import project
+from app.router.project.project_router import project
 from app.router.user.user import user
 from app.router.oss.oss import oss
-from app.router.project.project_router import directory
+
+from app.router.project.directory_router import directory
 from app.router.admin.admin import admin
 
 from app.router.api_case.api_case_router import case
@@ -23,8 +24,8 @@ from app.router.jobs.jobs import jobs
 
 def register_router(app: FastAPI):
     app.include_router(ws)
-    app.include_router(user, prefix="/user", tags=["用户中心"])
     app.include_router(auth, prefix="/auth", tags=["账号管理"])
+    app.include_router(user, prefix="/user", tags=["用户中心"])
     app.include_router(admin, prefix="/admin", tags=["管理员"])
     app.include_router(jobs, prefix="/jobs", tags=["定时任务"])
     app.include_router(project, prefix="/project", tags=["项目"])

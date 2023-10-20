@@ -60,3 +60,12 @@ class DatabaseBulk:
                 serialized_data_list.append(serialized_data)
         if serialized_data_list:
             await session.execute(model.__table__.insert(), serialized_data_list)
+
+    @staticmethod
+    def serializer_comma_string(comma_string: str) -> list:
+        """将sql concat的字符串转换为列表"""
+        if "," in comma_string:
+            check_list = [i for i in comma_string.split(",") if i]
+        else:
+            check_list = [comma_string]
+        return check_list
