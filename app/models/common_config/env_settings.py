@@ -14,10 +14,10 @@ class EnvModel(Base, BaseMixin):
 
     env_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(16), nullable=False, comment="环境名称")
-    url = Column(String(128), nullable=False, comment="环境URL")
+    domain = Column(String(128), nullable=False, comment="环境URL")
 
-    def __init__(self, name: str, url: str, create_user: int):
+    def __init__(self, name: str, domain: str, create_user: int):
         self.create_user = create_user
         self.update_user = create_user
         self.name = name
-        self.url = url
+        self.domain = domain

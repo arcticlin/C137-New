@@ -8,7 +8,7 @@ Description:
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_, text
 
-from app.models.api_settings.env_settings import EnvModel
+from app.models.common_config.env_settings import EnvModel
 from app.schemas.cconfig.env_schema import EnvAddRequest, EnvUpdateRequest
 from app.utils.new_logger import logger
 from app.schemas.cconfig.sql_schema import *
@@ -20,7 +20,6 @@ from app.models.common_config.script_model import ScriptModel
 from app.handler.db_bulk import DatabaseBulk
 from app.models.apicase.api_path import ApiPathModel
 from app.models.apicase.api_headers import ApiHeadersModel
-from app.models.api_settings.assert_settings import AssertModel
 
 
 class CommonConfigCrud:

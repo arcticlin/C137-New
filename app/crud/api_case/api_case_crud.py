@@ -5,10 +5,6 @@ Author: bot
 Created: 2023/8/2
 Description:
 """
-from datetime import datetime
-
-from pymysql import OperationalError
-from sqlalchemy.dialects.mysql import pymysql
 
 from app.core.db_connector import async_session
 from app.crud.api_case.api_headers_crud import ApiHeadersCrud
@@ -17,17 +13,12 @@ from app.crud.api_case.assert_crud import AssertCurd
 from app.crud.api_case.extract_crud import ExtractCrud
 from app.crud.api_case.suffix_crud import SuffixCrud
 from app.exceptions.custom_exception import CustomException
-from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
-from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd, CaseBasicInfoUpdate
-from app.utils.new_logger import logger
+from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd
 from app.models.apicase.api_case import ApiCaseModel
 from app.models.apicase.api_path import ApiPathModel
 from app.models.apicase.api_headers import ApiHeadersModel
-from app.schemas.api_case.api_path_schema import *
-from app.schemas.api_case.api_headers_schema import *
 from app.schemas.api_case.api_case_schema import *
 from sqlalchemy import text, select, and_
-from app.models.api_settings.env_settings import EnvModel
 
 
 class ApiCaseCrud:
