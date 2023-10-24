@@ -23,6 +23,28 @@ from app.handler.db_tool.db_bulk import DatabaseBulk
 
 class EnvCrud:
     @staticmethod
+    async def env_exists_by_id(env_id: int):
+        async with async_session() as session:
+            smtm = text(
+                """
+                SELECT EXISTS(SELECT 1 FROM envs WHERE env_id = :env_id AND deleted_at = 0) AS is_exists;
+            """
+            )
+            result = await session.execute(smtm, {"env_id": env_id})
+            return result.scalars().first()
+
+    @staticmethod
+    async def env_exists_by_name(name: str):
+        async with async_session() as session:
+            smtm = text(
+                """
+                    SELECT EXISTS(SELECT 1 FROM envs WHERE name = :name AND deleted_at = 0) AS is_exists;
+                """
+            )
+            result = await session.execute(smtm, {"name": name})
+            return result.scalars().first()
+
+    @staticmethod
     async def add_env_form(form: RequestEnvNew, creator: int):
         async with async_session() as session:
             async with session.begin():
@@ -47,15 +69,23 @@ class EnvCrud:
                     raise CustomException(NEW_ENV_FAIL, addition_info=str(e))
 
     @staticmethod
-    async def get_env_list(operator: int):
+    async def get_env_list(page: int, page_size: int, operator: int):
+        offset = (page - 1) * page_size
         async with async_session() as session:
-            smtm = text(
+            smtm_total = text(
                 """
-                SELECT env_id, name, domain FROM env WHERE create_user = :operator AND deleted_at = 0
-            """
+                SELECT COUNT(*) as total FROM envs WHERE create_user = :operator AND deleted_at = 0;
+                """
             )
-            result = await session.execute(smtm, {"operator": operator})
-            return result.scalars().all()
+            total = await session.execute(smtm_total, {"operator": operator})
+            smtm = (
+                select(EnvModel)
+                .where(and_(EnvModel.create_user == operator, EnvModel.deleted_at == 0))
+                .limit(page_size)
+                .offset(offset)
+            )
+            result = await session.execute(smtm)
+            return result.scalars().all(), total.scalars().first()
 
     @staticmethod
     async def get_env_detail(env_id: int):

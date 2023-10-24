@@ -20,10 +20,16 @@ from app.router.api_case.api_case_router import case
 from app.router.common_config.config_router import cconfig
 from app.router.ws.ws import ws
 from app.router.jobs.jobs import jobs
+from app.router.common_config.env.env import envs
+from app.router.common_config.redis.redis_router import rds_router
+from app.router.common_config.sql.sql_router import sql_router
 
 
 def register_router(app: FastAPI):
     app.include_router(ws)
+    app.include_router(envs, prefix="/c", tags=["envs"])
+    app.include_router(rds_router, prefix="/c", tags=["rds_router"])
+    app.include_router(sql_router, prefix="/c", tags=["sql_router"])
     app.include_router(auth, prefix="/auth", tags=["账号管理"])
     app.include_router(user, prefix="/user", tags=["用户中心"])
     app.include_router(admin, prefix="/admin", tags=["管理员"])

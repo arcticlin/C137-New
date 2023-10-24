@@ -33,7 +33,7 @@ async def custom_exception_handler(request: Request, exc: CustomException):
         content=jsonable_encoder(
             {
                 "code": exc.internal_code,
-                "error_msg": f"{exc.error_message}{'' if exc.addition_info is None else f':({exc.addition_info})'})",
+                "error_msg": f"{exc.error_message}{'' if exc.addition_info is None else f':({exc.addition_info})'}",
             }
         ),
     )

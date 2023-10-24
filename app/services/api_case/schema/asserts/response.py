@@ -17,5 +17,5 @@ class ResponseAssertInfo(BaseModel):
         ...,
         description="断言类型 1: equal 2: n-equal 3:GE 4: LE 5:in-list 6: not-in-list 7: contain 8: not-contain 9: start-with 10: end-with 11: Re_Gex 12:Json-Path",
     )
-    assert_exp: str = Field(..., description="断言表达式")
+    assert_exp: str = Field(None, description="断言表达式")
     assert_value: str = Field(..., description="断言值")

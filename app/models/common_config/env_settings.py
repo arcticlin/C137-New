@@ -10,7 +10,7 @@ from sqlalchemy import Column, Integer, String, TEXT, ForeignKey, BOOLEAN
 
 
 class EnvModel(Base, BaseMixin):
-    __tablename__ = "env"
+    __tablename__ = "envs"
 
     env_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(16), nullable=False, comment="环境名称")
