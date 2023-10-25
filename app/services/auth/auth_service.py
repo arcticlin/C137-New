@@ -1,7 +1,7 @@
 import secrets
 import string
 
-from app.exceptions.auth_exp_410 import *
+from app.exceptions.exp_410_auth import *
 from app.handler.auth.token_handler import UserToken
 from app.handler.redis.cache_redis import CacheRedis
 from app.handler.serializer.response_serializer import C137Response

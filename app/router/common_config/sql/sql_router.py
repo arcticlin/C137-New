@@ -38,8 +38,8 @@ async def ping_sql_by_form(form: RequestSqlPingByForm, user_id=Depends(Permissio
 
 @sql_router.post("/debug", summary="SQL调试语句", response_model=CommonResponse)
 async def ping_sql_by_form(form: RequestSqlCommandDebug, user_id=Depends(Permission())):
-    await SqlService.debug_sql_command(form)
-    return C137Response.success(message="pong")
+    result = await SqlService.debug_sql_command(form)
+    return C137Response.success(data=result)
 
 
 @sql_router.get("/{sql_id}/detail", summary="SQL连接配置详情", response_model=ResponseSqlDetail)

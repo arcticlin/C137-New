@@ -9,7 +9,7 @@ from app.exceptions.custom_exception import CustomException
 from app.handler.db_tool.db_bulk import DatabaseBulk
 from app.services.directory.crud.directory_crud import DirectoryCrud
 from app.services.directory.schema.dir_new import DirectoryNew
-from app.exceptions.project_exp_420 import *
+from app.exceptions.exp_420_project import *
 from loguru import logger
 
 

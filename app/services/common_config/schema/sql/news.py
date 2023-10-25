@@ -35,3 +35,4 @@ class RequestSqlPingByForm(BaseModel):
 class RequestSqlCommandDebug(BaseModel):
     sql_id: int = Field(..., description="SQL配置ID")
     command: str = Field(..., description="SQL语句")
+    fetch_one: bool = Field(False, description="是否只取一条")

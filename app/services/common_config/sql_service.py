@@ -9,7 +9,7 @@ from app.exceptions.custom_exception import CustomException
 from app.services.auth.crud.auth_crud import UserCrud
 from app.services.common_config.crud.sql.sql_crud import SqlCrud
 from app.services.common_config.schema.sql.news import RequestSqlAdd, RequestSqlPingByForm, RequestSqlCommandDebug
-from app.exceptions.db_exp_460 import *
+from app.exceptions.exp_460_db import *
 from app.services.common_config.schema.sql.update import RequestSqlUpdate
 
 
@@ -78,6 +78,6 @@ class SqlService:
         check = await SqlCrud.query_sql_detail(form.sql_id)
         if not check:
             raise CustomException(SQL_NOT_EXISTS)
-        new_form = SqlCrud.convert_model_to_sql_form(check)
-
-        await SqlCrud.execute_sql_command(form)
+        sconfig = SqlCrud.convert_model_to_sql_form(check)
+        result = await SqlCrud.execute_sql_command_by_form(sconfig, form.command, form.fetch_one)
+        return result

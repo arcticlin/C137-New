@@ -4,7 +4,7 @@ from app.handler.redis.rds_client import RedisCli
 
 
 class ApiRedis(RedisCli):
-    def __init__(self, trace_id: int = None):
+    def __init__(self, trace_id: str = None):
         super().__init__(trace_id)
 
     def get_env_rk(self, env_id: int):

@@ -5,11 +5,11 @@ from typing import Union
 import jsonpath
 
 from app.crud.api_case.assert_crud import AssertCurd
-from app.handler.async_http_client import AsyncRequest
+from app.handler.ahttp.async_http_client import AsyncRequest
+from app.handler.redis.api_redis import ApiRedis
 
 from app.schemas.api_case.api_case_schemas import Orm2CaseAssert
 from app.utils.time_utils import TimeUtils
-from app.handler.api_redis_handle import RedisCli
 
 
 class AssertService:
@@ -19,7 +19,7 @@ class AssertService:
         self.case_id = case_id
         self.async_response = async_response
         self.log = dict(env_assert=[], case_assert=[])
-        self.rds = RedisCli(trace_id)
+        self.rds = ApiRedis(trace_id)
 
     @staticmethod
     def _equal(actual: int, expect: Union[str, list], is_equal: bool = True) -> dict:

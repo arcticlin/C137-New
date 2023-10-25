@@ -2,9 +2,10 @@ import re
 
 import jsonpath
 
-from app.handler.api_redis_handle import RedisCli
-from app.handler.async_http_client import AsyncRequest
-from app.handler.new_redis_handler import redis_client
+
+from app.handler.ahttp.async_http_client import AsyncRequest
+from app.handler.redis.api_redis import ApiRedis
+
 from app.schemas.api_case.api_case_schemas import Orm2CaseExtract
 
 
@@ -16,7 +17,7 @@ class ExtractService:
         self.async_response = async_response
         self.log = dict(extract=[])
         self.g_var = dict()
-        self.rds = RedisCli(trace_id)
+        self.rds = ApiRedis(trace_id)
 
     @staticmethod
     async def extract_with_re(src: str, exp: str, out_name: str, index: int = None):

@@ -9,7 +9,7 @@ from app.exceptions.custom_exception import CustomException
 from app.services.auth.crud.auth_crud import UserCrud
 from app.services.common_config.crud.redis.redis_crud import RedisCrud
 from app.services.common_config.schema.redis.news import RequestRedisAdd, RequestRedisPingByForm
-from app.exceptions.rds_c_exp_450 import *
+from app.exceptions.exp_450_rds import *
 from app.services.common_config.schema.redis.update import RequestRedisUpdate
 
 

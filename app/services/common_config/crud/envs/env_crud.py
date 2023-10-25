@@ -11,7 +11,7 @@ from sqlalchemy import text, and_, select
 
 from app.core.db_connector import async_session
 from app.exceptions.custom_exception import CustomException
-from app.exceptions.env_exp_430 import NEW_ENV_FAIL
+from app.exceptions.exp_430_env import NEW_ENV_FAIL
 from app.models.common_config.env_settings import EnvModel
 from app.models.apicase.api_path import ApiPathModel
 from app.models.apicase.api_headers import ApiHeadersModel

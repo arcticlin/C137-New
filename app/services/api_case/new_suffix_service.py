@@ -9,16 +9,19 @@ import asyncio
 from typing import List, Union, Dict
 
 from app.crud.api_case.suffix_crud import SuffixCrud
-from app.crud.cconfig.cconfig_crud import CommonConfigCrud
-from app.exceptions.cconfig_exp import SQL_NOT_EXISTS
+
+from app.exceptions.exp_460_db import SQL_NOT_EXISTS
 from app.exceptions.custom_exception import CustomException
-from app.handler.api_redis_handle import RedisCli
-from app.handler.db_handler import DataBaseConnect
-from app.handler.response_handler import C137Response
-from app.handler.script_handler import ScriptHandler
+from app.handler.redis.api_redis import ApiRedis
+
+from app.handler.serializer.response_serializer import C137Response
+from app.handler.script.script_handler import ScriptHandler
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.schemas.api_case.api_case_schemas import Orm2CaseSuffix
 from app.schemas.api_settings.suffix_schema import SchemaCaseSuffix
+from app.services.common_config.schema.sql.news import RequestSqlCommandDebug
+from app.services.common_config.script_service import ScriptService
+from app.services.common_config.sql_service import SqlService
 from app.utils.time_utils import TimeUtils
 
 
@@ -28,7 +31,7 @@ class SuffixService:
         self.case_id = case_id
         self.trace_id = trace_id
         self.is_temp = is_temp
-        self.rds = RedisCli(trace_id)
+        self.rds = ApiRedis(trace_id)
         self.env_var = dict()
         self.case_var = dict()
         self.env_log: Dict[str, List] = dict(env_prefix=[], env_suffix=[])
@@ -67,24 +70,13 @@ class SuffixService:
     @staticmethod
     async def execute_method_sql(sql_id: int, run_command: str):
         """执行SQL语句"""
-        sql_info = await CommonConfigCrud.query_sql_detail(sql_id)
-        if not sql_info:
-            raise CustomException(SQL_NOT_EXISTS)
-        c = await DataBaseConnect.mysql_connection(
-            host=sql_info.host,
-            port=sql_info.port,
-            username=sql_info.db_user,
-            password=sql_info.db_password,
-            db=sql_info.db_name,
-        )
-        async with c.cursor() as cursor:
-            await cursor.execute(run_command)
-            result = await cursor.fetchall()
-            return result
+        to_model = RequestSqlCommandDebug(sql_id=sql_id, run_command=run_command, fetch_one=False)
+        result = await SqlService.debug_sql_command(to_model)
+        return result
 
     @staticmethod
     async def execute_common_script(script: SchemaCaseSuffix):
-        script_info = await CommonConfigCrud.query_script_detail(script_id=script.script_id)
+        script_info = await ScriptService.query_script_by_id(script_id=script.script_id)
         run_out_name, run_command = script_info.var_key, script_info.var_script
         result = await ScriptHandler.python_executor(run_out_name, run_command)
         return result, run_out_name

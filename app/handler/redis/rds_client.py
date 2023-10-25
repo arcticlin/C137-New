@@ -4,7 +4,7 @@ from redis import asyncio as aioredis
 from redis.asyncio import Redis
 
 from app.exceptions.custom_exception import CustomException
-from app.exceptions.rds_c_exp_450 import REDIS_CONNECT_FAIL
+from app.exceptions.exp_450_rds import REDIS_CONNECT_FAIL
 from app.services.common_config.schema.redis.news import RequestRedisPingByForm
 from base_config import Config
 from loguru import logger

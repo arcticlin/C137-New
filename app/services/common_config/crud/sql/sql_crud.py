@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from app.core.db_connector import async_session
 from app.handler.db_tool.db_bulk import DatabaseBulk
-from app.handler.db_tool.db_client import DbClient
+from app.handler.db_tool.db_client import AsyncDbClient
 from app.services.common_config.schema.sql.news import RequestSqlAdd, RequestSqlPingByForm
 from app.services.common_config.schema.sql.update import RequestSqlUpdate
 from app.models.common_config.sql_model import SqlModel
@@ -111,7 +111,7 @@ class SqlCrud:
 
     @staticmethod
     async def ping_by_form(form: RequestSqlPingByForm):
-        await DbClient.mysql_ping(form=form)
+        await AsyncDbClient(form).ping()
 
     @staticmethod
     async def ping_by_id(sql_id: int):
@@ -121,15 +121,14 @@ class SqlCrud:
             )
             result = smtm.scalars().first()
         s_config = SqlCrud.convert_model_to_sql_form(result)
-        await DbClient.mysql_ping(form=s_config)
+        await AsyncDbClient(s_config).ping()
 
     @staticmethod
-    async def execute_sql_command_by_form(form: RequestSqlPingByForm):
-        return await DbClient.mysql_execute(form)
-
-    @staticmethod
-    async def execute_sql_command(instance: Connection, command: str, fetch_one: bool):
-        return await DbClient.mysql_execute(instance, command, fetch_one)
+    async def execute_sql_command_by_form(form: RequestSqlPingByForm, command: str, fetch_one: bool):
+        c = AsyncDbClient(form)
+        async with c as connection:
+            result = await c.execute_command_with_c(connection, command, fetch_one)
+            return result
 
     @staticmethod
     def convert_model_to_sql_form(instance: SqlModel):

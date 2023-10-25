@@ -8,7 +8,7 @@ Description:
 import aiohttp
 
 from app.exceptions.custom_exception import CustomException
-from app.exceptions.oss_exp_510 import GET_TOKEN_FAILED
+from app.exceptions.exp_510_oss import GET_TOKEN_FAILED
 from base_config import Config
 from aiohttp import ClientSession
 from fastapi import UploadFile

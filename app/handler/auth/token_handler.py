@@ -9,7 +9,7 @@ import hashlib
 from datetime import datetime, timedelta
 import jwt
 from jwt.exceptions import ExpiredSignatureError
-from app.exceptions.auth_exp_410 import *
+from app.exceptions.exp_410_auth import *
 from app.exceptions.custom_exception import CustomException
 from typing import Dict
 

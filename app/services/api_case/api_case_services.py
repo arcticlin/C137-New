@@ -5,7 +5,6 @@ Author: bot
 Created: 2023/8/2
 Description:
 """
-import json
 import time
 from typing import List
 
@@ -14,12 +13,12 @@ from app.crud.api_case.assert_crud import AssertCurd
 from app.crud.api_case.extract_crud import ExtractCrud
 from app.crud.api_case.suffix_crud import SuffixCrud
 from app.exceptions.custom_exception import CustomException
-from app.exceptions.case_exp import *
-from app.handler.new_redis_handler import redis_client
-from app.handler.api_redis_handle import RedisCli
-from app.handler.response_handler import C137Response
-from app.schemas.api_case.api_case_schema_new import SchemaRequestAddCase
-from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd, CaseFullUpdate, CaseFullOut
+from app.exceptions.exp_case_480 import *
+from app.handler.redis.api_redis import ApiRedis
+
+
+from app.handler.serializer.response_serializer import C137Response
+from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd, CaseFullUpdate
 from app.schemas.api_case.api_case_schemas import (
     OrmFullCase,
     Orm2CaseBaseInfo,
@@ -34,10 +33,8 @@ from app.schemas.api_case.api_case_schemas import (
 
 from app.services.api_case.assert_service import AssertService
 from app.services.api_case.extract_service import ExtractService
-from app.services.api_case.suffix_services import NewSuffixServices
-from app.handler.cases_handler import CaseHandler
+from app.handler.case.case_handler import CaseHandler
 from app.services.api_case.new_suffix_service import SuffixService
-from deepdiff import DeepDiff
 from app.crud.api_case.api_report_crud import ApiResultCrud, ApiReportCrud
 
 
@@ -166,7 +163,7 @@ class ApiCaseServices:
 
     @staticmethod
     async def run_single_case(trace_id: str, env_id: int, case_id: int):
-        rds = RedisCli(trace_id)
+        rds = ApiRedis(trace_id)
         await rds.init_env_key(env_id)
         # 1. 检查环境获取是否存在异常
         env_url = await ApiCaseCrud.query_env_info(env_id)
@@ -206,7 +203,7 @@ class ApiCaseServices:
 
     @staticmethod
     async def run_case_suite(trace_id: str, env_id: int, case_id: List[int]):
-        rds = RedisCli(trace_id)
+        rds = ApiRedis(trace_id)
         await rds.init_env_key(env_id)
         # 1. 检查环境获取是否存在异常
         env_url = await ApiCaseCrud.query_env_info(env_id)

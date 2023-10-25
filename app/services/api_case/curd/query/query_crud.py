@@ -5,7 +5,7 @@ Author: bot
 Created: 2023/10/23
 Description:
 """
-from app.handler.db_bulk import DatabaseBulk
+from app.handler.db_tool.db_bulk import DatabaseBulk
 from app.models.apicase.api_path import ApiPathModel
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_

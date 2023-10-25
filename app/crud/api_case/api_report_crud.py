@@ -7,7 +7,7 @@ Description:
 """
 from sqlalchemy import select, and_
 
-from app.handler.db_bulk import DatabaseBulk
+from app.handler.db_tool.db_bulk import DatabaseBulk
 from app.models.apicase.api_report import ApiReportModel
 
 from app.models.apicase.api_result import ApiCaseResultModel

@@ -9,50 +9,65 @@ import aiomysql
 from aiomysql import Connection
 
 from app.exceptions.custom_exception import CustomException
-from app.exceptions.db_exp_460 import SQL_CONNECT_FAIL, SQL_EXECUTE_FAIL
+from app.exceptions.exp_460_db import SQL_CONNECT_FAIL, SQL_EXECUTE_FAIL
 from app.services.common_config.schema.sql.news import RequestSqlPingByForm
 
 
-class DbClient:
-    def __init__(self):
+class AsyncDbClient:
+    def __init__(self, form: RequestSqlPingByForm):
         self.connection = None
+        self.form = form
 
-    async def __aenter__(self, form: RequestSqlPingByForm):
-        self.connection = await self.mysql_connector(form.host, form.db_user, form.db_password, form.db_name, form.port)
+    async def __aenter__(self):
+        self.connection = await self.mysql_connector()
         return self.connection
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.connection:
             self.connection.close()
-            await self.connection.wait_closed()
 
-    @staticmethod
-    async def mysql_connector(
-        host: str, username: str, password: str = None, db: str = None, port: int = 3306
-    ) -> Connection:
+    async def mysql_connector(self) -> Connection:
         try:
-            connection = await aiomysql.connect(host=host, port=port, user=username, password=password, db=db)
+            connection = await aiomysql.connect(
+                host=self.form.host,
+                port=self.form.port,
+                user=self.form.db_user,
+                password=self.form.db_password,
+                db=self.form.db_name,
+            )
             return connection
         except Exception as e:
             raise CustomException(SQL_CONNECT_FAIL, f"{e}")
 
-    @staticmethod
-    async def mysql_ping(form: RequestSqlPingByForm):
-        c = await DbClient.mysql_connector(form.host, form.db_user, form.db_password, form.db_name, form.port)
+    async def ping(self):
+        c = await self.mysql_connector()
         c.close()
 
-    @staticmethod
-    async def mysql_execute(connection: Connection, text: str, is_first: bool = False):
-        async with connection.cursor() as cursor:
+    async def execute_command(self, command: str, fetch_one: bool = False):
+        c = await self.mysql_connector()
+        async with c.cursor() as cursor:
             try:
-                await cursor.execute(text)
-                if is_first:
+                await cursor.execute(command)
+                if fetch_one:
                     result = await cursor.fetchone()
                 else:
                     result = await cursor.fetchall()
+                return result
             except Exception as e:
                 raise CustomException(SQL_EXECUTE_FAIL, f"{e}")
-            return result
+
+    @staticmethod
+    async def execute_command_with_c(connection: Connection, command: str, fetch_one: bool = False):
+        async with connection.cursor() as cursor:
+            try:
+                await cursor.execute(command)
+                if fetch_one:
+                    result = await cursor.fetchone()
+                else:
+                    result = await cursor.fetchall()
+                return result
+            except Exception as e:
+                raise CustomException(SQL_EXECUTE_FAIL, f"{e}")
 
     @staticmethod
     async def postgresql_connection(

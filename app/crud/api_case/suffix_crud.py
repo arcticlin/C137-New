@@ -8,7 +8,7 @@ Description:
 from datetime import datetime
 from typing import List, Any, Sequence
 
-from app.handler.db_bulk import DatabaseBulk
+from app.handler.db_tool.db_bulk import DatabaseBulk
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.core.db_connector import async_session
 from sqlalchemy import text, select, and_, or_, Row, RowMapping, func

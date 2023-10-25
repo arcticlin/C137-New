@@ -2,7 +2,7 @@ from fastapi.security import APIKeyHeader
 from base_config import Config
 from fastapi import Depends
 from app.exceptions.custom_exception import CustomException
-from app.exceptions.auth_exp_410 import *
+from app.exceptions.exp_410_auth import *
 from app.handler.auth.token_handler import UserToken
 from datetime import datetime
 from app.handler.redis.rds_client import RedisCli

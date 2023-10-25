@@ -9,7 +9,7 @@ Description:
 from app.exceptions.custom_exception import CustomException
 from app.services.project.crud.pm_crud import ProjectMCrud
 from app.services.project.crud.project_curd import ProjectCrud
-from app.exceptions.project_exp_420 import *
+from app.exceptions.exp_420_project import *
 from loguru import logger
 
 from app.services.project.schema.project_member import ProjectAddMemberRequest

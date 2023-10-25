@@ -13,7 +13,7 @@ from typing import List
 from fastapi import APIRouter
 from celery import Celery
 from celery.result import AsyncResult
-from app.handler.response_handler import C137Response
+from app.handler.serializer.response_serializer import C137Response
 from app.services.api_case.api_case_services import ApiCaseServices
 
 jobs = APIRouter()

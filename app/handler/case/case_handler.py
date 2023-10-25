@@ -1,6 +1,6 @@
 # coding=utf-8
 """
-File: cases_handler.py
+File: case_handler.py
 Author: bot
 Created: 2023/8/8
 Description:
@@ -8,9 +8,10 @@ Description:
 import json
 from typing import List, Union
 import re
-from app.handler.api_redis_handle import RedisCli
+
+from app.handler.redis.api_redis import ApiRedis
 from app.schemas.api_case.api_case_schemas import OrmFullCase
-from app.handler.async_http_client import AsyncRequest
+from app.handler.ahttp.async_http_client import AsyncRequest
 from app.utils.time_utils import TimeUtils
 
 
@@ -21,7 +22,7 @@ class CaseHandler:
         self.case_id = "temp" if case_id is None else case_id
         self.trace_id = trace_id
         self.log = dict(var_replace=[])
-        self.rds = RedisCli(trace_id)
+        self.rds = ApiRedis(trace_id)
 
     @staticmethod
     def set_url_by_path(url: str, path: List[dict]):
