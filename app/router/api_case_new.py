@@ -12,8 +12,9 @@ from app.handler.serializer.response_serializer import C137Response
 import uuid
 
 from app.middleware.access_permission import Permission
+from app.services.api_case_new.case.schema.debug_form import RequestDebugForm
 from app.services.api_case_new.case.schema.new import RequestApiCaseNew
-from app.services.api_case_new.case.schema.response import ResponseCaseNew, ResponseCaseDetail
+from app.services.api_case_new.case.schema.response import ResponseCaseNew, ResponseCaseDetail, ResponseDebugResult
 from app.services.api_case_new.case_service import CaseService
 
 cases = APIRouter()
@@ -40,3 +41,8 @@ async def update_case(case_id: int, user=Depends(Permission())):
 async def case_detail(case_id: int, user=Depends(Permission())):
     result = await CaseService.query_case_detail(case_id, user["user_id"])
     return C137Response.success(data=result)
+
+
+@cases.post("/debug", summary="调试用例", response_model=ResponseDebugResult)
+async def debug_case(form: RequestDebugForm, user=Depends(Permission())):
+    pass

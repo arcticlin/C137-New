@@ -9,6 +9,7 @@ from app.exceptions.custom_exception import CustomException
 from app.exceptions.exp_420_project import PD_NOT_EXISTS
 from app.exceptions.exp_480_case import *
 from app.services.api_case_new.case.crud.case_crud import ApiCaseCrud
+from app.services.api_case_new.case.schema.debug_form import RequestDebugForm
 from app.services.api_case_new.case.schema.new import RequestApiCaseNew
 from app.services.directory.crud.directory_crud import DirectoryCrud
 
@@ -43,3 +44,8 @@ class CaseService:
             raise CustomException(CASE_NOT_EXISTS)
 
         return await ApiCaseCrud.query_case_detail(case_id)
+
+
+    @staticmethod
+    async def debug_temp_case(form: RequestDebugForm):
+        pass

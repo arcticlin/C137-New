@@ -15,3 +15,12 @@ class OutParamsInfo(BaseModel):
     value: str = Field(..., title="参数值")
     enable: bool = Field(True, title="是否启用")
     comment: str = Field(None, title="备注")
+
+
+class DebugParamsInfo(BaseModel):
+
+    key: str = Field(..., title="参数名")
+    types: int = Field(..., title="参数值类型, 1:path 2: qeury")
+    value: str = Field(..., title="参数值")
+    enable: bool = Field(True, title="是否启用")
+    comment: str = Field(None, title="备注")

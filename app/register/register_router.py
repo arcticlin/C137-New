@@ -35,7 +35,7 @@ def register_router(app: FastAPI):
     app.include_router(jobs, prefix="/jobs", tags=["定时任务"])
     app.include_router(project, prefix="/project", tags=["项目"])
     app.include_router(directory, prefix="/directory", tags=["目录"])
-    app.include_router(case, prefix="/apicase", tags=["接口测试"])
+    app.include_router(case, prefix="/api_case", tags=["接口测试"])
     app.include_router(envs, prefix="/config", tags=["配置信息"])
     app.include_router(rds_router, prefix="/config", tags=["配置信息"])
     app.include_router(sql_router, prefix="/config", tags=["配置信息"])

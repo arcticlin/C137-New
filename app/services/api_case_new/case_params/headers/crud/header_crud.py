@@ -10,7 +10,7 @@ from typing import List
 
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_
-from app.models.apicase.api_headers import ApiHeadersModel
+from app.models.api_case.api_headers import ApiHeadersModel
 from app.handler.serializer.response_serializer import C137Response
 from loguru import logger
 

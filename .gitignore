@@ -32,3 +32,6 @@ __hypothesis/
 /.mypy_cache/
 /.pytest_cache/
 ./logs/
+
+#env
+env_config/dev.env

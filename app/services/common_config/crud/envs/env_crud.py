@@ -13,8 +13,8 @@ from app.core.db_connector import async_session
 from app.exceptions.custom_exception import CustomException
 from app.exceptions.exp_430_env import NEW_ENV_FAIL
 from app.models.common_config.env_settings import EnvModel
-from app.models.apicase.api_path import ApiPathModel
-from app.models.apicase.api_headers import ApiHeadersModel
+from app.models.api_case.api_path import ApiPathModel
+from app.models.api_case.api_headers import ApiHeadersModel
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.models.api_settings.assert_settings import AssertModel
 from app.services.common_config.schema.env.news import RequestEnvNew

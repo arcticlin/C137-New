@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.handler.serializer.response_serializer import C137Response
-from app.models.apicase.api_case import ApiCaseModel
+from app.models.api_case.api_case import ApiCaseModel
 
 
 class DatabaseBulk:

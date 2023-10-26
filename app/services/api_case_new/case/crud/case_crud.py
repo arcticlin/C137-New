@@ -14,9 +14,9 @@ from app.exceptions.custom_exception import CustomException
 from app.exceptions.exp_480_case import CASE_ADD_FAILED, CASE_DELETE_FAILED
 from app.handler.db_tool.db_bulk import DatabaseBulk
 from app.handler.serializer.response_serializer import C137Response
-from app.models.apicase.api_case import ApiCaseModel
-from app.models.apicase.api_path import ApiPathModel
-from app.models.apicase.api_headers import ApiHeadersModel
+from app.models.api_case.api_case import ApiCaseModel
+from app.models.api_case.api_path import ApiPathModel
+from app.models.api_case.api_headers import ApiHeadersModel
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.models.api_settings.assert_settings import AssertModel
 from app.models.api_settings.extract_settings import ExtractModel

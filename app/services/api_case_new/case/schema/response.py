@@ -9,6 +9,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 from app.core.basic_schema import CommonResponse
+from app.services.api_case_new.case.schema.debug_form import OutDebugResponse
 from app.services.api_case_new.case.schema.info import OutCaseDetailInfo, OutCaseSimpleInfo
 from app.services.api_case_new.case.schema.new import OutApiCaseNew
 
@@ -23,3 +24,7 @@ class ResponseCaseDetail(CommonResponse):
 
 class ResponseCaseList(CommonResponse):
     data: List[OutCaseSimpleInfo] = Field(..., title="用例列表")
+
+
+class ResponseDebugResult(CommonResponse):
+    data: OutDebugResponse = Field(..., title="调试结果")

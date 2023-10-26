@@ -14,9 +14,9 @@ from app.crud.api_case.extract_crud import ExtractCrud
 from app.crud.api_case.suffix_crud import SuffixCrud
 from app.exceptions.custom_exception import CustomException
 from app.schemas.api_case.api_case_schema_new_new import CaseFullAdd
-from app.models.apicase.api_case import ApiCaseModel
-from app.models.apicase.api_path import ApiPathModel
-from app.models.apicase.api_headers import ApiHeadersModel
+from app.models.api_case.api_case import ApiCaseModel
+from app.models.api_case.api_path import ApiPathModel
+from app.models.api_case.api_headers import ApiHeadersModel
 from app.schemas.api_case.api_case_schema import *
 from sqlalchemy import text, select, and_
 
