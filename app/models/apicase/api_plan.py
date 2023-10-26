@@ -20,7 +20,7 @@ class ApiPlan(Base, BaseMixin):
 
     name = Column(String(32), nullable=False, comment="计划名称")
     project_id = Column(Integer, ForeignKey("project.project_id"), nullable=False, comment="绑定项目ID", index=True)
-    env_id = Column(Integer, ForeignKey("env.env_id"), nullable=False, comment="绑定环境ID", index=True)
+    env_id = Column(Integer, ForeignKey("envs.env_id"), nullable=False, comment="绑定环境ID", index=True)
     cron = Column(String(32), nullable=False, comment="定时任务")
     run_async = Column(Integer, default=0, comment="是否异步执行")
     case_list = Column(JSON, comment="用例列表")

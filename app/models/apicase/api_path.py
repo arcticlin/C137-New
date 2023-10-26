@@ -20,7 +20,7 @@ class ApiPathModel(Base, BaseMixin):
     enable = Column(BOOLEAN, default=True, comment="是否启用")
     comment = Column(String(32), comment="备注")
     case_id = Column(Integer, ForeignKey("api_case.case_id"), index=True)
-    env_id = Column(Integer, ForeignKey("env.env_id"), index=True)
+    env_id = Column(Integer, ForeignKey("envs.env_id"), index=True)
 
     def __init__(
         self,

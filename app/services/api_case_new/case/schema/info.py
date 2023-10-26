@@ -5,9 +5,10 @@ Author: bot
 Created: 2023/10/25
 Description:
 """
+import json
 from typing import Union, List
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from app.services.api_case_new.case_params.headers.schema.info import OutHeaderInfo
 from app.services.api_case_new.case_params.query.schema.info import OutParamsInfo
@@ -32,6 +33,18 @@ class OutCaseUrlInfo(BaseModel):
 class OutCaseBodyInfo(BaseModel):
     body_type: int = Field(..., title="请求体类型, 0: none, 1: json 2: form 3: x-form 4: binary, 5: GraphQL")
     body: Union[str, dict, list] = Field(None, title="请求体数据")
+
+    # @validator("body", pre=True, always=True)
+    # def convert_to_json(cls, v, values):
+    #     # 如果body_type为1并且body不为空，则尝试将body解析为JSON
+    #     if values.get("body_type") == 1 and v and isinstance(v, str):
+    #         try:
+    #             print(v)
+    #             return json.loads(v)
+    #         except json.JSONDecodeError:
+    #             # 处理JSON解析错误，这里可以根据需要自定义处理逻辑
+    #             return v
+    #             # raise ValueError("Invalid JSON format")
 
 
 class OutCaseDetailInfo(BaseModel):

@@ -23,10 +23,12 @@ from app.router.common_config.env.env import envs
 from app.router.common_config.redis.redis_router import rds_router
 from app.router.common_config.sql.sql_router import sql_router
 from app.router.common_config.script.script_router import script_router
+from app.router.api_case_new import cases
 
 
 def register_router(app: FastAPI):
     app.include_router(ws)
+    app.include_router(cases, prefix="/c", tags=["用例"])
     app.include_router(auth, prefix="/auth", tags=["账号管理"])
     app.include_router(user, prefix="/user", tags=["用户中心"])
     app.include_router(admin, prefix="/admin", tags=["管理员"])

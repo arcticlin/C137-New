@@ -47,7 +47,7 @@ async def get_project_dir_tree(project_id: int = Query(..., description="项目I
     return C137Response.success(data=result)
 
 
-@directory.get("/case_list/{directory_id}", summary="获取目录下的用例列表", response_model=ResponseDirectoryCaseList)
+@directory.get("/{directory_id}/case_list", summary="获取目录下的用例列表", response_model=ResponseDirectoryCaseList)
 async def get_case_list_in_directory(directory_id: int):
     case_list = await DirectoryService.get_case_list_in_directory(directory_id)
     return C137Response.success(data=case_list)

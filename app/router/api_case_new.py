@@ -1,0 +1,42 @@
+# coding=utf-8
+"""
+File: api_case_new.py
+Author: bot
+Created: 2023/10/26
+Description:
+"""
+from fastapi import APIRouter, Depends
+
+from app.core.basic_schema import CommonResponse
+from app.handler.serializer.response_serializer import C137Response
+import uuid
+
+from app.middleware.access_permission import Permission
+from app.services.api_case_new.case.schema.new import RequestApiCaseNew
+from app.services.api_case_new.case.schema.response import ResponseCaseNew, ResponseCaseDetail
+from app.services.api_case_new.case_service import CaseService
+
+cases = APIRouter()
+
+
+@cases.post("/add", summary="添加用例", response_model=ResponseCaseNew)
+async def add_case(data: RequestApiCaseNew, user=Depends(Permission())):
+    case_id = await CaseService.add_api_case(data, user["user_id"])
+    return C137Response.success(data={"case_id": case_id})
+
+
+@cases.delete("/delete/{case_id}", summary="删除用例", response_model=CommonResponse)
+async def delete_case(case_id: int, user=Depends(Permission())):
+    await CaseService.delete_api_case(case_id, user["user_id"])
+    return C137Response.success(message="删除成功")
+
+
+@cases.put("/update/{case_id}", summary="更新用例", response_model=CommonResponse)
+async def update_case(case_id: int, user=Depends(Permission())):
+    pass
+
+
+@cases.get("/detail/{case_id}", summary="用例详情", response_model=ResponseCaseDetail)
+async def case_detail(case_id: int, user=Depends(Permission())):
+    result = await CaseService.query_case_detail(case_id, user["user_id"])
+    return C137Response.success(data=result)

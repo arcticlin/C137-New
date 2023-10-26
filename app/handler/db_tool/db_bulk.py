@@ -5,12 +5,17 @@ Author: bot
 Created: 2023/7/28
 Description: 批量操作
 """
-
-
+import inspect
 from datetime import datetime
 import json
-from typing import List
+
+from typing import List, Union
 from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+
+from app.handler.serializer.response_serializer import C137Response
+from app.models.apicase.api_case import ApiCaseModel
 
 
 class DatabaseBulk:
@@ -41,6 +46,25 @@ class DatabaseBulk:
         # model_instance.updated_at = datetime.now()
         if operator and hasattr(model_instance, "update_user"):
             setattr(model_instance, "update_user", operator)
+
+    @staticmethod
+    async def deleted_model_with_session(
+        session: AsyncSession, model, primary_key: List[int], operator: int
+    ):
+        """
+        软删除
+        primary_key可能等于整型,'',或者是逗号分隔的字符串
+        """
+        if not primary_key:
+            return
+        for ids in primary_key:
+            field_name = model.__table__.primary_key.columns.keys()[0]
+            smtm = await session.execute(select(model).where(model.__table__.c[field_name] == ids))
+            obj = smtm.scalars().first()
+            if obj:
+                obj.deleted_at = int(datetime.now().timestamp())
+                obj.update_user = operator
+
 
     @staticmethod
     async def bulk_add_data(session, model, data: List[BaseModel], *ignore_key, **addition_data):
