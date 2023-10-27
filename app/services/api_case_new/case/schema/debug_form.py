@@ -30,7 +30,7 @@ class OutDebugResponse(BaseModel):
 
 
 class RequestDebugForm(BaseModel):
-    method: str = Field(..., title="请求方法")
+    env_id: int = Field(..., title="环境id")
     url_info: OutCaseUrlInfo = Field(..., title="请求地址信息")
     body_info: OutCaseBodyInfo = Field(..., title="请求体信息")
     query_info: List[DebugParamsInfo] = Field([], title="请求参数信息")

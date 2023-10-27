@@ -43,6 +43,8 @@ async def case_detail(case_id: int, user=Depends(Permission())):
     return C137Response.success(data=result)
 
 
-@cases.post("/debug", summary="调试用例", response_model=ResponseDebugResult)
+# @cases.post("/debug", summary="调试用例", response_model=ResponseDebugResult)
+@cases.post("/debug", summary="调试用例", response_model=CommonResponse)
 async def debug_case(form: RequestDebugForm, user=Depends(Permission())):
-    pass
+    await CaseService.debug_temp_case("1", form, user["user_id"])
+    return C137Response.success()

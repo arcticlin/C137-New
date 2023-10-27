@@ -18,10 +18,12 @@ def base_url():
 
 @pytest.fixture(scope="session")
 def login_token(base_url):
-    url = AuthModule.login_path()
-    data = AuthModule.login_form("tt", "1234")
+    url = f"{base_url}{AuthModule.login_path()}"
+    data = AuthModule.login_form("test01", "123456")
+    print(data)
     res = requests.post(url=url, json=data)
-    return res.json()["data"]["token"]
+    print("res", res)
+    return {"authorization": res.json()["data"]["token"], "accept": "application/json, text/plain, */*"}
 
 
 # @pytest.fixture(scope="session")

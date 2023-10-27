@@ -14,7 +14,7 @@ import sys
 class RedisCli(Redis):
     _instances = {}
 
-    def __new__(cls, trace_id: str = None, form: RequestRedisPingByForm = None):
+    def __new__(cls, trace_id: str = None, form: RequestRedisPingByForm = None, **kwargs):
         # 实现单例
         if trace_id is None:
             instance = super(RedisCli, cls).__new__(cls)
@@ -100,3 +100,6 @@ class RedisCli(Redis):
         except Exception as e:
             logger.error(f"Redis 命令执行异常: {e}")
             raise CustomException(REDIS_CONNECT_FAIL, f"Redis 命令执行异常: {e}")
+
+    async def get_common_env(self, env_id: int, user_id: int):
+        return await self.get_key_value_as_json(f"api:e:e_{env_id}_{user_id}")

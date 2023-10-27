@@ -42,3 +42,9 @@ async def delete_env(env_id: int, user_id=Depends(Permission())):
 @envs.put("/{env_id}", summary="更新环境", response_model=CommonResponse)
 async def update_env(env_id: int, user_id=Depends(Permission())):
     pass
+
+
+@envs.get("/{env_id}/keys", summary="环境变量列表", response_model=CommonResponse)
+async def get_env_keys(env_id: int, user_id=Depends(Permission())):
+    result = await EnvService.get_env_keys(env_id, user_id["user_id"])
+    return C137Response.success(data=result)

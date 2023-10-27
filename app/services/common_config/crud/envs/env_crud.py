@@ -12,13 +12,19 @@ from sqlalchemy import text, and_, select
 from app.core.db_connector import async_session
 from app.exceptions.custom_exception import CustomException
 from app.exceptions.exp_430_env import NEW_ENV_FAIL
+from app.handler.serializer.response_serializer import C137Response
 from app.models.common_config.env_settings import EnvModel
 from app.models.api_case.api_path import ApiPathModel
 from app.models.api_case.api_headers import ApiHeadersModel
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.models.api_settings.assert_settings import AssertModel
+from app.services.api_case_new.case_params.headers.schema.info import OutHeaderInfo
+from app.services.api_case_new.case_params.query.schema.info import OutParamsInfo
+from app.services.api_case_new.settings.asserts.schema.info import OutAssertInfo
+from app.services.api_case_new.settings.suffix.schema.info import OutCaseSuffixInfo
 from app.services.common_config.schema.env.news import RequestEnvNew
 from app.handler.db_tool.db_bulk import DatabaseBulk
+from app.services.common_config.schema.env.responses import EnvDetailOut
 
 
 class EnvCrud:
@@ -88,30 +94,46 @@ class EnvCrud:
             return result.scalars().all(), total.scalars().first()
 
     @staticmethod
-    async def get_env_detail(env_id: int):
+    async def get_env_detail(env_id: int) -> EnvDetailOut:
         async with async_session() as session:
-            smtm_e = await session.execute(
+            smtm_env = await session.execute(
                 select(EnvModel).where(and_(EnvModel.env_id == env_id, EnvModel.deleted_at == 0))
             )
-            smtm_q = await session.execute(
+            smtm_params = await session.execute(
                 select(ApiPathModel).where(and_(ApiPathModel.env_id == env_id, ApiPathModel.deleted_at == 0))
             )
-            smtm_h = await session.execute(
+            smtm_headers = await session.execute(
                 select(ApiHeadersModel).where(and_(ApiHeadersModel.env_id == env_id, ApiHeadersModel.deleted_at == 0))
             )
-            smtm_s = await session.execute(
+            smtm_suffix = await session.execute(
                 select(SuffixModel).where(and_(SuffixModel.env_id == env_id, SuffixModel.deleted_at == 0))
             )
-            smtm_a = await session.execute(
+            smtm_assert = await session.execute(
                 select(AssertModel).where(and_(AssertModel.env_id == env_id, AssertModel.deleted_at == 0))
             )
-            return (
-                smtm_e.scalars().first(),
-                smtm_q.scalars().all(),
-                smtm_h.scalars().all(),
-                smtm_s.scalars().all(),
-                smtm_a.scalars().all(),
+            result_env = smtm_env.scalars().first()
+            result_params = smtm_params.scalars().all()
+            result_headers = smtm_headers.scalars().all()
+            result_suffix = smtm_suffix.scalars().all()
+            result_assert = smtm_assert.scalars().all()
+
+            orm_query_info = [C137Response.orm_to_pydantic(x, OutParamsInfo) for x in result_params if x.types == 2]
+            orm_header_info = [C137Response.orm_to_pydantic(x, OutHeaderInfo) for x in result_headers]
+            orm_prefix_info = [C137Response.orm_to_pydantic(x, OutCaseSuffixInfo) for x in result_suffix if x.suffix_type == 1]
+            orm_suffix_info = [C137Response.orm_to_pydantic(x, OutCaseSuffixInfo) for x in result_suffix if
+                               x.suffix_type == 2]
+            orm_assert_info = [C137Response.orm_to_pydantic(x, OutAssertInfo) for x in result_assert]
+            return EnvDetailOut(
+                env_id=result_env.env_id,
+                name=result_env.name,
+                domain=result_env.domain,
+                query_info=orm_query_info,
+                headers_info=orm_header_info,
+                prefix_info=orm_prefix_info,
+                suffix_info=orm_suffix_info,
+                assert_info=orm_assert_info,
             )
+
 
     @staticmethod
     async def get_env_dependencies(env_id: int):

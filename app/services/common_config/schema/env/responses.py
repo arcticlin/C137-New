@@ -27,6 +27,7 @@ class EnvDetailOut(BaseModel):
     domain: str = Field(..., description="环境URL")
     headers_info: List[ResponseHeaderInfo] = Field([], description="请求头信息")
     query_info: List[ResponseQueryInfo] = Field([], description="查询信息")
+    prefix_info: List[ResponseSuffixInfo] = Field([], description="前缀信息")
     suffix_info: List[ResponseSuffixInfo] = Field([], description="后缀信息")
     assert_info: List[ResponseAssertInfo] = Field([], description="断言信息")
 
