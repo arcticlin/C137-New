@@ -22,7 +22,7 @@ class SuffixModel(Base, BaseMixin):
     sort = Column(Integer, nullable=False, comment="排序", index=True)
 
     execute_type = Column(
-        Integer, nullable=False, comment="执行类型, 1: python 2: sql 3: redis 4: delay 5: global-script", index=True
+        Integer, nullable=False, comment="执行类型, 1: 公共脚本 2: sql 3: redis 4: delay 5: python", index=True
     )
 
     case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="绑定用例ID")

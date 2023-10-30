@@ -36,3 +36,13 @@ class DebugAssertInfo(BaseModel):
     )
     assert_exp: str = Field(None, description="断言表达式")
     assert_value: str = Field(..., description="断言值")
+
+
+class OutAssertResult(BaseModel):
+    name: str = Field(None, description="断言名称")
+    assert_from: int = Field(..., description="断言来源 1: res_header 2: res_body 3: res_status_code 4: res_elapsed")
+    assert_type: int = Field(..., description="断言方式")
+    assert_exp: str = Field(None, description="断言表达式")
+    expect: str = Field(None, description="断言期望值")
+    actual: str = Field(None, description="断言实际值")
+    is_pass: bool = Field(..., description="断言结果")

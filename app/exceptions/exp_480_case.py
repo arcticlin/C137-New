@@ -18,3 +18,4 @@ CASE_EXISTS = (400, 40483, "目录用例已存在, 同一级目录仅不支持�
 
 
 PYTHON_SCRIPT_OUT_NAME_WRONG = (400, 41480, "出参变量不在执行脚本函数中")
+BODY_CAN_NOT_SERIALIZABLE = (400, 41481, "body参数无法序列化")

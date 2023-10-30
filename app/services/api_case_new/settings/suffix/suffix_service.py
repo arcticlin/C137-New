@@ -121,9 +121,9 @@ class SuffixService:
                 continue
             result, log = await self._executor(p)
             if result is not None:
-                await self.rds.set_env_var(result)
+                await self.rds.set_case_var(result)
             if is_prefix:
-                log = {"env_prefix": log}
+                log = {"case_prefix": log}
             else:
-                log = {"env_suffix": log}
-            await self.rds.set_env_log(log)
+                log = {"case_suffix": log}
+            await self.rds.set_case_log(log)

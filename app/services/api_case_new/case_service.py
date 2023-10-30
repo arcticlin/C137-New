@@ -8,11 +8,13 @@ Description:
 from app.exceptions.custom_exception import CustomException
 from app.exceptions.exp_420_project import PD_NOT_EXISTS
 from app.exceptions.exp_480_case import *
+from app.handler.case.case_handler_new import CaseHandler
 from app.handler.redis.api_redis_new import ApiRedis
 
 from app.services.api_case_new.case.crud.case_crud import ApiCaseCrud
 from app.services.api_case_new.case.schema.debug_form import RequestDebugForm
 from app.services.api_case_new.case.schema.new import RequestApiCaseNew
+from app.services.api_case_new.settings.asserts.asserts_service import AssertService
 from app.services.api_case_new.settings.suffix.suffix_service import SuffixService
 from app.services.common_config.env_service import EnvService
 from app.services.directory.crud.directory_crud import DirectoryCrud
@@ -58,8 +60,31 @@ class CaseService:
 
         # 初始化环境Redis
         await rds.init_env_keys()
+        await rds.init_case_keys()
 
         # 实例化SuffixServer
         s_server = SuffixService(rds)
         # 执行环境前置
         await s_server.execute_env_prefix(env_detail.prefix_info, True)
+        # 执行用例前置
+        await s_server.execute_case_prefix(form.prefix_info, True)
+        # 执行用例
+        c_server = CaseHandler(form, rds, env_detail.domain)
+        response = await c_server.case_executor()
+
+        # 执行用例后置
+        await s_server.execute_case_prefix(form.suffix_info, True)
+        # 执行用例断言
+        # await s_server.execute_case_assert(form.assert_info, response)
+        c_assert_server = AssertService(rds)
+        case_assert_result = [await c_assert_server.assert_result(response, x) for x in form.assert_info]
+
+        # 执行用例提取
+        # await s_server.execute_case_extract(form.extract_info, response)
+        # 执行环境断言
+        env_assert_result = [
+            await c_assert_server.assert_result(response, x, is_env=True) for x in env_detail.assert_info
+        ]
+
+        # 返回结果以及断言结果
+        final_assert_result = c_assert_server.assert_response_result(env_assert_result, case_assert_result)

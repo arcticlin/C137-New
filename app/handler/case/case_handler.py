@@ -49,7 +49,7 @@ class CaseHandler:
         """
         获取el表达式
         """
-        re_pattern = re.compile(r"\$\{(.+?)\}")
+        re_pattern = re.compile(r"\$\{(.+?)}")
         result = re_pattern.findall(src)
         return result[0] if result else None
 

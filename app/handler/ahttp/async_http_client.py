@@ -10,6 +10,8 @@
 import json, time, aiohttp
 from aiohttp import FormData
 
+from app.handler.case.schemas import AsyncResponseSchema
+
 
 class AsyncRequest:
     def __init__(self, url: str, timeout=15, **kwargs):
@@ -29,7 +31,7 @@ class AsyncRequest:
         return kwargs.get("data")
 
     @staticmethod
-    async def get_request_data(body):
+    def get_request_data(body):
         if isinstance(body, bytes):
             request_body = body.decode()
         elif isinstance(body, FormData):
@@ -89,7 +91,7 @@ class AsyncRequest:
         cookie: dict = None,
         elapsed=None,
         **kwargs,
-    ):
+    ) -> AsyncResponseSchema:
         """收集请求的数据和响应的结果并返回"""
         if request_headers is None:
             request_headers = {}
@@ -105,16 +107,26 @@ class AsyncRequest:
             cookie = {}
         else:
             cookie = json.dumps(cookie, ensure_ascii=False)
-        return {
-            "status_code": status_code,
-            "request_headers": request_headers,
-            "request_data": await AsyncRequest.get_request_data(request_data),
-            "response_headers": response_headers,
-            "response": response,
-            "elapsed": elapsed,
-            "cookies": cookie,
+        return AsyncResponseSchema(
+            status_code=status_code,
+            request_headers=request_headers,
+            request_data=AsyncRequest.get_request_data(request_data),
+            response_headers=response_headers,
+            response=response,
+            elapsed=elapsed,
+            cookies=cookie,
             **kwargs,
-        }
+        )
+        # return {
+        #     "status_code": status_code,
+        #     "request_headers": request_headers,
+        #     "request_data": await AsyncRequest.get_request_data(request_data),
+        #     "response_headers": response_headers,
+        #     "response": response,
+        #     "elapsed": elapsed,
+        #     "cookies": cookie,
+        #     **kwargs,
+        # }
 
     @staticmethod
     def collect_response_for_test(response: dict):
