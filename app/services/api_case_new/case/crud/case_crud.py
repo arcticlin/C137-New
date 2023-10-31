@@ -233,6 +233,7 @@ class ApiCaseCrud:
             smtm_case = await session.execute(
                 select(ApiCaseModel).where(and_(ApiCaseModel.case_id == case_id, ApiCaseModel.deleted_at == 0))
             )
+
             smtm_params = await session.execute(
                 select(ApiPathModel).where(and_(ApiPathModel.case_id == case_id, ApiPathModel.deleted_at == 0))
             )

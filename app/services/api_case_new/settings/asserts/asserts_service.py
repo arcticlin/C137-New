@@ -141,7 +141,7 @@ class AssertService:
         else:
             result, expect, is_pass = self._jsonpath(source, assert_form.assert_exp, assert_form.assert_value)
             log.append(f"[{t}]: [断言-JsonPath] -> 断言结果: {is_pass}, 断言实际值: {result}, 断言期望值: {expect}")
-        print("11", self.log)
+
         await self.rds.set_case_log(self.log)
         return OutAssertResult(
             name=assert_form.name,

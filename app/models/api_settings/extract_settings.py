@@ -6,7 +6,7 @@ Created: 2023/8/7
 Description:
 """
 from app.core.db_connector import Base, BaseMixin
-from sqlalchemy import Column, Integer, String, TEXT, ForeignKey, BOOLEAN
+from sqlalchemy import Column, Integer, String, TEXT, ForeignKey, BOOLEAN, SMALLINT
 
 
 class ExtractModel(Base, BaseMixin):
@@ -24,6 +24,7 @@ class ExtractModel(Base, BaseMixin):
     extract_exp = Column(TEXT, nullable=False, comment="提取表达式")
     extract_out_name = Column(String(16), nullable=False, comment="提取出参名")
     extract_index = Column(Integer, comment="提取顺序")
+    extract_to = Column(SMALLINT, default=2, comment="提取到, 1: 环境变量中 2: 用例变量中")
 
     def __init__(
         self,
@@ -36,6 +37,7 @@ class ExtractModel(Base, BaseMixin):
         description: str = None,
         extract_index: int = None,
         enable: bool = True,
+        extract_to: int = 2,
     ):
         self.name = name
         self.enable = enable
@@ -46,3 +48,4 @@ class ExtractModel(Base, BaseMixin):
         self.extract_out_name = extract_out_name
         self.description = description
         self.extract_index = extract_index
+        self.extract_to = extract_to

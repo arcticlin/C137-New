@@ -21,7 +21,7 @@ ExtractInfo = Union[DebugExtractInfo, OutExtractInfo]
 class ExtractService:
     def __init__(self, rds: ApiRedis):
         self.rds = rds
-        self.log = dict(case_extract=[])
+        self.log = dict(env_extract=[], case_extract=[])
 
     @staticmethod
     def extract_with_re(source: Any, expression: str, out_name: str, index: int = None):
@@ -80,9 +80,20 @@ class ExtractService:
                 OutExtractResult(name=e.name, extract_key=e.extract_out_name, extract_value=result if result else "")
             )
             if isinstance(re_flag, str):
-                self.log["case_extract"].append(f"提取响应生成变量[{e.extract_out_name}]失败: 正则表达式异常: {re_flag}")
+                if e.extract_to == 1:
+                    self.log["env_extract"].append(f"提取环境生成变量[{e.extract_out_name}]失败: 正则表达式异常: {re_flag}")
+                else:
+                    self.log["case_extract"].append(f"提取响应生成变量[{e.extract_out_name}]失败: 正则表达式异常: {re_flag}")
             else:
-                self.log["case_extract"].append(f"提取响应生成变量[{e.extract_out_name}] => {result[e.extract_out_name]} ")
-            await self.rds.set_case_var(result)
-            await self.rds.set_case_log(self.log)
+                if e.extract_to == 1:
+                    self.log["env_extract"].append(f"提取环境生成变量[{e.extract_out_name}] => {result[e.extract_out_name]} ")
+                else:
+
+                    self.log["case_extract"].append(f"提取响应生成变量[{e.extract_out_name}] => {result[e.extract_out_name]} ")
+            if e.extract_to == 1:
+                await self.rds.set_env_var(result)
+                await self.rds.set_env_log(self.log)
+            else:
+                await self.rds.set_case_var(result)
+                await self.rds.set_case_log(self.log)
         return temp_result

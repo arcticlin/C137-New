@@ -54,7 +54,6 @@ async def update_api_case(form: CaseFullUpdate, user=Depends(Permission())):
 @case.post("/request", summary="调试请求用例")
 async def debug_temp_case(data: OrmFullCase, user=Depends(Permission())):
     random_uid = f"c:runner_temp_request"
-    print("1")
     result = await ApiCaseServices.temp_request(data, user["user_id"])
     return C137Response.success(data=result, headers={"trace_id": random_uid})
 

@@ -107,6 +107,7 @@ class AsyncRequest:
             cookie = {}
         else:
             cookie = json.dumps(cookie, ensure_ascii=False)
+        print("response: ", response)
         return AsyncResponseSchema(
             status_code=status_code,
             request_headers=request_headers,

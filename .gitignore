@@ -34,4 +34,4 @@ __hypothesis/
 ./logs/
 
 #env
-env_config/dev.env
+/env_config/dev.env

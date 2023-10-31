@@ -19,7 +19,7 @@ from app.services.directory.directory_service import DirectoryService
 loop = asyncio.get_event_loop()
 
 # 调用异步方法
-result = loop.run_until_complete(CaseService.run_case_by_id("dff8e6de-811f-45d4-93bd-2a38cb9fc2f5", 5, [32], 1))
+result = loop.run_until_complete(CaseService.run_case_by_id("dff8e6de-811f-45d4-93bd-2a38cb9fc2f5", 1, [2], 1))
 
 # 输出结果
 print(result)

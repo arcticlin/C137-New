@@ -36,7 +36,6 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...)):
         logger.debug(f"client: {user_id} disconnect")
         await WsService.remove_client(user_id)
     except Exception as e:
-        print("11hh", e)
         pass
     finally:
         pass

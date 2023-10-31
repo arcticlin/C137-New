@@ -147,7 +147,7 @@ class EnvCrud:
                     IFNULL(GROUP_CONCAT(DISTINCT s.suffix_id ORDER BY s.suffix_id), '') AS suffix_ids,
                     IFNULL(GROUP_CONCAT(DISTINCT a.assert_id ORDER BY a.assert_id), '') AS assert_ids
                 FROM
-                    env AS e
+                    envs AS e
                 LEFT JOIN
                     (
                         SELECT

@@ -81,7 +81,8 @@ class SuffixService:
         c_assert_server = AssertService(self.rds)
         case_assert_result = [await c_assert_server.assert_result(response, x) for x in temp_case.assert_info]
         c_extract_server = ExtractService(self.rds)
-        return
+        await c_extract_server.extract(response, temp_case.extract_info)
+        return response
 
     async def _executor(self, data: SuffixInfo, is_prefix: bool = False):
         """
@@ -95,7 +96,6 @@ class SuffixService:
         if data.execute_type == 1:
             # 执行公共脚本
             result = await self.execute_to_common_script(data.script_id)
-            print(result)
             log.append(f"[{t}]: [公共脚本] -> 执行: 设置变量: {result}")
             return result, log
         elif data.execute_type == 2:
@@ -114,7 +114,9 @@ class SuffixService:
             await self.execute_to_delay(data.run_delay)
             return None, log
         elif data.execute_type == 6:
-            await self.execute_to_case(data.case_id, is_prefix)
+            result = await self.execute_to_case(data.run_case_id, is_prefix)
+            log.append(f"[{t}]: [Case] -> 执行: 执行用例: {data.run_case_id} = 接口状态: {result.status_code}")
+            return None, log
         else:
             # 执行临时脚本
             result = await self.execute_to_temp_script(data.run_out_name, data.run_command)
@@ -130,11 +132,11 @@ class SuffixService:
         run_each_time: bool = False,
     ):
         for p in data:
-            print("here", p)
             if not p.enable:
                 continue
             if run_each_time and not p.run_each_case:
                 continue
+
             result, log = await self._executor(p, is_prefix)
             if result is not None:
                 await self.rds.set_env_var(result)

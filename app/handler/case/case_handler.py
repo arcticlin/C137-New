@@ -142,9 +142,7 @@ class CaseHandler:
         return temp_dict
 
     async def case_pick_up(self, env_url: str, obj: OrmFullCase):
-        print("11", obj)
-        print("22", obj.url_info)
-        print("33", type(obj.url_info))
+
         url = obj.url_info.url
         method = obj.url_info.method
         headers = await self.parse_query([x.dict() for x in obj.header_info])

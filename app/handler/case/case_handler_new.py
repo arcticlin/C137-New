@@ -86,7 +86,9 @@ class CaseHandler:
     async def parse_string(self, key: str):
         log = self.log["var_replace"]
         t = TimeUtils.get_current_time_without_year()
+
         if "${" in key:
+            print("here", key)
             log.append(f"[{t}]: [参数替换] -> 获取El表达式变量: {key}")
             find_el = CaseHandler.get_el_exp(key)
             if find_el:
@@ -136,6 +138,7 @@ class CaseHandler:
         for key, value in key.items():
             key = await self.parse_string(key)
             if isinstance(value, dict):
+                print("here", value)
                 result = await self.parse_obj(value)
             elif isinstance(value, list):
                 result = await self.parse_list(value)
@@ -178,6 +181,7 @@ class CaseHandler:
             url = self.pick_up_url_with_env(self.case_form.basic_info.temp_domain, url)
         else:
             url = self.pick_up_url_with_env(self.env_form.domain, url)
+        await self.rds.set_case_log(self.log)
         return url, method, env_headers, body, body_type, path, env_query
 
     async def case_executor(self):

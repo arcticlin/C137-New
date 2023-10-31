@@ -13,7 +13,7 @@ from sqlalchemy.orm import relationship
 from app.core.db_connector import Base, BaseMixin
 
 
-class ApiPlan(Base, BaseMixin):
+class ApiPlanModel(Base, BaseMixin):
     __tablename__ = "api_plan"
 
     id = Column(Integer, primary_key=True)

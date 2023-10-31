@@ -250,7 +250,6 @@ class ApiCaseServices:
                     "case_assert": case_result,
                     "final_result": False not in _flag,
                 }
-                print("123123", response)
                 if False not in _flag:
                     count_result["success"] += 1
                 else:

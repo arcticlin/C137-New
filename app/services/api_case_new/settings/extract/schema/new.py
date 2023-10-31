@@ -18,3 +18,5 @@ class AddWithExtractInfo(BaseModel):
     extract_exp: str = Field(None, description="提取表达式")
     extract_out_name: str = Field(..., description="提取值")
     extract_index: int = Field(None, description="提取索引")
+    extract_to: int = Field(None, description="提取到 1: 环境变量 2: 用例变量")
+
