@@ -3,7 +3,7 @@ from typing import Union, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from app.services.api_case_new.case.schema.info import OutCaseUrlInfo, OutCaseBodyInfo
+from app.services.api_case_new.case.schema.info import OutCaseUrlInfo, OutCaseBodyInfo, OutCaseBasicInfo
 from app.services.api_case_new.case_params.headers.schema.info import DebugHeaderInfo
 from app.services.api_case_new.case_params.query.schema.info import DebugParamsInfo
 from app.services.api_case_new.settings.asserts.schema.info import DebugAssertInfo
@@ -32,6 +32,7 @@ class OutDebugResponse(BaseModel):
 class RequestDebugForm(BaseModel):
     env_id: int = Field(..., title="环境id")
     url_info: OutCaseUrlInfo = Field(..., title="请求地址信息")
+    basic_info: OutCaseBasicInfo = Field(None)
     body_info: OutCaseBodyInfo = Field(..., title="请求体信息")
     query_info: List[DebugParamsInfo] = Field([], title="请求参数信息")
     path_info: List[DebugParamsInfo] = Field([], title="路径参数信息")

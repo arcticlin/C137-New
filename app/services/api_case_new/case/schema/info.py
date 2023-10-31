@@ -23,6 +23,7 @@ class OutCaseBasicInfo(BaseModel):
     status: int = Field(1, title="用例状态, 1: debug, 2: close, 3: normal")
     priority: str = Field("P1", title="用例优先级: P0-P4")
     case_type: int = Field(1, title="用例类型: 1. 正常用例 2. 前置用例 3. 数据构造")
+    temp_domain: str = Field("", description="临时Domain, 用于跳过环境Domain")
 
 
 class OutCaseUrlInfo(BaseModel):

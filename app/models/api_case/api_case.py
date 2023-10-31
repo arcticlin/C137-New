@@ -22,6 +22,7 @@ class ApiCaseModel(Base, BaseMixin):
     # 请求配置
     request_type = Column(Integer, default=1, comment="请求协议类型 1: http 2: grpc")
     url = Column(TEXT, nullable=False, comment="请求url")
+    temp_domain = Column(TEXT, nullable=True, comment="临时Domain, 用于跳过环境domain")
     method = Column(String(12), comment="请求方式")
     headers = relationship("ApiHeadersModel", backref="api_case")
     path = relationship("ApiPathModel", backref="api_case")
@@ -54,6 +55,7 @@ class ApiCaseModel(Base, BaseMixin):
         body: str = None,
         body_type: int = 1,
         request_type: int = 1,
+        temp_domain: str = None,
     ):
         self.create_user = create_user
         self.update_user = create_user
@@ -68,3 +70,4 @@ class ApiCaseModel(Base, BaseMixin):
         self.body = body
         self.body_type = body_type
         self.request_type = request_type
+        self.temp_domain = temp_domain

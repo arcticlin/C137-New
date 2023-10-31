@@ -15,6 +15,7 @@ from app.middleware.access_permission import Permission
 from app.services.api_case_new.case.schema.debug_form import RequestDebugForm
 from app.services.api_case_new.case.schema.new import RequestApiCaseNew
 from app.services.api_case_new.case.schema.response import ResponseCaseNew, ResponseCaseDetail, ResponseDebugResult
+from app.services.api_case_new.case.schema.runner import RequestRunSingleCase, RequestRunMultiCase
 from app.services.api_case_new.case_service import CaseService
 
 cases = APIRouter()
@@ -46,5 +47,15 @@ async def case_detail(case_id: int, user=Depends(Permission())):
 # @cases.post("/debug", summary="调试用例", response_model=ResponseDebugResult)
 @cases.post("/debug", summary="调试用例", response_model=CommonResponse)
 async def debug_case(form: RequestDebugForm, user=Depends(Permission())):
-    await CaseService.debug_temp_case("1", form, user["user_id"])
-    return C137Response.success()
+    random_uid = str(uuid.uuid4())
+    response = await CaseService.debug_temp_case(random_uid, form, user["user_id"])
+    return C137Response.success(data=response)
+
+
+@cases.post("/run_case", summary="执行用例", response_model=CommonResponse)
+async def run_single_case(data: RequestRunMultiCase, user=Depends(Permission())):
+    random_uid = str(uuid.uuid4())
+    response = await CaseService.run_case_by_id(
+        "dff8e6de-811f-45d4-93bd-2a38cb9fc2f5", data.env_id, data.case_id, user["user_id"]
+    )
+    return C137Response.success(data=response)

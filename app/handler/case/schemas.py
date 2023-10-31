@@ -5,6 +5,8 @@ Author: bot
 Created: 2023/10/30
 Description:
 """
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -19,3 +21,4 @@ class AsyncResponseSchema(BaseModel):
     elapsed: str = Field(None, title="响应时间")
     cookies: str = Field(None, title="cookie")
     json_format: bool = Field(False, title="是否格式化json")
+    final_result: Any = Field(None, description="最终结果")

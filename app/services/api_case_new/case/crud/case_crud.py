@@ -5,7 +5,7 @@ Author: bot
 Created: 2023/10/26
 Description:
 """
-from typing import List
+from typing import List, Union, AsyncGenerator
 
 from app.core.db_connector import async_session
 from sqlalchemy import and_, select, text, func
@@ -20,14 +20,19 @@ from app.models.api_case.api_headers import ApiHeadersModel
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.models.api_settings.assert_settings import AssertModel
 from app.models.api_settings.extract_settings import ExtractModel
-from app.services.api_case_new.case.schema.info import OutCaseDetailInfo, OutCaseBasicInfo, OutCaseUrlInfo, \
-    OutCaseBodyInfo
+from app.services.api_case_new.case.schema.info import (
+    OutCaseDetailInfo,
+    OutCaseBasicInfo,
+    OutCaseUrlInfo,
+    OutCaseBodyInfo,
+)
 from app.services.api_case_new.case.schema.new import RequestApiCaseNew
 from app.services.api_case_new.case_params.headers.schema.info import OutHeaderInfo
 from app.services.api_case_new.case_params.query.schema.info import OutParamsInfo
 from app.services.api_case_new.settings.asserts.schema.info import OutAssertInfo
 from app.services.api_case_new.settings.extract.schema.info import OutExtractInfo
 from app.services.api_case_new.settings.suffix.schema.info import OutCaseSuffixInfo
+from loguru import logger
 
 
 class ApiCaseCrud:
@@ -109,7 +114,9 @@ class ApiCaseCrud:
 
     @staticmethod
     async def delete_case(case_id: int, operator: int):
-        case_ids, path_ids, header_ids, suffix_ids, assert_ids, extract_ids = await ApiCaseCrud.get_case_dependencies(case_id)
+        case_ids, path_ids, header_ids, suffix_ids, assert_ids, extract_ids = await ApiCaseCrud.get_case_dependencies(
+            case_id
+        )
         async with async_session() as session:
             try:
                 await DatabaseBulk.deleted_model_with_session(session, ApiCaseModel, case_ids, operator)
@@ -255,11 +262,14 @@ class ApiCaseCrud:
             orm_query_info = [C137Response.orm_to_pydantic(x, OutParamsInfo) for x in result_params if x.types == 2]
             orm_path_info = [C137Response.orm_to_pydantic(x, OutParamsInfo) for x in result_params if x.types == 1]
             orm_header_info = [C137Response.orm_to_pydantic(x, OutHeaderInfo) for x in result_headers]
-            orm_prefix_info = [C137Response.orm_to_pydantic(x, OutCaseSuffixInfo) for x in result_suffix if x.suffix_type == 1]
-            orm_suffix_info = [C137Response.orm_to_pydantic(x, OutCaseSuffixInfo) for x in result_suffix if x.suffix_type == 2]
+            orm_prefix_info = [
+                C137Response.orm_to_pydantic(x, OutCaseSuffixInfo) for x in result_suffix if x.suffix_type == 1
+            ]
+            orm_suffix_info = [
+                C137Response.orm_to_pydantic(x, OutCaseSuffixInfo) for x in result_suffix if x.suffix_type == 2
+            ]
             orm_assert_info = [C137Response.orm_to_pydantic(x, OutAssertInfo) for x in result_assert]
             orm_extract_info = [C137Response.orm_to_pydantic(x, OutExtractInfo) for x in result_extract]
-
             return OutCaseDetailInfo(
                 case_id=result_case.case_id,
                 directory_id=result_case.directory_id,
@@ -275,4 +285,12 @@ class ApiCaseCrud:
                 extract_info=orm_extract_info,
             )
 
-
+    @staticmethod
+    async def query_batch_case_detail(case_ids: List[int]) -> AsyncGenerator[OutCaseDetailInfo, None]:
+        for c_id in case_ids:
+            try:
+                case_detail = await ApiCaseCrud.query_case_detail(c_id)
+                yield case_detail
+            except Exception as e:
+                logger.error(f"查询用例失败: {e}")
+                yield None

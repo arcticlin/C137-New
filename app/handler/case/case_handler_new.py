@@ -17,6 +17,7 @@ from app.services.api_case_new.case.schema.debug_form import RequestDebugForm
 from app.services.api_case_new.case.schema.info import OutCaseDetailInfo
 from app.services.api_case_new.case_params.headers.schema.info import DebugHeaderInfo, OutHeaderInfo
 from app.services.api_case_new.case_params.query.schema.info import DebugParamsInfo, OutParamsInfo
+from app.services.common_config.schema.env.responses import EnvDetailOut
 from app.utils.time_utils import TimeUtils
 
 
@@ -27,11 +28,11 @@ CaseDetailInfo = Union[RequestDebugForm, OutCaseDetailInfo]
 
 
 class CaseHandler:
-    def __init__(self, case_form: CaseDetailInfo, rds: ApiRedis, env_url: str):
+    def __init__(self, case_form: CaseDetailInfo, env_form: EnvDetailOut, rds: ApiRedis):
         self.rds = rds
         self.case_form = case_form
         self.log = dict(var_replace=[])
-        self.env_url = env_url
+        self.env_form = env_form
 
     @staticmethod
     def replace_path_in_url(url: str, path: dict):
@@ -158,8 +159,12 @@ class CaseHandler:
     async def case_pick_up(self):
         url = self.case_form.url_info.url
         method = self.case_form.url_info.method.upper()
+        env_headers = await self.parse_params(self.env_form.headers_info)
         headers = await self.parse_params(self.case_form.header_info)
+        env_headers.update(headers)
+        env_query = await self.parse_params(self.env_form.query_info)
         query = await self.parse_params(self.case_form.query_info)
+        env_query.update(query)
         path = await self.parse_params(self.case_form.path_info)
         body_type = self.case_form.body_info.body_type
         body = self.case_form.body_info.body
@@ -168,8 +173,12 @@ class CaseHandler:
         elif body_type == 1:
             body = await self.parse_body(body)
         url = self.replace_path_in_url(url, path)
-        url = self.pick_up_url_with_env(self.env_url, url)
-        return url, method, headers, body, body_type, path, query
+        # 临时域名,跳过环境域名,比如用于请求阿里云OSS
+        if self.case_form.basic_info and self.case_form.basic_info.temp_domain:
+            url = self.pick_up_url_with_env(self.case_form.basic_info.temp_domain, url)
+        else:
+            url = self.pick_up_url_with_env(self.env_form.domain, url)
+        return url, method, env_headers, body, body_type, path, env_query
 
     async def case_executor(self):
         url, method, headers, body, body_type, path, query = await self.case_pick_up()

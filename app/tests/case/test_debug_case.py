@@ -37,6 +37,26 @@ def test_case_debugger(base_url, login_token):
                 "assert_value": 400,
             }
         ],
+        "extract_info": [
+            {
+                "name": "提取URL",
+                "enable": True,
+                "extract_from": 2,
+                "extract_type": 1,
+                "extract_exp": "$.url",
+                "extract_out_name": "rick_url",
+                "extract_index": 0,
+            },
+            {
+                "name": "提取Location",
+                "enable": True,
+                "extract_from": 2,
+                "extract_type": 2,
+                "extract_exp": r".*" + "(Earth\s\(.*\)" + r",",
+                "extract_out_name": "location",
+                "extract_index": 0,
+            },
+        ],
     }
     r = requests.post(url=url, json=body, headers=token)
     print(r)

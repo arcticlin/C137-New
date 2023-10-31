@@ -18,7 +18,7 @@ from app.exceptions.custom_exception import CustomException
 
 
 class ScriptHandler:
-    white_module = ["datetime", "json"]
+    white_module = ["datetime", "json", "uuid"]
     temp_namespace = {}
 
     @staticmethod
@@ -43,6 +43,7 @@ class ScriptHandler:
 
     @staticmethod
     async def python_executor(get_var: str, script_text: str, check_module=True):
+        print(get_var, script_text)
         # 代码格式检查
         ScriptHandler.input_checker(script_text)
         # 模块导入检查
@@ -69,7 +70,7 @@ class ScriptHandler:
         except RecursionError:
             raise CustomException((400, 40902, f"代码递归栈溢出(限制100次), 请检查"))
         except Exception as e:
-            raise CustomException((400, 40902, f"{e}"))
+            raise CustomException((400, 40902, f"执行Python脚本出问题了: {e}"))
         finally:
             sys.setrecursionlimit(10000)
         # exec(compiled_code, ScriptHandler.temp_namespace)

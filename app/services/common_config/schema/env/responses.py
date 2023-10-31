@@ -13,6 +13,10 @@ from app.core.basic_schema import CommonResponse
 from app.services.api_case.schema.asserts.response import ResponseAssertInfo
 from app.services.api_case.schema.query.response import ResponseHeaderInfo, ResponseQueryInfo
 from app.services.api_case.schema.suffix.response import ResponseSuffixInfo
+from app.services.api_case_new.case_params.headers.schema.info import OutHeaderInfo
+from app.services.api_case_new.case_params.query.schema.info import OutParamsInfo
+from app.services.api_case_new.settings.asserts.schema.info import OutAssertInfo
+from app.services.api_case_new.settings.suffix.schema.info import OutCaseSuffixInfo
 
 
 class EnvListOut(BaseModel):
@@ -25,11 +29,11 @@ class EnvDetailOut(BaseModel):
     env_id: int = Field(..., description="环境id")
     name: str = Field(..., description="环境名称")
     domain: str = Field(..., description="环境URL")
-    headers_info: List[ResponseHeaderInfo] = Field([], description="请求头信息")
-    query_info: List[ResponseQueryInfo] = Field([], description="查询信息")
-    prefix_info: List[ResponseSuffixInfo] = Field([], description="前缀信息")
-    suffix_info: List[ResponseSuffixInfo] = Field([], description="后缀信息")
-    assert_info: List[ResponseAssertInfo] = Field([], description="断言信息")
+    headers_info: List[OutHeaderInfo] = Field([], description="请求头信息")
+    query_info: List[OutParamsInfo] = Field([], description="查询信息")
+    prefix_info: List[OutCaseSuffixInfo] = Field([], description="前缀信息")
+    suffix_info: List[OutCaseSuffixInfo] = Field([], description="后缀信息")
+    assert_info: List[OutAssertInfo] = Field([], description="断言信息")
 
 
 class EnvAddOut(BaseModel):

@@ -5,6 +5,8 @@ Author: bot
 Created: 2023/10/25
 Description:
 """
+from typing import Any
+
 from pydantic import BaseModel, Field
 
 
@@ -31,3 +33,9 @@ class DebugExtractInfo(BaseModel):
     extract_exp: str = Field(None, description="提取表达式")
     extract_out_name: str = Field(..., description="提取值")
     extract_index: int = Field(None, description="提取索引")
+
+
+class OutExtractResult(BaseModel):
+    name: str = Field(None, description="提取名称")
+    extract_key: str = Field(..., description="提取变量名")
+    extract_value: Any = Field(None, description="变量值")
