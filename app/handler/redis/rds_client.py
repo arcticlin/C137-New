@@ -14,22 +14,22 @@ import sys
 class RedisCli(Redis):
     _instances = {}
 
-    def __new__(cls, trace_id: str = None, form: RequestRedisPingByForm = None, **kwargs):
-        # 实现单例
-        if trace_id is None:
-            instance = super(RedisCli, cls).__new__(cls)
-            if form:
-                instance.__init__(trace_id, form)
-            else:
-                instance.__init__(trace_id)
-            cls._instances["default"] = instance
-            return cls._instances["default"]
-        else:
-            if trace_id not in cls._instances:
-                instance = super(RedisCli, cls).__new__(cls)
-                instance.__init__(trace_id)
-                cls._instances[trace_id] = instance
-        return cls._instances[trace_id]
+    # def __new__(cls, trace_id: str = None, form: RequestRedisPingByForm = None, **kwargs):
+    #     # 实现单例
+    #     if trace_id is None:
+    #         instance = super(RedisCli, cls).__new__(cls)
+    #         if form:
+    #             instance.__init__(trace_id, form)
+    #         else:
+    #             instance.__init__(trace_id)
+    #         cls._instances["default"] = instance
+    #         return cls._instances["default"]
+    #     else:
+    #         if trace_id not in cls._instances and kwargs.get("case_id", False) and :
+    #             instance = super(RedisCli, cls).__new__(cls)
+    #             instance.__init__(trace_id)
+    #             cls._instances[trace_id] = instance
+    #     return cls._instances[trace_id]
 
     def __init__(self, trace_id: str = None, form: RequestRedisPingByForm = None):
         if form is not None:

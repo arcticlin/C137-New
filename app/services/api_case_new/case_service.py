@@ -5,6 +5,7 @@ Author: bot
 Created: 2023/10/26
 Description:
 """
+import asyncio
 from typing import List
 
 from app.exceptions.custom_exception import CustomException
@@ -15,9 +16,11 @@ from app.handler.redis.api_redis_new import ApiRedis
 
 from app.services.api_case_new.case.crud.case_crud import ApiCaseCrud
 from app.services.api_case_new.case.schema.debug_form import RequestDebugForm
+from app.services.api_case_new.case.schema.info import OutCaseDetailInfo
 from app.services.api_case_new.case.schema.new import RequestApiCaseNew
 from app.services.api_case_new.settings.asserts.asserts_service import AssertService
 from app.services.api_case_new.settings.extract.extract_service import ExtractService
+from app.services.api_case_new.settings.suffix.schema.info import OutCaseSuffixInfo
 from app.services.api_case_new.settings.suffix.suffix_service import SuffixService
 from app.services.common_config.env_service import EnvService
 from app.services.directory.crud.directory_crud import DirectoryCrud
@@ -98,10 +101,7 @@ class CaseService:
     async def run_case_by_id(trace_id: str, env_id: int, case_ids: List[int], operator: int):
         env_detail = await EnvService.get_env_detail(env_id)
         env_prefix_running_status = False
-        env_suffix_running_status = False
         # 迭代获取测试用例详情
-        # fetch_case_detail = await ApiCaseCrud.query_batch_case_detail(case_ids)
-
         async for c in ApiCaseCrud.query_batch_case_detail(case_ids):
             # TODO 获取详情时异常或执行时异常记录Fail用例
             # 初始化Redis
@@ -115,6 +115,7 @@ class CaseService:
             env_prefix_running_status = True
 
             await suffix_server.execute_case_prefix(c.prefix_info, True)
+            task = []
             c_server = CaseHandler(c, env_detail, rds)
             response = await c_server.case_executor()
             # 执行用例后置
@@ -133,4 +134,67 @@ class CaseService:
             # 返回结果以及断言结果
             final_assert_result = c_assert_server.assert_response_result(env_assert_result, case_assert_result)
             response.final_result = final_assert_result
-            return response
+            print(c.case_id, response)
+
+    @staticmethod
+    async def debug_sleep(rds: ApiRedis):
+        print("rds", rds, rds.trace_id, rds.case_id)
+        await asyncio.sleep(5)
+
+    @staticmethod
+    async def run_case_by_id_debug(trace_id: str, env_id: int, case_ids: List[int], operator: int):
+        tasks = []
+        for case_id in case_ids:
+            rds = ApiRedis(trace_id=trace_id, user_id=operator, env_id=env_id, case_id=case_id)
+            task = CaseService.debug_sleep(rds)
+            tasks.append(task)
+        # 使用asyncio.gather()并行执行多个用例
+        await asyncio.gather(*tasks)
+
+    @staticmethod
+    async def async_run_case_suite(trace_id: str, env_id: int, case_ids: List[int], operator: int):
+        env_detail = await EnvService.get_env_detail(env_id)
+        e_p = [i for i in env_detail.prefix_info if i.run_each_case == 1]
+        e_s = [i for i in env_detail.suffix_info if i.run_each_case == 1]
+        tasks = []
+        env_prefix_running_status = False
+        async for case in ApiCaseCrud.query_batch_case_detail(case_ids):
+            rds = ApiRedis(trace_id=trace_id, env_id=env_id, case_id=case.case_id, user_id=operator)
+            await rds.init_env_keys()
+            suffix_executor = SuffixService(rds, env_detail=env_detail)
+            await suffix_executor.execute_env_prefix(env_detail.prefix_info, True, env_prefix_running_status)
+            env_prefix_running_status = True
+            case_runner = CaseHandler(case, env_detail, rds)
+            extractor = ExtractService(rds)
+            task = CaseService.run_single_case(
+                case_form=case,
+                env_prefix_each_run=e_p,
+                env_suffix_each_run=e_s,
+                suffix_executor=suffix_executor,
+                case_runner=case_runner,
+                extractor=extractor,
+                rds=rds,
+            )
+            tasks.append(task)
+        await asyncio.gather(*tasks)
+        print("11", tasks)
+
+    @staticmethod
+    async def run_single_case(
+        case_form: OutCaseDetailInfo,
+        env_prefix_each_run: List[OutCaseSuffixInfo],
+        env_suffix_each_run: List[OutCaseSuffixInfo],
+        suffix_executor: SuffixService,
+        case_runner: CaseHandler,
+        extractor: ExtractService,
+        rds: ApiRedis,
+    ):
+        print("Running:", rds.case_id)
+        await rds.init_case_keys()
+        await suffix_executor.execute_env_prefix(env_prefix_each_run, True)
+        await suffix_executor.execute_case_prefix(case_form.prefix_info, True)
+        response = await case_runner.case_executor()
+        await suffix_executor.execute_case_prefix(case_form.suffix_info, False)
+        await suffix_executor.execute_env_prefix(env_suffix_each_run, False)
+        await extractor.extract(response, case_form.extract_info)
+        return response

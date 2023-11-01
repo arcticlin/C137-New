@@ -88,7 +88,6 @@ class ExtractService:
                 if e.extract_to == 1:
                     self.log["env_extract"].append(f"提取环境生成变量[{e.extract_out_name}] => {result[e.extract_out_name]} ")
                 else:
-
                     self.log["case_extract"].append(f"提取响应生成变量[{e.extract_out_name}] => {result[e.extract_out_name]} ")
             if e.extract_to == 1:
                 await self.rds.set_env_var(result)

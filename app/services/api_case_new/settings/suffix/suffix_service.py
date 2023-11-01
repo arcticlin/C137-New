@@ -70,21 +70,27 @@ class SuffixService:
     async def execute_to_redis():
         pass
 
-    async def execute_to_case(self, case_id: int, is_prefix: bool = False):
+    async def execute_to_case(self, case_id: int, is_prefix: bool = False, is_env: bool = False):
         temp_case = await ApiCaseCrud.query_case_detail(case_id)
         # 前置Case执行用例前置, 但是执行变量和日志应当存储在环境Redis中
-        await self.execute_env_prefix(temp_case.prefix_info, is_prefix)
+        if is_env:
+            await self.execute_env_prefix(temp_case.prefix_info, True)
+        else:
+            await self.execute_case_prefix(temp_case.prefix_info, True)
         # 执行用例
         c_server = CaseHandler(temp_case, self.env_detail, self.rds)
         response = await c_server.case_executor()
-        await self.execute_env_prefix(temp_case.suffix_info, is_prefix)
+        if is_env:
+            await self.execute_env_prefix(temp_case.prefix_info, False)
+        else:
+            await self.execute_case_prefix(temp_case.prefix_info, False)
         c_assert_server = AssertService(self.rds)
         case_assert_result = [await c_assert_server.assert_result(response, x) for x in temp_case.assert_info]
         c_extract_server = ExtractService(self.rds)
         await c_extract_server.extract(response, temp_case.extract_info)
         return response
 
-    async def _executor(self, data: SuffixInfo, is_prefix: bool = False):
+    async def _executor(self, data: SuffixInfo, is_prefix: bool = False, is_env: bool = False):
         """
         前/后置执行器
         """
@@ -114,7 +120,7 @@ class SuffixService:
             await self.execute_to_delay(data.run_delay)
             return None, log
         elif data.execute_type == 6:
-            result = await self.execute_to_case(data.run_case_id, is_prefix)
+            result = await self.execute_to_case(data.run_case_id, is_prefix, is_env)
             log.append(f"[{t}]: [Case] -> 执行: 执行用例: {data.run_case_id} = 接口状态: {result.status_code}")
             return None, log
         else:

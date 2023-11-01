@@ -43,7 +43,6 @@ class ScriptHandler:
 
     @staticmethod
     async def python_executor(get_var: str, script_text: str, check_module=True):
-        print(get_var, script_text)
         # 代码格式检查
         ScriptHandler.input_checker(script_text)
         # 模块导入检查
