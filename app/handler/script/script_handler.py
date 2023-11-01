@@ -54,6 +54,8 @@ class ScriptHandler:
         # ScriptHandler.temp_namespace.update(vars(builtins))
 
         try:
+            # 避免协程同步进行时共享变量导致丢失
+
             if not ScriptHandler.temp_namespace.__contains__(trace_id):
                 ScriptHandler.temp_namespace[trace_id] = {}
             # 限制递归层数, 避免出现死循环
