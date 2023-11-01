@@ -13,8 +13,8 @@ from typing import List
 from fastapi import APIRouter
 from celery import Celery
 from celery.result import AsyncResult
-from app.handler.response_handler import C137Response
-from app.services.api_case.api_case_services import ApiCaseServices
+from app.handler.serializer.response_serializer import C137Response
+
 
 jobs = APIRouter()
 
@@ -28,7 +28,7 @@ def my_celery_task(env_id: int, case_id: List[int]) -> AsyncResult:
     async def my_coroutine():
         # 协程的逻辑
         random_uid = str(uuid.uuid4())
-        response = await ApiCaseServices.run_case_suite(random_uid, env_id, case_id)
+        # response = await ApiCaseServices.run_case_suite(random_uid, env_id, case_id)
         return random_uid
 
     # 执行协程并获取结果

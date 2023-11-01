@@ -15,7 +15,7 @@ from typing import List, Union
 
 from app.schemas.api_settings.assert_schema import AssertShow
 from app.schemas.api_settings.suffix_schema import SuffixSimpleShow
-from app.schemas.response_schema import CommonResponse
+from app.core.basic_schema import CommonResponse
 
 
 class AddApiCaseRequest(BaseModel):

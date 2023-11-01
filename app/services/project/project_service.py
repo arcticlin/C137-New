@@ -1,31 +1,37 @@
-import json
-from datetime import datetime
+# coding=utf-8
+"""
+File: project_service.py
+Author: bot
+Created: 2023/10/18
+Description:
+"""
 
-from app.crud.project.project_crud import ProjectCrud
-from app.crud.project.project_directory_crud import PDirectoryCrud
-from app.exceptions.commom_exception import CustomException
-from app.handler.response_handler import C137Response
-from app.schemas.project.pd_schema import AddPDirectoryRequest, DeletePDirectoryRequest
-from app.schemas.project.project_schema import AddProjectRequest, UpdateProjectRequest, AddProjectMemberRequest
-from app.utils.new_logger import logger
-from app.exceptions.project_exp import *
-from app.utils.sql_checker import SqlChecker
-from app.crud.project.project_member_crud import ProjectMCrud
+from app.exceptions.custom_exception import CustomException
+from app.services.project.crud.pm_crud import ProjectMCrud
+from app.services.project.crud.project_curd import ProjectCrud
+from app.exceptions.exp_420_project import *
+from loguru import logger
+
+from app.services.project.schema.project_member import ProjectAddMemberRequest
+from app.services.project.schema.project_new import ProjectNewRequest
+from app.services.project.schema.project_update import ProjectUpdateRequest
+from app.services.ws.ws_service import WsService
 
 
 class ProjectService:
     @staticmethod
-    async def add_project(data: AddProjectRequest, creator: int):
+    async def add_project(data: ProjectNewRequest, operator: int) -> int:
         """创建项目"""
-        logger.debug(f"{creator} => 创建项目")
-        exists = await ProjectCrud.exists_project_name(data.project_name, creator)
+        exists = await ProjectCrud.exists_project_name(data.project_name, operator)
         if exists:
             raise CustomException(PROJECT_NAME_EXISTS)
-        project_id = await ProjectCrud.add_project(data, creator)
+        project_id = await ProjectCrud.add_project(data, operator)
+        # 通知更新
+        await WsService.ws_notify_update_project_list([operator])
         return project_id
 
     @staticmethod
-    async def delete_project(project_id: int, operator: int):
+    async def delete_project(project_id: int, operator: int) -> None:
         """删除项目"""
         logger.debug(f"{operator} => 删除项目: {project_id}")
         exists = await ProjectCrud.exists_project_id(project_id)
@@ -34,14 +40,18 @@ class ProjectService:
             raise CustomException(PROJECT_NOT_EXISTS)
         if not has_permission:
             raise CustomException(PROJECT_NOT_CREATOR)
+        # 通知更新
+        pm_list = await ProjectMCrud.query_pm_with_id(project_id)
         await ProjectCrud.delete_project(project_id, operator)
+        await WsService.ws_notify_update_project_list(pm_list)
+        await WsService.ws_notify_message(pm_list, f"项目: {project_id}已被解散")
 
     @staticmethod
-    async def update_project(data: UpdateProjectRequest, operator: int):
+    async def update_project(project_id: int, data: ProjectUpdateRequest, operator: int) -> None:
         """更新项目"""
-        logger.debug(f"{operator} => 更新项目: {data.project_id}")
-        exists = await ProjectCrud.exists_project_id(data.project_id)
-        has_permission = await ProjectCrud.user_has_permission(data.project_id, operator)
+        logger.debug(f"{operator} => 更新项目: {project_id}")
+        exists = await ProjectCrud.exists_project_id(project_id)
+        has_permission = await ProjectCrud.user_has_permission(project_id, operator)
         name_exists = await ProjectCrud.exists_project_name(data.project_name, operator)
         if not exists:
             raise CustomException(PROJECT_NOT_EXISTS)
@@ -49,21 +59,10 @@ class ProjectService:
             raise CustomException(PROJECT_NOT_CREATOR)
         if name_exists:
             raise CustomException(PROJECT_NAME_EXISTS)
-        await ProjectCrud.update_project(data, operator)
-
-    @staticmethod
-    async def add_project_member(project_id: int, data: AddProjectMemberRequest, operator: int):
-        logger.debug(f"{operator} => 添加项目: {project_id} 成员: {data.user_id}")
-        operator_role = await ProjectCrud.member_role_in_project(project_id, operator)
-        if not operator_role:
-            raise CustomException(PROJECT_NOT_CREATOR)
-        if operator_role == 1:
-            raise CustomException(PROJECT_NOT_CREATOR)
-        if await ProjectCrud.member_role_in_project(project_id, data.user_id):
-            raise CustomException(PROJECT_MEMBER_EXISTS)
-        await ProjectCrud.add_project_member(
-            project_id=project_id, user_id=data.user_id, role=data.role, operator=operator
-        )
+        # 通知更新
+        pm_list = await ProjectMCrud.query_pm_with_id(project_id)
+        await ProjectCrud.update_project(project_id, data, operator)
+        await WsService.ws_notify_update_project_list(pm_list)
 
     @staticmethod
     async def get_project_list(user_id: int):
@@ -109,80 +108,6 @@ class ProjectService:
         return project_info
 
     @staticmethod
-    async def add_project_dir(data: AddPDirectoryRequest, creator: int):
-        logger.debug(f"{creator} => 添加项目: {data.project_id} 目录")
-        if await PDirectoryCrud.pd_name_exists(name=data.name, project_id=data.project_id):
-            raise CustomException(PD_NAME_EXISTS)
-        await PDirectoryCrud.add_project_dir(data, creator)
-
-    @staticmethod
-    async def delete_directory_new(directory_id: int, operator: int):
-        exists = await PDirectoryCrud.pd_is_exists(directory_id)
-        if not exists:
-            raise CustomException(PD_NOT_EXISTS)
-        check = await PDirectoryCrud.verify_permission_in_directory(directory_id, operator)
-        if not check:
-            raise CustomException(PD_NOT_ALLOW)
-        await PDirectoryCrud.delete_dir(directory_id, operator)
-
-    @staticmethod
-    async def update_project_dir_name(project_id: int, directory_id: int, name: str, operator: int):
-        logger.debug(f"{operator} => 更新项目: {project_id} 目录信息")
-        check = await PDirectoryCrud.check_directory_permission(project_id, directory_id)
-        if check is None:
-            raise CustomException(PD_NOT_EXISTS)
-        check_d, check_u = check
-        if not SqlChecker().check_permission(operator, check_u):
-            raise CustomException(PD_NOT_ALLOW)
-        await PDirectoryCrud.update_project_dir_name(directory_id, name, operator)
-
-    @staticmethod
-    async def get_project_directory_tree(project_id: int):
-        result = await ProjectCrud.n_get_project_directory_tree(project_id)
-        temp_data = []
-        for x in result:
-            directory_id, name, parent_id, has_case = x
-            temp_data.append(
-                {
-                    "directory_id": directory_id,
-                    "name": name,
-                    "parent_id": parent_id,
-                    "has_case": has_case,
-                }
-            )
-
-        return ProjectCrud.another_build_directory_tree(temp_data)
-
-    @staticmethod
-    async def get_case_list_in_directory(directory_id: int):
-        result = await PDirectoryCrud.get_case_list_in_directory(directory_id)
-        temp_data = []
-        for x in result:
-            case_id, name, method, priority, status, create_user, updated_at = x
-            temp_data.append(
-                {
-                    "case_id": case_id,
-                    "name": name,
-                    "method": method,
-                    "priority": priority,
-                    "status": status,
-                    "create_user": create_user,
-                    "updated_at": int(updated_at.timestamp()),
-                }
-            )
-        return temp_data
-
-    @staticmethod
-    async def update_project_directory_name(dir_id: int, name: str, operator: int):
-        check_directory = await PDirectoryCrud.pd_is_exists(dir_id)
-        if not check_directory:
-            raise CustomException(PD_NOT_EXISTS)
-        check_name = await PDirectoryCrud.pd_name_exists(name=name, directory_id=dir_id)
-        if check_name:
-            raise CustomException(PD_NAME_EXISTS)
-        await PDirectoryCrud.update_project_dir_name(dir_id, name, operator)
-
-    @staticmethod
     async def get_project_members(project_id: int):
         logger.debug(f"查询项目: {project_id}详情")
         members = await ProjectMCrud.query_project_members(project_id)
@@ -198,6 +123,8 @@ class ProjectService:
         if role == 3:
             raise CustomException(PROJECT_MEMBER_NOT_ALLOW_ADD_CREATOR)
         await ProjectMCrud.add_member(project_id, member_id, operator, role)
+        await WsService.ws_notify_update_project_list([member_id])
+        await WsService.ws_notify_message([member_id], f"你被添加到项目: {project_id}")
 
     @staticmethod
     async def remove_member(project_id: int, member_id: int, operator: int):
@@ -209,6 +136,8 @@ class ProjectService:
         if not await ProjectMCrud.exists_member(project_id, member_id):
             raise CustomException(PROJECT_MEMBER_NOT_EXISTS)
         await ProjectMCrud.remove_member(project_id, member_id, operator)
+        await WsService.ws_notify_update_project_list([member_id])
+        await WsService.ws_notify_message([member_id], f"你被移除项目: {project_id}")
 
     @staticmethod
     async def update_member(project_id: int, member_id: int, member_role: int, operator: int):
@@ -231,3 +160,6 @@ class ProjectService:
         if not await ProjectMCrud.exists_member(project_id, operator):
             raise CustomException(PROJECT_MEMBER_NOT_EXISTS)
         await ProjectMCrud.exit_member(project_id, operator)
+        # 通知更新
+        pm_list = await ProjectMCrud.query_pm_with_id(project_id)
+        await WsService.ws_notify_update_project_list(pm_list)

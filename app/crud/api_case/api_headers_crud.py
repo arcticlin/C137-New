@@ -5,8 +5,8 @@ Author: bot
 Created: 2023/8/14
 Description:
 """
-from app.handler.db_bulk import DatabaseBulk
-from app.models.apicase.api_headers import ApiHeadersModel
+from app.handler.db_tool.db_bulk import DatabaseBulk
+from app.models.api_case.api_headers import ApiHeadersModel
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_
 

@@ -5,10 +5,11 @@ from app.register.register_db import register_db
 from app.register.register_exception import register_exception
 from app.register.register_router import register_router
 from base_config import Config
-from app.schemas.response_schema import CommonResponse
+
 from app.middleware.flyele_token import FlyeleToken
 from app.register.register_middleware import register_middleware
 from app.services.ws.client_store import connected_clients
+
 app = FastAPI()
 
 

@@ -17,7 +17,7 @@ class AssertModel(Base, BaseMixin):
     name = Column(String(16), nullable=False, comment="断言名称")
     enable = Column(BOOLEAN, default=True, comment="是否启用")
     case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="绑定用例ID")
-    env_id = Column(Integer, ForeignKey("env.env_id"), comment="绑定环境ID")
+    env_id = Column(Integer, ForeignKey("envs.env_id"), comment="绑定环境ID")
 
     assert_from = Column(
         Integer, nullable=False, comment="断言来源 1: res_header 2: res_body 3: res_status_code 4: res_elapsed"

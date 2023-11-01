@@ -10,7 +10,7 @@ from typing import Set
 from fastapi import APIRouter, WebSocket, Query
 from starlette.websockets import WebSocketDisconnect
 
-from app.handler.token_handler import UserToken
+from app.handler.auth.token_handler import UserToken
 from app.services.ws.client_store import connected_clients
 from app.services.ws.ws_service import WsService
 from loguru import logger
@@ -36,7 +36,6 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...)):
         logger.debug(f"client: {user_id} disconnect")
         await WsService.remove_client(user_id)
     except Exception as e:
-        print("11hh", e)
         pass
     finally:
         pass

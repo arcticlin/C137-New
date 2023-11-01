@@ -1,0 +1,23 @@
+# coding=utf-8
+"""
+File: exp_420_project.py
+Author: bot
+Created: 2023/20/18
+Description:
+"""
+PROJECT_NAME_EXISTS = (400, 40420, "项目名已存在")
+PROJECT_NOT_EXISTS = (400, 40201, "项目不存在")
+PROJECT_NOT_CREATOR = (400, 40202, "非项目创建者或管理员")
+PROJECT_MEMBER_EXISTS = (400, 40203, "该成员已在项目中")
+PROJECT_MEMBER_NOT_EXISTS = (400, 40204, "该成员不在项目中")
+PROJECT_MEMBER_NOT_ALLOW_TO_CREATOR = (400, 40205, "不允许修改为管理员")
+PROJECT_MEMBER_NOT_ALLOW_REMOVE_CREATOR = (400, 40206, "不允许移除创建者")
+PROJECT_MEMBER_NOT_ALLOW_UPDATE_CREATOR = (400, 40207, "不允许修改创建者")
+PROJECT_MEMBER_NOT_ALLOW_EXIT_CREATOR = (400, 40208, "不允许创建者退出项目")
+PROJECT_MEMBER_NOT_ALLOW_ADD_CREATOR = (400, 40209, "不允许添加创建者")
+PROJECT_MEMBER_NOT_ALLOW = (400, 40120, "无权限访问该项目")
+
+
+PD_NAME_EXISTS = (400, 40204, "目录名已存在")
+PD_NOT_EXISTS = (400, 40205, "目录不存在")
+PD_NOT_ALLOW = (400, 40206, "仅创建人或责任人可修改\删除目录")

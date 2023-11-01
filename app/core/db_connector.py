@@ -58,6 +58,7 @@ class BaseMixin:
         target.updated_at = func.now()
 
 
+
 # 事件绑定, before在更新数据时执行方法. FYI: 仅python层面的赋值, 并不会真正的更新数据库, 只有Commit后才会更新数据库.
 # https://docs.sqlalchemy.org/en/14/orm/events.html
 event.listen(BaseMixin, "before_insert", BaseMixin.set_defaults)

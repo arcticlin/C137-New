@@ -5,12 +5,11 @@ Author: bot
 Created: 2023/8/8
 Description:
 """
-from app.handler.db_bulk import DatabaseBulk
+from app.handler.db_tool.db_bulk import DatabaseBulk
 from app.models.api_settings.extract_settings import ExtractModel
 from sqlalchemy import select, and_, text
 from app.core.db_connector import async_session
 from app.schemas.api_case.api_case_schema_new_new import CaseExtractAdd
-
 
 
 class ExtractCrud:

@@ -7,7 +7,7 @@ Description:
 """
 from typing import List
 
-from app.handler.db_bulk import DatabaseBulk
+from app.handler.db_tool.db_bulk import DatabaseBulk
 from app.models.api_settings.assert_settings import AssertModel
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_, text

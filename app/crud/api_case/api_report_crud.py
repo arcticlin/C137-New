@@ -7,10 +7,10 @@ Description:
 """
 from sqlalchemy import select, and_
 
-from app.handler.db_bulk import DatabaseBulk
-from app.models.apicase.api_report import ApiReportModel
+from app.handler.db_tool.db_bulk import DatabaseBulk
+from app.models.api_case.api_report import ApiReportModel
 
-from app.models.apicase.api_result import ApiCaseResultModel
+from app.models.api_case.api_result import ApiCaseResultModel
 from app.core.db_connector import async_session
 
 

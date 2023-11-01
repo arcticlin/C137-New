@@ -22,8 +22,8 @@ class UserModel(Base, BaseMixin):
     email = Column(String(64), nullable=True, comment="邮箱")
 
     user_role = Column(
-        SqlEnum(UserRoleEnum),
-        default=UserRoleEnum.NORMAL_USER,
+        INT,
+        default=1,
         comment="用户权限, 1: 普通用户, 2: 管理员",
     )
 
@@ -39,7 +39,7 @@ class UserModel(Base, BaseMixin):
         password,
         nickname=None,
         email=None,
-        user_role=UserRoleEnum.NORMAL_USER,
+        user_role=1,
         department_id=None,
         avatar=None,
     ):

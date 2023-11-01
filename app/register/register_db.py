@@ -6,10 +6,12 @@ Created: 2023/7/25
 Description:
 """
 from sqlalchemy import create_engine, DDL
+
+from app.handler.redis.rds_client import RedisCli
 from base_config import Config
 from app.core.db_connector import async_engine, Base
 from fastapi import FastAPI
-from app.handler.redis_handler import redis_client
+
 
 # Model
 from app.models.model_collect import *
@@ -49,4 +51,5 @@ def register_db(app: FastAPI):
             await drop_tables()
         await create_tables()
         if Config.REDIS_ON:
-            await redis_client.init_redis_connect()
+            rds = RedisCli()
+            await rds.init_redis_connect()

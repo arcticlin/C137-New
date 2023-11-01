@@ -5,6 +5,7 @@ Author: bot
 Created: 2023/8/7
 Description:
 """
+from sqlalchemy.orm import relationship
 
 from app.core.db_connector import Base, BaseMixin
 from sqlalchemy import Column, Integer, String, TEXT, ForeignKey, BOOLEAN
@@ -21,11 +22,11 @@ class SuffixModel(Base, BaseMixin):
     sort = Column(Integer, nullable=False, comment="排序", index=True)
 
     execute_type = Column(
-        Integer, nullable=False, comment="执行类型, 1: python 2: sql 3: redis 4: delay 5: global-script", index=True
+        Integer, nullable=False, comment="执行类型, 1: 公共脚本 2: sql 3: redis 4: delay 5: python", index=True
     )
 
     case_id = Column(Integer, ForeignKey("api_case.case_id"), comment="绑定用例ID")
-    env_id = Column(Integer, ForeignKey("env.env_id"), comment="绑定环境ID")
+    env_id = Column(Integer, ForeignKey("envs.env_id"), comment="绑定环境ID")
     run_each_case = Column(Integer, comment="是否每条用例执行一次, 1: 是 0: 否")
 
     script_id = Column(Integer, ForeignKey("script.script_id"), comment="脚本ID", index=True)
