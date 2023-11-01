@@ -70,9 +70,9 @@ class ScriptService:
         return result
 
     @staticmethod
-    async def debug_script_by_id(script_id: int):
+    async def debug_script_by_id(script_id: int, trace_id: str = "default"):
         check = await ScriptCrud.query_script_id_exists(script_id)
         if not check:
             raise CustomException(SCRIPT_NOT_EXISTS)
-        result = await ScriptCrud.execute_by_id(script_id)
+        result = await ScriptCrud.execute_by_id(script_id, trace_id)
         return result

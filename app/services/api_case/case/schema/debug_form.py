@@ -3,12 +3,12 @@ from typing import Union, List, Optional
 
 from pydantic import BaseModel, Field, validator
 
-from app.services.api_case_new.case.schema.info import OutCaseUrlInfo, OutCaseBodyInfo, OutCaseBasicInfo
-from app.services.api_case_new.case_params.headers.schema.info import DebugHeaderInfo
-from app.services.api_case_new.case_params.query.schema.info import DebugParamsInfo
-from app.services.api_case_new.settings.asserts.schema.info import DebugAssertInfo
-from app.services.api_case_new.settings.extract.schema.info import DebugExtractInfo
-from app.services.api_case_new.settings.suffix.schema.info import DebugCaseSuffixInfo
+from app.services.api_case.case.schema.info import OutCaseUrlInfo, OutCaseBodyInfo, OutCaseBasicInfo
+from app.services.api_case.case_params.headers.schema.info import DebugHeaderInfo
+from app.services.api_case.case_params.query.schema.info import DebugParamsInfo
+from app.services.api_case.settings.asserts.schema.info import DebugAssertInfo
+from app.services.api_case.settings.extract.schema.info import DebugExtractInfo
+from app.services.api_case.settings.suffix.schema.info import DebugCaseSuffixInfo
 
 
 class OutDebugResponse(BaseModel):

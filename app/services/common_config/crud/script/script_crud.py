@@ -114,14 +114,14 @@ class ScriptCrud:
         return result
 
     @staticmethod
-    async def execute_by_id(script_id: int):
+    async def execute_by_id(script_id: int, trace_id: str = "default"):
         async with async_session() as session:
             smtm = await session.execute(
                 select(ScriptModel).where(and_(ScriptModel.script_id == script_id, ScriptModel.deleted_at == 0))
             )
             result = smtm.scalars().first()
         s_config = ScriptCrud.convert_model_to_script_form(result)
-        result = await ScriptHandler.python_executor(s_config.var_key, s_config.var_script)
+        result = await ScriptHandler.python_executor(s_config.var_key, s_config.var_script, trace_id=trace_id)
         return result
 
     @staticmethod

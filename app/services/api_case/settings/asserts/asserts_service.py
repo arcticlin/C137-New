@@ -12,7 +12,7 @@ import jsonpath
 
 from app.handler.case.schemas import AsyncResponseSchema
 from app.handler.redis.api_redis_new import ApiRedis
-from app.services.api_case_new.settings.asserts.schema.info import DebugAssertInfo, OutAssertInfo, OutAssertResult
+from app.services.api_case.settings.asserts.schema.info import DebugAssertInfo, OutAssertInfo, OutAssertResult
 from app.utils.time_utils import TimeUtils
 
 AssertInfo = Union[DebugAssertInfo, OutAssertInfo]

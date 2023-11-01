@@ -11,10 +11,10 @@ from pydantic import BaseModel, Field
 
 from app.core.basic_schema import CommonResponse
 
-from app.services.api_case_new.case_params.headers.schema.info import OutHeaderInfo
-from app.services.api_case_new.case_params.query.schema.info import OutParamsInfo
-from app.services.api_case_new.settings.asserts.schema.info import OutAssertInfo
-from app.services.api_case_new.settings.suffix.schema.info import OutCaseSuffixInfo
+from app.services.api_case.case_params.headers.schema.info import OutHeaderInfo
+from app.services.api_case.case_params.query.schema.info import OutParamsInfo
+from app.services.api_case.settings.asserts.schema.info import OutAssertInfo
+from app.services.api_case.settings.suffix.schema.info import OutCaseSuffixInfo
 
 
 class EnvListOut(BaseModel):

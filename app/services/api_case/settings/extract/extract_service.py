@@ -13,7 +13,7 @@ import jsonpath
 
 from app.handler.case.schemas import AsyncResponseSchema
 from app.handler.redis.api_redis_new import ApiRedis
-from app.services.api_case_new.settings.extract.schema.info import DebugExtractInfo, OutExtractInfo, OutExtractResult
+from app.services.api_case.settings.extract.schema.info import DebugExtractInfo, OutExtractInfo, OutExtractResult
 
 ExtractInfo = Union[DebugExtractInfo, OutExtractInfo]
 

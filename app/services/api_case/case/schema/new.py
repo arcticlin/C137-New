@@ -8,11 +8,11 @@ Description:
 from pydantic import BaseModel, Field
 from typing import List, Optional, Union
 
-from app.services.api_case_new.case_params.headers.schema.news import AddWithHeaderInfo
-from app.services.api_case_new.case_params.query.schema.news import AddWithQueryInfo
-from app.services.api_case_new.settings.asserts.schema.news import AddWithAssertInfo
-from app.services.api_case_new.settings.extract.schema.new import AddWithExtractInfo
-from app.services.api_case_new.settings.suffix.schema.news import AddWithSuffixInfo
+from app.services.api_case.case_params.headers.schema.news import AddWithHeaderInfo
+from app.services.api_case.case_params.query.schema.news import AddWithQueryInfo
+from app.services.api_case.settings.asserts.schema.news import AddWithAssertInfo
+from app.services.api_case.settings.extract.schema.new import AddWithExtractInfo
+from app.services.api_case.settings.suffix.schema.news import AddWithSuffixInfo
 
 
 class AddWithBasicInfo(BaseModel):

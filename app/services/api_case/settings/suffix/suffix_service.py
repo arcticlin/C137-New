@@ -12,10 +12,10 @@ from app.exceptions.custom_exception import CustomException
 from app.exceptions.exp_480_case import PYTHON_SCRIPT_OUT_NAME_WRONG
 from app.handler.case.case_handler_new import CaseHandler
 from app.handler.redis.api_redis_new import ApiRedis
-from app.services.api_case_new.case.crud.case_crud import ApiCaseCrud
-from app.services.api_case_new.settings.asserts.asserts_service import AssertService
-from app.services.api_case_new.settings.extract.extract_service import ExtractService
-from app.services.api_case_new.settings.suffix.schema.info import DebugCaseSuffixInfo, OutCaseSuffixInfo
+from app.services.api_case.case.crud.case_crud import ApiCaseCrud
+from app.services.api_case.settings.asserts.asserts_service import AssertService
+from app.services.api_case.settings.extract.extract_service import ExtractService
+from app.services.api_case.settings.suffix.schema.info import DebugCaseSuffixInfo, OutCaseSuffixInfo
 from app.services.common_config.env_service import EnvService
 from app.services.common_config.schema.env.responses import EnvDetailOut
 from app.services.common_config.schema.script.news import RequestScriptDebugByForm
@@ -50,11 +50,11 @@ class SuffixService:
         return result
 
     @staticmethod
-    async def execute_to_common_script(script_id: int) -> dict:
+    async def execute_to_common_script(script_id: int, trace_id: str = "default") -> dict:
         """
         执行公共脚本
         """
-        result = await ScriptService.debug_script_by_id(script_id)
+        result = await ScriptService.debug_script_by_id(script_id, trace_id)
         return result
 
     @staticmethod
@@ -96,12 +96,13 @@ class SuffixService:
         """
         var = dict()
         log = []
+        local_temp_namespace = f"{self.rds.trace_id}_{self.rds.env_id}_{self.rds.case_id}"
         t = TimeUtils.get_current_time_without_year()
         if not data.enable:
             return None, None
         if data.execute_type == 1:
             # 执行公共脚本
-            result = await self.execute_to_common_script(data.script_id)
+            result = await self.execute_to_common_script(data.script_id, local_temp_namespace)
             log.append(f"[{t}]: [公共脚本] -> 执行: 设置变量: {result}")
             return result, log
         elif data.execute_type == 2:
