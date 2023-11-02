@@ -78,3 +78,9 @@ class ApiRedis(RedisCli):
 
         get_value_from_redis = await self.get_key_value_as_json(rk)
         return get_value_from_redis.get("var", {}).get(var_key, None)
+
+    async def get_case_log(self):
+        """设置case日志"""
+        rk = self.get_case_rk()
+        log = await self.get_key_value_as_json(rk)
+        return log

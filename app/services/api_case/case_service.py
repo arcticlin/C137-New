@@ -6,19 +6,27 @@ Created: 2023/10/26
 Description:
 """
 import asyncio
-from typing import List
+from typing import List, Dict
+
+from pydantic import BaseModel
 
 from app.exceptions.custom_exception import CustomException
 from app.exceptions.exp_420_project import PD_NOT_EXISTS
 from app.exceptions.exp_480_case import *
 from app.handler.case.case_handler_new import CaseHandler
+from app.handler.case.schemas import AsyncResponseSchema
 from app.handler.redis.api_redis_new import ApiRedis
+from app.services.api_case.api_result.crud.report_curd import ApiReportCrud
+from app.services.api_case.api_result.crud.result_crud import ApiResultCrud
+from app.services.api_case.api_result.schema.report.new import UpdateReportData
+from app.services.api_case.api_result.schema.result.info import OutCaseRun
 
 from app.services.api_case.case.crud.case_crud import ApiCaseCrud
 from app.services.api_case.case.schema.debug_form import RequestDebugForm
 from app.services.api_case.case.schema.info import OutCaseDetailInfo
 from app.services.api_case.case.schema.new import RequestApiCaseNew
 from app.services.api_case.settings.asserts.asserts_service import AssertService
+from app.services.api_case.settings.asserts.schema.info import OutAssertInfo, OutAssertResult
 from app.services.api_case.settings.extract.extract_service import ExtractService
 from app.services.api_case.settings.suffix.schema.info import OutCaseSuffixInfo
 from app.services.api_case.settings.suffix.suffix_service import SuffixService
@@ -153,48 +161,79 @@ class CaseService:
 
     @staticmethod
     async def async_run_case_suite(trace_id: str, env_id: int, case_ids: List[int], operator: int):
+        success_ = 0
+        failed_ = 0
+        xfail = 0
+        skip = 0
+        total_duration = 0
         env_detail = await EnvService.get_env_detail(env_id)
         e_p = [i for i in env_detail.prefix_info if i.run_each_case == 1]
         e_s = [i for i in env_detail.suffix_info if i.run_each_case == 1]
         tasks = []
         env_prefix_running_status = False
+        report_id = await ApiReportCrud.init_report(trace_id, len(case_ids), operator)
         async for case in ApiCaseCrud.query_batch_case_detail(case_ids):
+            if case.basic_info.status == 2:
+                skip += 1
+                continue
             rds = ApiRedis(trace_id=trace_id, env_id=env_id, case_id=case.case_id, user_id=operator)
             await rds.init_env_keys()
             await rds.init_case_keys()
             suffix_executor = SuffixService(rds, env_detail=env_detail)
             await suffix_executor.execute_env_prefix(env_detail.prefix_info, True, env_prefix_running_status)
-            env_prefix_running_status = True
             case_runner = CaseHandler(case, env_detail, rds)
             extractor = ExtractService(rds)
+            assert_server = AssertService(rds)
             task = CaseService.run_single_case(
                 case_form=case,
-                env_prefix_each_run=e_p,
-                env_suffix_each_run=e_s,
+                env_prefix=[x for x in e_p if x.run_each_case == 1],
+                env_suffix=[x for x in e_s if x.run_each_case == 1],
+                env_assert=[x for x in env_detail.assert_info],
                 suffix_executor=suffix_executor,
                 case_runner=case_runner,
                 extractor=extractor,
+                assert_server=assert_server,
                 rds=rds,
             )
             tasks.append(task)
-        await asyncio.gather(*tasks)
-        print("11", tasks)
+        result: List[OutCaseRun] = await asyncio.gather(*tasks)
+
+        for r in result:
+            total_duration += r.response.elapsed
+            if r.assert_result:
+                success_ += 1
+            else:
+                failed_ += 1
+            await ApiResultCrud.add_case_result(report_id, r.case_id, r.response, r.case_log, r.assert_result)
+        report_result = UpdateReportData(
+            success=success_, failed=failed_, xfail=xfail, skip=skip, duration=total_duration, status=2
+        )
+        print(report_result)
+        await ApiReportCrud.update_report_data(report_id, report_result)
 
     @staticmethod
     async def run_single_case(
         case_form: OutCaseDetailInfo,
-        env_prefix_each_run: List[OutCaseSuffixInfo],
-        env_suffix_each_run: List[OutCaseSuffixInfo],
+        env_prefix: List[OutCaseSuffixInfo],
+        env_suffix: List[OutCaseSuffixInfo],
+        env_assert: List[OutAssertInfo],
         suffix_executor: SuffixService,
         case_runner: CaseHandler,
         extractor: ExtractService,
+        assert_server: AssertService,
         rds: ApiRedis,
-    ):
-        print("Running:", rds.case_id)
-        await suffix_executor.execute_env_prefix(env_prefix_each_run, True)
+    ) -> OutCaseRun:
+        await suffix_executor.execute_env_prefix(env_prefix, True)
         await suffix_executor.execute_case_prefix(case_form.prefix_info, True)
         response = await case_runner.case_executor()
         await suffix_executor.execute_case_prefix(case_form.suffix_info, False)
-        await suffix_executor.execute_env_prefix(env_suffix_each_run, False)
+        await suffix_executor.execute_env_prefix(env_suffix, False)
         await extractor.extract(response, case_form.extract_info)
-        return response
+        case_assert = [await assert_server.assert_result(response, x) for x in case_form.assert_info]
+        env_assert_result = [await assert_server.assert_result(response, x) for x in env_assert]
+        case_log = await rds.get_case_log()
+        final_assert_result = False not in assert_server.assert_response_result(env_assert_result, case_assert)
+        result = OutCaseRun(
+            case_id=case_form.case_id, response=response, case_log=case_log, assert_result=final_assert_result
+        )
+        return result
