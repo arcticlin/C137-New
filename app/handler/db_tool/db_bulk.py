@@ -36,7 +36,7 @@ class DatabaseBulk:
 
         # setattr(model_instance, "update_at", datetime.now())
         # changed_var.append("update_at")
-
+        print(changed_var)
         return changed_var
 
     @staticmethod
@@ -48,9 +48,7 @@ class DatabaseBulk:
             setattr(model_instance, "update_user", operator)
 
     @staticmethod
-    async def deleted_model_with_session(
-        session: AsyncSession, model, primary_key: List[int], operator: int
-    ):
+    async def deleted_model_with_session(session: AsyncSession, model, primary_key: List[int], operator: int):
         """
         软删除
         primary_key可能等于整型,'',或者是逗号分隔的字符串
@@ -64,7 +62,6 @@ class DatabaseBulk:
             if obj:
                 obj.deleted_at = int(datetime.now().timestamp())
                 obj.update_user = operator
-
 
     @staticmethod
     async def bulk_add_data(session, model, data: List[BaseModel], *ignore_key, **addition_data):

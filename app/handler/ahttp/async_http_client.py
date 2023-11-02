@@ -143,6 +143,7 @@ class AsyncRequest:
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar(unsafe=True)) as session:
             async with session.request(method, self.url, timeout=self.timeout, ssl=False, **self.kwargs) as res:
                 cost = "%.0fms" % ((time.time() - start) * 1000)
+                cost = round((time.time() - start) * 1000, 3)
                 response, json_format = await AsyncRequest.get_response(res)
                 cookie = self.get_cookie(session)
                 return await self.collect_request(
