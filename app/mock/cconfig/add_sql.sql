@@ -1,2 +1,0 @@
-INSERT INTO sql_model (name, host, port, db_user, db_password, db_name, sql_type, create_user, update_user, deleted_at) VALUES ('本地测试环境', '127.0.0.1', 3306, 'root', 'test1234', 'C137', 1, 1, 1, 0);
-INSERT INTO sql_model (name, host, port, db_user, db_password, db_name, sql_type, create_user, update_user, deleted_at) VALUES ('飞项测试环境', '192.168.1.30', 3306, 'feixiang_develop', 'Zic1YBXPEssAB62VrK5u', 'feixiang', 1, 1, 1, 0);

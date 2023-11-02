@@ -1,1 +1,0 @@
-INSERT INTO redis_model (name, host, port, password, db, cluster, create_user, update_user, deleted_at) VALUES ('本地Redis', '127.0.0.1', 6379, 'test1234', 0, false, 1, 1, 0)
