@@ -42,7 +42,7 @@ class ScriptHandler:
         raise CustomException((400, 40902, f"代码执行超时"))
 
     @staticmethod
-    async def python_executor(get_var: str, script_text: str, check_module=True):
+    async def python_executor(get_var: str, script_text: str, check_module=True, trace_id: str = "default"):
         # 代码格式检查
         ScriptHandler.input_checker(script_text)
         # 模块导入检查
@@ -54,15 +54,22 @@ class ScriptHandler:
         # ScriptHandler.temp_namespace.update(vars(builtins))
 
         try:
+            # 避免协程同步进行时共享变量导致丢失
+
+            if not ScriptHandler.temp_namespace.__contains__(trace_id):
+                ScriptHandler.temp_namespace[trace_id] = {}
             # 限制递归层数, 避免出现死循环
             sys.setrecursionlimit(100)
             # 添加超时操作
             await asyncio.wait_for(
-                asyncio.to_thread(exec, compiled_code, ScriptHandler.temp_namespace),
+                asyncio.to_thread(exec, compiled_code, ScriptHandler.temp_namespace[trace_id]),
                 timeout=5,
             )
-            result = eval(get_var, ScriptHandler.temp_namespace)
-            ScriptHandler.temp_namespace.pop(get_var)
+
+            result = eval(get_var, ScriptHandler.temp_namespace[trace_id])
+            # TODO: 定期清理temp_namespace变量
+            if ScriptHandler.temp_namespace[trace_id].__contains__(get_var):
+                ScriptHandler.temp_namespace[trace_id].pop(get_var)
             return {get_var: result}
         except asyncio.TimeoutError:
             raise CustomException((400, 40902, f"代码执行超时, 请检查"))

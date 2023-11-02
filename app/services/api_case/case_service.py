@@ -14,14 +14,14 @@ from app.exceptions.exp_480_case import *
 from app.handler.case.case_handler_new import CaseHandler
 from app.handler.redis.api_redis_new import ApiRedis
 
-from app.services.api_case_new.case.crud.case_crud import ApiCaseCrud
-from app.services.api_case_new.case.schema.debug_form import RequestDebugForm
-from app.services.api_case_new.case.schema.info import OutCaseDetailInfo
-from app.services.api_case_new.case.schema.new import RequestApiCaseNew
-from app.services.api_case_new.settings.asserts.asserts_service import AssertService
-from app.services.api_case_new.settings.extract.extract_service import ExtractService
-from app.services.api_case_new.settings.suffix.schema.info import OutCaseSuffixInfo
-from app.services.api_case_new.settings.suffix.suffix_service import SuffixService
+from app.services.api_case.case.crud.case_crud import ApiCaseCrud
+from app.services.api_case.case.schema.debug_form import RequestDebugForm
+from app.services.api_case.case.schema.info import OutCaseDetailInfo
+from app.services.api_case.case.schema.new import RequestApiCaseNew
+from app.services.api_case.settings.asserts.asserts_service import AssertService
+from app.services.api_case.settings.extract.extract_service import ExtractService
+from app.services.api_case.settings.suffix.schema.info import OutCaseSuffixInfo
+from app.services.api_case.settings.suffix.suffix_service import SuffixService
 from app.services.common_config.env_service import EnvService
 from app.services.directory.crud.directory_crud import DirectoryCrud
 
@@ -161,6 +161,7 @@ class CaseService:
         async for case in ApiCaseCrud.query_batch_case_detail(case_ids):
             rds = ApiRedis(trace_id=trace_id, env_id=env_id, case_id=case.case_id, user_id=operator)
             await rds.init_env_keys()
+            await rds.init_case_keys()
             suffix_executor = SuffixService(rds, env_detail=env_detail)
             await suffix_executor.execute_env_prefix(env_detail.prefix_info, True, env_prefix_running_status)
             env_prefix_running_status = True
@@ -190,7 +191,6 @@ class CaseService:
         rds: ApiRedis,
     ):
         print("Running:", rds.case_id)
-        await rds.init_case_keys()
         await suffix_executor.execute_env_prefix(env_prefix_each_run, True)
         await suffix_executor.execute_case_prefix(case_form.prefix_info, True)
         response = await case_runner.case_executor()

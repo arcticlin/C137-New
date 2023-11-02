@@ -20,18 +20,18 @@ from app.models.api_case.api_headers import ApiHeadersModel
 from app.models.api_settings.suffix_settings import SuffixModel
 from app.models.api_settings.assert_settings import AssertModel
 from app.models.api_settings.extract_settings import ExtractModel
-from app.services.api_case_new.case.schema.info import (
+from app.services.api_case.case.schema.info import (
     OutCaseDetailInfo,
     OutCaseBasicInfo,
     OutCaseUrlInfo,
     OutCaseBodyInfo,
 )
-from app.services.api_case_new.case.schema.new import RequestApiCaseNew
-from app.services.api_case_new.case_params.headers.schema.info import OutHeaderInfo
-from app.services.api_case_new.case_params.query.schema.info import OutParamsInfo
-from app.services.api_case_new.settings.asserts.schema.info import OutAssertInfo
-from app.services.api_case_new.settings.extract.schema.info import OutExtractInfo
-from app.services.api_case_new.settings.suffix.schema.info import OutCaseSuffixInfo
+from app.services.api_case.case.schema.new import RequestApiCaseNew
+from app.services.api_case.case_params.headers.schema.info import OutHeaderInfo
+from app.services.api_case.case_params.query.schema.info import OutParamsInfo
+from app.services.api_case.settings.asserts.schema.info import OutAssertInfo
+from app.services.api_case.settings.extract.schema.info import OutExtractInfo
+from app.services.api_case.settings.suffix.schema.info import OutCaseSuffixInfo
 from loguru import logger
 
 

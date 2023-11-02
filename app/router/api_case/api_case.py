@@ -12,11 +12,11 @@ from app.handler.serializer.response_serializer import C137Response
 import uuid
 
 from app.middleware.access_permission import Permission
-from app.services.api_case_new.case.schema.debug_form import RequestDebugForm
-from app.services.api_case_new.case.schema.new import RequestApiCaseNew
-from app.services.api_case_new.case.schema.response import ResponseCaseNew, ResponseCaseDetail, ResponseDebugResult
-from app.services.api_case_new.case.schema.runner import RequestRunSingleCase, RequestRunMultiCase
-from app.services.api_case_new.case_service import CaseService
+from app.services.api_case.case.schema.debug_form import RequestDebugForm
+from app.services.api_case.case.schema.new import RequestApiCaseNew
+from app.services.api_case.case.schema.response import ResponseCaseNew, ResponseCaseDetail, ResponseDebugResult
+from app.services.api_case.case.schema.runner import RequestRunSingleCase, RequestRunMultiCase
+from app.services.api_case.case_service import CaseService
 
 cases = APIRouter()
 

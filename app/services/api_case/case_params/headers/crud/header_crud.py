@@ -14,7 +14,7 @@ from app.models.api_case.api_headers import ApiHeadersModel
 from app.handler.serializer.response_serializer import C137Response
 from loguru import logger
 
-from app.services.api_case_new.case_params.headers.schema.response import ResponseHeaderInfo
+from app.services.api_case.case_params.headers.schema.response import ResponseHeaderInfo
 
 
 class ApiHeaderCrud:

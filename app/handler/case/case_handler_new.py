@@ -13,10 +13,10 @@ from app.exceptions.custom_exception import CustomException
 from app.exceptions.exp_480_case import BODY_CAN_NOT_SERIALIZABLE
 from app.handler.ahttp.async_http_client import AsyncRequest
 from app.handler.redis.api_redis_new import ApiRedis
-from app.services.api_case_new.case.schema.debug_form import RequestDebugForm
-from app.services.api_case_new.case.schema.info import OutCaseDetailInfo
-from app.services.api_case_new.case_params.headers.schema.info import DebugHeaderInfo, OutHeaderInfo
-from app.services.api_case_new.case_params.query.schema.info import DebugParamsInfo, OutParamsInfo
+from app.services.api_case.case.schema.debug_form import RequestDebugForm
+from app.services.api_case.case.schema.info import OutCaseDetailInfo
+from app.services.api_case.case_params.headers.schema.info import DebugHeaderInfo, OutHeaderInfo
+from app.services.api_case.case_params.query.schema.info import DebugParamsInfo, OutParamsInfo
 from app.services.common_config.schema.env.responses import EnvDetailOut
 from app.utils.time_utils import TimeUtils
 

@@ -10,10 +10,10 @@ from typing import List
 from pydantic import BaseModel, Field
 
 
-from app.services.api_case_new.case_params.headers.schema.news import RequestTempHeaderNew, AddWithHeaderInfo
-from app.services.api_case_new.case_params.query.schema.news import AddWithQueryInfo
-from app.services.api_case_new.settings.asserts.schema.news import AddWithAssertInfo
-from app.services.api_case_new.settings.suffix.schema.news import AddWithSuffixInfo
+from app.services.api_case.case_params.headers.schema.news import RequestTempHeaderNew, AddWithHeaderInfo
+from app.services.api_case.case_params.query.schema.news import AddWithQueryInfo
+from app.services.api_case.settings.asserts.schema.news import AddWithAssertInfo
+from app.services.api_case.settings.suffix.schema.news import AddWithSuffixInfo
 
 
 class RequestEnvNew(BaseModel):
