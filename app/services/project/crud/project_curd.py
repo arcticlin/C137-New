@@ -253,6 +253,7 @@ class ProjectCrud:
             )
             smtm_case_count = await session.execute(smtm_case_count, {"user_id": user_id})
             result = smtm_case_count.all()
+            print(result)
             # execute_member = await session.execute(smtm)
             # result = execute_member.scalars().all()
             return result
