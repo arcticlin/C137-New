@@ -24,9 +24,11 @@ async def websocket_endpoint(websocket: WebSocket, token: str = Query(...)):
     try:
         UserToken.parse_token(token)
         user_id = UserToken.get_user_id_from_token(token)
+        print("come", user_id)
         await websocket.accept()
         if user_id not in connected_clients or connected_clients[user_id] != websocket:
             connected_clients[user_id] = websocket
+        print(connected_clients)
         await websocket.send_json(WsService.connect_success())
         while True:
             data = await websocket.receive_text()

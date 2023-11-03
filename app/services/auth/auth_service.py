@@ -32,6 +32,9 @@ class AuthService:
             is_admin = True
         form.password = UserToken.add_salt(form.password)
         user_id = await UserCrud.register_user(form, is_admin=is_admin)
+        print(
+            "??",
+        )
         await WsService.ws_notify_update_user_list()
         return user_id
 

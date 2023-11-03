@@ -52,6 +52,7 @@ class WsService:
 
     @staticmethod
     async def ws_notify_update_user_list():
+        print("here", connected_clients)
         for client in connected_clients:
             await connected_clients[client].send_json({"code": 1001})
 
