@@ -8,3 +8,5 @@ Description:
 
 
 NEW_ENV_FAIL = (500, 50430, "新建环境失败")
+
+ENV_NOT_EXISTS = (500, 50431, "环境不存在")

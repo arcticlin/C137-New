@@ -5,7 +5,7 @@ Author: bot
 Created: 2023/10/23
 Description:
 """
-
+from datetime import datetime
 
 from sqlalchemy import text, and_, select
 
@@ -198,3 +198,79 @@ class EnvCrud:
             )
             result = await session.execute(smtm, {"env_id": env_id})
             return result.first()
+
+    @staticmethod
+    async def delete_env_and_dependencies(env_id: int, operator: int):
+        delete_time = int(datetime.now().timestamp())
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    # 删除env
+                    smtm = text(
+                        """
+                        UPDATE
+                            envs
+                        SET
+                            deleted_at = :delete_time,
+                            update_user = :operator
+                        WHERE
+                            env_id = :env_id AND deleted_at = 0;
+                    """
+                    )
+                    await session.execute(smtm, {"delete_time": delete_time, "operator": operator, "env_id": env_id})
+                    # 删除query
+                    smtm = text(
+                        """
+                        UPDATE
+                            api_path
+                        SET
+                            deleted_at = :delete_time,
+                            update_user = :operator
+                        WHERE
+                            env_id = :env_id AND deleted_at = 0;
+                    """
+                    )
+                    await session.execute(smtm, {"delete_time": delete_time, "operator": operator, "env_id": env_id})
+                    # 删除headers
+                    smtm = text(
+                        """
+                        UPDATE
+                            api_headers
+                        SET
+                            deleted_at = :delete_time,
+                            update_user = :operator
+                        WHERE
+                            env_id = :env_id AND deleted_at = 0;
+                    """
+                    )
+                    await session.execute(smtm, {"delete_time": delete_time, "operator": operator, "env_id": env_id})
+                    # 删除suffix
+                    smtm = text(
+                        """
+                        UPDATE
+                            common_suffix
+                        SET
+                            deleted_at = :delete_time,
+                            update_user = :operator
+                        WHERE
+                            env_id = :env_id AND deleted_at = 0;
+                    """
+                    )
+                    await session.execute(smtm, {"delete_time": delete_time, "operator": operator, "env_id": env_id})
+                    # 删除assert
+                    smtm = text(
+                        """
+                        UPDATE
+                            common_assert
+                        SET
+                            deleted_at = :delete_time,
+                            update_user = :operator
+                        WHERE
+                            env_id = :env_id AND deleted_at = 0;
+                    """
+                    )
+                    await session.execute(smtm, {"delete_time": delete_time, "operator": operator, "env_id": env_id})
+                    await session.commit()
+                except Exception as e:
+                    await session.rollback()
+                    raise CustomException(NEW_ENV_FAIL, addition_info=str(e))

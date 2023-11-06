@@ -25,6 +25,7 @@ from loguru import logger
 10001: 消息通知
 1001: 更新用户列表
 1002: 更新项目列表
+1003: 更新环境列表
 """
 
 
@@ -52,7 +53,6 @@ class WsService:
 
     @staticmethod
     async def ws_notify_update_user_list():
-        print("here", connected_clients)
         for client in connected_clients:
             await connected_clients[client].send_json({"code": 1001})
 
@@ -67,3 +67,9 @@ class WsService:
         for uid in user_id:
             if str(uid) in connected_clients:
                 await connected_clients[str(uid)].send_json({"code": 1002})
+
+    @staticmethod
+    async def ws_notify_update_env_list(user_id: List[int]):
+        for uid in user_id:
+            if str(uid) in connected_clients:
+                await connected_clients[str(uid)].send_json({"code": 1003})

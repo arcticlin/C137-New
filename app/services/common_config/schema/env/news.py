@@ -23,3 +23,9 @@ class RequestEnvNew(BaseModel):
     query_info: List[AddWithQueryInfo] = Field([], description="查询信息")
     suffix_info: List[AddWithSuffixInfo] = Field([], description="后缀信息")
     assert_info: List[AddWithAssertInfo] = Field([], description="断言信息")
+
+
+class RequestAddEnvVars(BaseModel):
+    key: str
+    value: str
+    value_type: int = Field(..., title="参数值类型, 1: 字符串, 2: 数字, 3: 布尔值, 4: JSON")
