@@ -26,7 +26,7 @@ async def get_env_list(page: int = Query(1), page_size: int = Query(20), user_id
 
 @envs.post("/new", summary="新建环境", response_model=ResponseEnvAdd)
 async def new_env(data: RequestEnvNew, user_id=Depends(Permission())):
-    pass
+    return C137Response.success(data={"env_id": 1})
 
 
 @envs.get("/{env_id}", summary="环境详情", response_model=ResponseEnvDetail)

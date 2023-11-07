@@ -33,3 +33,7 @@ class EnvService:
         if not check:
             raise CustomException(ENV_NOT_EXISTS)
         await EnvCrud.delete_env_and_dependencies(env_id, user_id)
+
+    @staticmethod
+    async def add_env(env_id: int, user_id: int):
+        pass
