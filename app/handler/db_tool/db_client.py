@@ -57,7 +57,9 @@ class AsyncDbClient:
                 raise CustomException(SQL_EXECUTE_FAIL, f"{e}")
 
     @staticmethod
-    async def execute_command_with_c(connection: Connection, command: str, fetch_one: bool = False):
+    async def execute_command_with_c(
+        connection: Connection, command: str, fetch_one: bool = False, run_out_name: str = None
+    ):
         async with connection.cursor() as cursor:
             try:
                 await cursor.execute(command)
@@ -65,6 +67,8 @@ class AsyncDbClient:
                     result = await cursor.fetchone()
                 else:
                     result = await cursor.fetchall()
+                if run_out_name:
+                    return {run_out_name: result}
                 return result
             except Exception as e:
                 raise CustomException(SQL_EXECUTE_FAIL, f"{e}")

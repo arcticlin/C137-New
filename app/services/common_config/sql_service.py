@@ -79,5 +79,5 @@ class SqlService:
         if not check:
             raise CustomException(SQL_NOT_EXISTS)
         sconfig = SqlCrud.convert_model_to_sql_form(check)
-        result = await SqlCrud.execute_sql_command_by_form(sconfig, form.command, form.fetch_one)
+        result = await SqlCrud.execute_sql_command_by_form(sconfig, form.run_command, form.fetch_one, form.run_out_name)
         return result

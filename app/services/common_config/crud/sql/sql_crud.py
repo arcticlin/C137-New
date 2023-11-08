@@ -124,10 +124,12 @@ class SqlCrud:
         await AsyncDbClient(s_config).ping()
 
     @staticmethod
-    async def execute_sql_command_by_form(form: RequestSqlPingByForm, command: str, fetch_one: bool):
+    async def execute_sql_command_by_form(
+        form: RequestSqlPingByForm, command: str, fetch_one: bool, run_out_name: str = None
+    ):
         c = AsyncDbClient(form)
         async with c as connection:
-            result = await c.execute_command_with_c(connection, command, fetch_one)
+            result = await c.execute_command_with_c(connection, command, fetch_one, run_out_name)
             return result
 
     @staticmethod

@@ -12,6 +12,7 @@ class SqlListOut(BaseModel):
     sql_id: int = Field(..., description="SQL配置ID")
     name: str = Field(..., description="SQL配置名称")
     host: str = Field(..., description="SQL配置地址")
+    sql_type: int = Field(..., description="SQL配置类型, 1: Mysql  2: POSTGRESQL 3: MONGODB")
 
 
 class SqlDetailOut(BaseModel):
