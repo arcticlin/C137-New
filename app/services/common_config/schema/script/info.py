@@ -13,6 +13,8 @@ class ScriptListOut(BaseModel):
     name: str = Field(..., description="脚本配置名称")
     tag: str = Field(None, description="脚本配置标签")
     var_key: str = Field(..., description="脚本配置调用键")
+    create_user: int = Field(..., description="创建人")
+    public: bool = Field(..., description="脚本配置是否公开")
 
 
 class ScriptDetailOut(BaseModel):

@@ -23,8 +23,22 @@ script_router = APIRouter(prefix="/script")
 
 
 @script_router.get("/list", summary="公共脚本列表", response_model=ResponseScriptList)
-async def get_script_list(page: int = Query(1), page_size: int = Query(20), user_id=Depends(Permission())):
-    result, total = await ScriptService.query_script_list(page, page_size, user_id["user_id"])
+async def get_script_list(
+    page: int = Query(1),
+    page_size: int = Query(20),
+    filter_user: int = Query(None),
+    filter_public: int = Query(None),
+    filter_name: str = Query(None),
+    user_id=Depends(Permission()),
+):
+    result, total = await ScriptService.query_script_list(
+        page=page,
+        page_size=page_size,
+        operator=user_id["user_id"],
+        filter_user=filter_user,
+        filter_public=filter_public,
+        filter_name=filter_name,
+    )
     return C137Response.success(data=result, total=total)
 
 

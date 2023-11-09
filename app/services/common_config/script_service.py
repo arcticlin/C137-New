@@ -52,8 +52,24 @@ class ScriptService:
         await ScriptCrud.delete_script_config(script_id, operator)
 
     @staticmethod
-    async def query_script_list(page: int, page_size: int, operator: int):
-        result, total = await ScriptCrud.query_script_list(page, page_size, operator)
+    async def query_script_list(
+        page: int,
+        page_size: int,
+        operator: int,
+        filter_user: int = None,
+        filter_public: int = None,
+        filter_name: str = None,
+    ):
+        if filter_public == 0 and filter_user != operator:
+            raise CustomException(NO_ALLOW_TO_QUERY_OTHER_PRIVATE)
+        result, total = await ScriptCrud.query_script_list(
+            page=page,
+            page_size=page_size,
+            operator=operator,
+            filter_user=filter_user,
+            filter_public=filter_public,
+            filter_name=filter_name,
+        )
         return result, total
 
     @staticmethod
