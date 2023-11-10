@@ -47,6 +47,7 @@ class ScriptService:
             raise CustomException(SCRIPT_NOT_EXISTS)
         user_role_in_system = await UserCrud.user_is_admin(operator)
         user_identical = await ScriptCrud.operator_is_creator(script_id, operator)
+        print(user_identical, operator, user_role_in_system)
         if not user_identical and user_role_in_system is None:
             raise CustomException(NO_ALLOW_TO_DELETE_SCRIPT)
         await ScriptCrud.delete_script_config(script_id, operator)
@@ -60,8 +61,17 @@ class ScriptService:
         filter_public: int = None,
         filter_name: str = None,
     ):
-        if filter_public == 0 and filter_user != operator:
-            raise CustomException(NO_ALLOW_TO_QUERY_OTHER_PRIVATE)
+        if filter_user is not None and filter_user != operator:
+            # 1: 筛选其他的用户的私有
+            if filter_public is not None and filter_public == 0:
+                raise CustomException(NO_ALLOW_TO_QUERY_OTHER_PRIVATE)
+            # 2: 筛选其他的用户的所有, 需屏蔽私有
+            if filter_public is not None and filter_public == 2:
+                filter_public = 1
+            # 3: 没有筛选是否公开, 默认屏蔽私有
+            if filter_public is None:
+                filter_public = 1
+
         result, total = await ScriptCrud.query_script_list(
             page=page,
             page_size=page_size,

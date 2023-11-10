@@ -15,7 +15,7 @@ from app.services.common_config.schema.script.update import RequestScriptUpdate
 from app.models.common_config.script_model import ScriptModel
 
 
-from sqlalchemy import select, and_, text, or_
+from sqlalchemy import select, and_, text, or_, func
 
 
 class ScriptCrud:
@@ -96,32 +96,25 @@ class ScriptCrud:
         offset = (page - 1) * page_size
         async with async_session() as session:
             # 基本逻辑: 未删除, 公共脚本或者创建者是自己
-            smtm_list = [ScriptModel.deleted_at == 0, ScriptModel.create_user == operator, ScriptModel.public == 1]
-            smtm_filter_list = [ScriptModel.deleted_at == 0]
-            # 筛选逻辑: 筛选用户, 筛选公共脚本, 筛选名称
-            if filter_user:
-                smtm_filter_list.append(ScriptModel.create_user == filter_user)
-            if filter_public == 1:
-                smtm_filter_list.append(ScriptModel.public == 1)
-            elif filter_public == 0:
-                smtm_filter_list.append(ScriptModel.public == 0)
-                smtm_filter_list.append(ScriptModel.create_user == operator)
-            if filter_name:
-                smtm_filter_list.append(ScriptModel.name.like(f"%{filter_name}%"))
-            smtm_total = text(
-                """
-                SELECT COUNT(*) as total FROM script WHERE deleted_at = 0 AND (public = 1 OR create_user = :operator)
-                """
-            )
-            total = await session.execute(smtm_total, {"operator": operator})
+            _list = [ScriptModel.deleted_at == 0]
             if filter_user is None and filter_public is None and filter_name is None:
-                smtm_r = select(ScriptModel).where(and_(*smtm_list))
-                # smtm_r = select(ScriptModel).where(and_(*smtm_list)).limit(page_size).offset(offset)
+                _list.append(or_(ScriptModel.public == 1, ScriptModel.create_user == operator))
             else:
-                smtm_r = select(ScriptModel).where(and_(*smtm_filter_list))
-                # smtm_r = select(ScriptModel).where(and_(*smtm_filter_list)).limit(page_size).offset(offset)
-            execute = await session.execute(smtm_r)
-            return execute.scalars().all(), total.scalars().first()
+                if filter_user is not None:
+                    _list.append(ScriptModel.create_user == filter_user)
+                if filter_public is not None:
+                    if filter_public == 1:
+                        _list.append(ScriptModel.public == 1)
+                    elif filter_public == 0:
+                        _list.append(ScriptModel.public == 0)
+                        _list.append(ScriptModel.create_user == operator)
+                if filter_name is not None:
+                    _list.append(ScriptModel.name.like(f"%{filter_name}%"))
+            script_count = await session.execute(select(func.count(ScriptModel.script_id)).where(*_list))
+            count = script_count.scalars().first()
+            smtm = await session.execute(select(ScriptModel).where(*_list).offset(offset).limit(page_size))
+            result = smtm.scalars().all()
+            return result, count
 
     @staticmethod
     async def query_script_detail(script_id: int):

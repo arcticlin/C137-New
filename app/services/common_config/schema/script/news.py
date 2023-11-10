@@ -19,7 +19,7 @@ class RequestScriptAdd(BaseModel):
 
 
 class ScriptAddOut(BaseModel):
-    script_id: int = Field(..., description="SQL配置ID")
+    script_id: int = Field(..., description="SCRIPT_ID")
 
 
 class RequestScriptDebugByForm(BaseModel):

@@ -26,13 +26,20 @@ class ScriptModel(Base, BaseMixin):
     public = Column(BOOLEAN, nullable=False, comment="是否公开")
 
     def __init__(
-        self, name: str, var_key: str, var_script: str, create_user: int, description: str = None, tag: str = None
+        self,
+        name: str,
+        var_key: str,
+        var_script: str,
+        create_user: int,
+        description: str = None,
+        tag: str = None,
+        public: bool = False,
     ):
         self.create_user = create_user
         self.update_user = create_user
         self.name = name
         self.var_key = var_key
         self.var_script = var_script
-        self.public = False
+        self.public = public
         self.description = description
         self.tag = tag

@@ -3,6 +3,7 @@ from typing import Union
 
 
 from app.handler.db_tool.db_bulk import DatabaseBulk
+from app.handler.serializer.response_serializer import C137Response
 from app.models.auth.user import UserModel
 from app.core.db_connector import async_session
 from sqlalchemy import select, and_, or_, text
@@ -63,11 +64,12 @@ class UserCrud:
     async def user_is_admin(user_id: int):
         """检查用户否为管理员"""
         async with async_session() as session:
+            print(user_id)
             smtm = select(UserModel).where(
-                and_(UserModel.user_id == user_id, UserModel.deleted_at == 0 and UserModel.user_role == 2)
+                and_(UserModel.user_id == user_id, UserModel.deleted_at == 0, UserModel.user_role == 2)
             )
             result = await session.execute(smtm)
-            return result.scalars().first() if not None else False
+            return 2 if result.scalars().first() is not None else None
 
     @staticmethod
     async def register_user(register_form: UserRegisterRequest, is_admin: bool = False) -> int:
