@@ -25,6 +25,8 @@ from app.services.api_case.settings.suffix.schema.info import OutCaseSuffixInfo
 from app.services.common_config.schema.env.news import RequestEnvNew
 from app.handler.db_tool.db_bulk import DatabaseBulk
 from app.services.common_config.schema.env.responses import EnvDetailOut
+from app.services.common_config.schema.env.update import RequestEnvUpdate
+import jsonpath
 
 
 class EnvCrud:
@@ -40,14 +42,14 @@ class EnvCrud:
             return result.scalars().first()
 
     @staticmethod
-    async def env_exists_by_name(name: str):
+    async def env_exists_by_name(name: str, creator: int):
         async with async_session() as session:
             smtm = text(
                 """
-                    SELECT EXISTS(SELECT 1 FROM envs WHERE name = :name AND deleted_at = 0) AS is_exists;
+                    SELECT EXISTS(SELECT 1 FROM envs WHERE name = :name AND deleted_at = 0 AND create_user =:create_user) AS is_exists;
                 """
             )
-            result = await session.execute(smtm, {"name": name})
+            result = await session.execute(smtm, {"name": name, "create_user": creator})
             return result.scalars().first()
 
     @staticmethod
@@ -61,15 +63,27 @@ class EnvCrud:
                     session.expunge(env)
                     # 添加Query绑定
                     if form.query_info:
-                        await DatabaseBulk.bulk_add_data(session, ApiPathModel, form.query_info)
+                        await DatabaseBulk.bulk_add_data(
+                            session, ApiPathModel, form.query_info, env_id=env.env_id, create_user=creator
+                        )
                     if form.headers_info:
-                        await DatabaseBulk.bulk_add_data(session, ApiHeadersModel, form.headers_info)
-                    if form.suffix_info:
-                        await DatabaseBulk.bulk_add_data(session, SuffixModel, form.suffix_info)
+                        await DatabaseBulk.bulk_add_data(
+                            session, ApiHeadersModel, form.headers_info, env_id=env.env_id, create_user=creator
+                        )
+                    if form.prefix_info or form.suffix_info:
+                        await DatabaseBulk.bulk_add_data(
+                            session,
+                            SuffixModel,
+                            form.prefix_info + form.suffix_info,
+                            env_id=env.env_id,
+                            create_user=creator,
+                        )
                     if form.assert_info:
-                        await DatabaseBulk.bulk_add_data(session, AssertModel, form.assert_info)
+                        await DatabaseBulk.bulk_add_data(
+                            session, AssertModel, form.assert_info, env_id=env.env_id, create_user=creator
+                        )
                     await session.commit()
-
+                    return env.env_id
                 except Exception as e:
                     await session.rollback()
                     raise CustomException(NEW_ENV_FAIL, addition_info=str(e))
@@ -270,6 +284,61 @@ class EnvCrud:
                     """
                     )
                     await session.execute(smtm, {"delete_time": delete_time, "operator": operator, "env_id": env_id})
+                    await session.commit()
+                except Exception as e:
+                    await session.rollback()
+                    raise CustomException(NEW_ENV_FAIL, addition_info=str(e))
+
+    @staticmethod
+    async def update_env_form(env_id: int, data: RequestEnvUpdate, operator: int):
+        # 全表单提交更新
+        env, path_id, header_id, suffix_id, assert_id = await EnvCrud.get_env_dependencies(env_id)
+        path_ids = DatabaseBulk.serializer_comma_string(path_id, True)
+        header_ids = DatabaseBulk.serializer_comma_string(header_id, True)
+        suffix_ids = DatabaseBulk.serializer_comma_string(suffix_id, True)
+        assert_ids = DatabaseBulk.serializer_comma_string(assert_id, True)
+
+        # 获取Path新增, 修改, 删除的数据
+        p_delete, p_add, p_update = DatabaseBulk.parse_form_data(path_ids, data.query_info, "path_id")
+        print("1", p_delete, p_add, p_update)
+        # 获取Header新增, 修改, 删除的数据
+        h_delete, h_add, h_update = DatabaseBulk.parse_form_data(header_ids, data.headers_info, "header_id")
+        # 获取Suffix新增, 修改, 删除的数据
+        s_delete, s_add, s_update = DatabaseBulk.parse_form_data(
+            suffix_ids, data.prefix_info + data.suffix_info, "suffix_id"
+        )
+        # 获取Assert新增, 修改, 删除的数据
+        a_delete, a_add, a_update = DatabaseBulk.parse_form_data(assert_ids, data.assert_info, "assert_id")
+
+        async with async_session() as session:
+            async with session.begin():
+                try:
+                    # 删除
+                    await DatabaseBulk.deleted_model_with_session(session, ApiPathModel, p_delete, operator)
+                    await DatabaseBulk.deleted_model_with_session(session, ApiHeadersModel, h_delete, operator)
+                    await DatabaseBulk.deleted_model_with_session(session, SuffixModel, s_delete, operator)
+                    await DatabaseBulk.deleted_model_with_session(session, AssertModel, a_delete, operator)
+
+                    # 更新
+                    await DatabaseBulk.update_model_with_session(session, ApiPathModel, p_update, "path_id", operator)
+                    await DatabaseBulk.update_model_with_session(
+                        session, ApiHeadersModel, h_update, "header_id", operator
+                    )
+                    await DatabaseBulk.update_model_with_session(session, SuffixModel, s_update, "suffix_id", operator)
+                    await DatabaseBulk.update_model_with_session(session, AssertModel, a_update, "assert_id", operator)
+                    # 新增
+                    await DatabaseBulk.add_model_with_session(session, ApiPathModel, p_add, operator, env_id=env_id)
+                    await DatabaseBulk.add_model_with_session(session, ApiHeadersModel, h_add, operator, env_id=env_id)
+                    await DatabaseBulk.add_model_with_session(session, SuffixModel, s_add, operator, env_id=env_id)
+                    await DatabaseBulk.add_model_with_session(session, AssertModel, a_add, operator, env_id=env_id)
+
+                    # 更新env
+                    smtm = await session.execute(
+                        select(EnvModel).where(and_(EnvModel.env_id == env_id, EnvModel.deleted_at == 0))
+                    )
+                    DatabaseBulk.update_model(
+                        smtm.scalars().first(), {"name": data.name, "domain": data.domain}, operator
+                    )
                     await session.commit()
                 except Exception as e:
                     await session.rollback()

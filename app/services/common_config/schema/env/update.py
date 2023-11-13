@@ -9,9 +9,10 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from app.services.api_case.schema.asserts.update import RequestAssertUpdate
-from app.services.api_case.schema.query.update import RequestQueryUpdate, RequestHeaderUpdate
-from app.services.api_case.schema.suffix.update import RequestSuffixUpdate
+from app.services.api_case.case_params.headers.schema.update import RequestHeaderUpdate
+from app.services.api_case.case_params.query.schema.update import RequestQueryUpdate
+from app.services.api_case.settings.asserts.schema.update import RequestAssertUpdate
+from app.services.api_case.settings.suffix.schema.update import RequestSuffixUpdate
 
 
 class RequestEnvUpdate(BaseModel):
@@ -19,5 +20,6 @@ class RequestEnvUpdate(BaseModel):
     domain: str = Field(..., description="环境URL")
     headers_info: List[RequestHeaderUpdate] = Field([], description="请求头信息")
     query_info: List[RequestQueryUpdate] = Field([], description="查询信息")
+    prefix_info: List[RequestSuffixUpdate] = Field([], description="前置信息")
     suffix_info: List[RequestSuffixUpdate] = Field([], description="后缀信息")
     assert_info: List[RequestAssertUpdate] = Field([], description="断言信息")

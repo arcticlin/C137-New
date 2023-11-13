@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 
 class RequestAssertUpdate(BaseModel):
-    assert_id: int = Field(..., description="断言ID")
+    assert_id: int = Field(None, description="断言ID")
     name: str = Field(None, description="断言名称")
     enable: bool = Field(None, description="是否启用")
     assert_from: int = Field(None, description="断言来源 1: res_header 2: res_body 3: res_status_code 4: res_elapsed")

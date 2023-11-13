@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 
 class RequestHeaderUpdate(BaseModel):
-    header_id: int = Field(..., title="header id")
+    header_id: int = Field(None, title="header id")
     key: str = Field(None, title="参数名")
     value_type: int = Field(None, title="参数值类型, 1: 字符串, 2: 数字, 3: 布尔值, 4: JSON")
     value: str = Field(None, title="参数值")

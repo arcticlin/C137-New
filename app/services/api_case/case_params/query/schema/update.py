@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 
 
 class RequestQueryUpdate(BaseModel):
-    path_id: int = Field(..., title="path id")
+    path_id: int = Field(None, title="path id")
     key: str = Field(None, title="参数名")
     types: int = Field(None, title="参数值类型, 1: 字符串, 2: 数字, 3: 布尔值, 4: JSON")
     value: str = Field(None, title="参数值")

@@ -9,10 +9,10 @@ import inspect
 from datetime import datetime
 import json
 
-from typing import List, Union
+from typing import List, Union, Tuple
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, and_
 
 from app.handler.serializer.response_serializer import C137Response
 from app.models.api_case.api_case import ApiCaseModel
@@ -36,7 +36,6 @@ class DatabaseBulk:
 
         # setattr(model_instance, "update_at", datetime.now())
         # changed_var.append("update_at")
-        print(changed_var)
         return changed_var
 
     @staticmethod
@@ -51,9 +50,8 @@ class DatabaseBulk:
     async def deleted_model_with_session(session: AsyncSession, model, primary_key: List[int], operator: int):
         """
         软删除
-        primary_key可能等于整型,'',或者是逗号分隔的字符串
         """
-        if not primary_key:
+        if not primary_key or len(primary_key) == 0:
             return
         for ids in primary_key:
             field_name = model.__table__.primary_key.columns.keys()[0]
@@ -62,6 +60,40 @@ class DatabaseBulk:
             if obj:
                 obj.deleted_at = int(datetime.now().timestamp())
                 obj.update_user = operator
+
+    @staticmethod
+    async def update_model_with_session(
+        session: AsyncSession, model, source_data: List[dict], primary_field_name: str, operator: int
+    ):
+        if not source_data or len(source_data) == 0:
+            return
+        for d in source_data:
+            model_id = d[primary_field_name]
+            smtm = await session.execute(
+                select(model).where(
+                    and_(model.__table__.c[primary_field_name] == model_id, model.__table__.c["deleted_at"] == 0)
+                )
+            )
+            obj = smtm.scalars().first()
+            if obj:
+                DatabaseBulk.update_model(obj, d, operator)
+
+    @staticmethod
+    async def add_model_with_session(session: AsyncSession, model, source_data: List[dict], operator: int, **kwargs):
+        serialized_data_list = []
+        if not source_data or len(source_data) == 0:
+            return
+        for d in source_data:
+            d["create_user"] = operator
+            d["update_user"] = operator
+            d["deleted_at"] = 0
+            if kwargs.get("env_id"):
+                d["env_id"] = kwargs.get("env_id")
+            elif kwargs.get("case_id"):
+                d["case_id"] = kwargs.get("case_id")
+            serialized_data_list.append(d)
+        if serialized_data_list:
+            await session.execute(model.__table__.insert(), serialized_data_list)
 
     @staticmethod
     async def bulk_add_data(session, model, data: List[BaseModel], *ignore_key, **addition_data):
@@ -96,3 +128,31 @@ class DatabaseBulk:
             else:
                 check_list = [comma_string]
         return check_list
+
+    @staticmethod
+    def get_delete_ids(existed_ids: List[int], new_form: List[dict], primary_key: str) -> List[int]:
+        """获取删除的id"""
+        form_ids = [i[primary_key] for i in new_form if i.__contains__(primary_key)]
+        return [i for i in existed_ids if i not in form_ids]
+
+    @staticmethod
+    def parse_form_data(
+        existed_ids: List[int], form_data: List[BaseModel], primary_key: str
+    ) -> Tuple[List[int], List[dict], List[dict]]:
+        """
+        解析表单数据, 返回元祖(需删除, 需新增, 需修改)
+        """
+        serialized_data_list = [i.dict() for i in form_data]
+
+        form_ids = [i[primary_key] for i in serialized_data_list if i.__contains__(primary_key)]
+
+        # 需删除的IDS
+        delete_ids = [i for i in existed_ids if i not in form_ids]
+
+        # 需修改的数据
+        update_data = [i for i in serialized_data_list if i.__contains__(primary_key) and i[primary_key] in existed_ids]
+
+        # 需新增的数据
+        add_data = [i for i in serialized_data_list if i.__contains__(primary_key) and i[primary_key] is None]
+
+        return delete_ids, add_data, update_data

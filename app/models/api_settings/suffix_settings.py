@@ -46,7 +46,7 @@ class SuffixModel(Base, BaseMixin):
         enable: bool,
         execute_type: int,
         create_user: int,
-        sort: int = None,
+        sort: int,
         env_id: int = None,
         script_id: int = None,
         sql_id: int = None,

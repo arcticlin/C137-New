@@ -9,12 +9,13 @@ from pydantic import BaseModel, Field
 
 
 class AddWithSuffixInfo(BaseModel):
-    suffix_type: int = Field(..., description="前/后置类型, 1: 前置, 2: 后置")
+    suffix_type: int = Field(1, description="前/后置类型, 1: 前置, 2: 后置")
     name: str = Field(..., description="前/后置名称")
     enable: bool = Field(..., description="是否启用")
     description: str = Field(None, description="描述")
     execute_type: int = Field(..., description="执行类型,  1: 公共脚本 2: sql 3: redis 4: delay 5: python")
     run_each_case: int = Field(None, description="是否每个用例都运行")
+    sort: int = Field(..., description="执行顺序")
 
     script_id: int = Field(None, description="脚本id")
     sql_id: int = Field(None, description="sql id")
@@ -34,7 +35,7 @@ class RequestTempSuffixNew(BaseModel):
     description: str = Field(None, description="描述")
     execute_type: int = Field(..., description="执行类型, 1: python 2: sql 3: redis 4: delay 5: global-script")
     run_each_case: int = Field(None, description="是否每个用例都运行")
-
+    sort: int = Field(..., description="执行顺序")
     script_id: int = Field(None, description="脚本id")
     sql_id: int = Field(None, description="sql id")
     redis_id: int = Field(None, description="redis id")

@@ -7,6 +7,9 @@ Description:
 """
 
 
-NEW_ENV_FAIL = (500, 50430, "新建环境失败")
+ENV_NOT_EXISTS = (400, 40430, "环境不存在")
+ENV_EXISTS = (400, 40431, "环境名已存在")
 
-ENV_NOT_EXISTS = (500, 50431, "环境不存在")
+
+NEW_ENV_FAIL = (400, 40432, "新建环境失败")
+UPDATE_ENV_FAIL = (400, 40433, "更新环境失败")

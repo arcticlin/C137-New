@@ -14,6 +14,7 @@ from app.services.common_config.schema.env.news import RequestEnvNew, RequestAdd
 from app.services.common_config.schema.env.responses import ResponseEnvList, ResponseEnvDetail, ResponseEnvAdd
 from app.core.basic_schema import CommonResponse
 from app.services.common_config.env_service import EnvService
+from app.services.common_config.schema.env.update import RequestEnvUpdate
 
 envs = APIRouter(prefix="/envs")
 
@@ -26,7 +27,8 @@ async def get_env_list(page: int = Query(1), page_size: int = Query(20), user_id
 
 @envs.post("/new", summary="新建环境", response_model=ResponseEnvAdd)
 async def new_env(data: RequestEnvNew, user_id=Depends(Permission())):
-    return C137Response.success(data={"env_id": 1})
+    env_id = await EnvService.add_env(data, user_id["user_id"])
+    return C137Response.success(data={"env_id": env_id})
 
 
 @envs.get("/{env_id}", summary="环境详情", response_model=ResponseEnvDetail)
@@ -42,8 +44,9 @@ async def delete_env(env_id: int, user_id=Depends(Permission())):
 
 
 @envs.put("/{env_id}", summary="更新环境", response_model=CommonResponse)
-async def update_env(env_id: int, user_id=Depends(Permission())):
-    pass
+async def update_env(env_id: int, data: RequestEnvUpdate, user_id=Depends(Permission())):
+    await EnvService.update_env(env_id, data, user_id["user_id"])
+    return C137Response.success()
 
 
 @envs.get("/{env_id}/vars", summary="环境变量列表", response_model=CommonResponse)

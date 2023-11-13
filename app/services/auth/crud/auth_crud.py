@@ -64,7 +64,6 @@ class UserCrud:
     async def user_is_admin(user_id: int):
         """检查用户否为管理员"""
         async with async_session() as session:
-            print(user_id)
             smtm = select(UserModel).where(
                 and_(UserModel.user_id == user_id, UserModel.deleted_at == 0, UserModel.user_role == 2)
             )

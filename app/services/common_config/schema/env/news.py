@@ -21,6 +21,7 @@ class RequestEnvNew(BaseModel):
     domain: str = Field(..., description="环境URL")
     headers_info: List[AddWithHeaderInfo] = Field([], description="请求头信息")
     query_info: List[AddWithQueryInfo] = Field([], description="查询信息")
+    prefix_info: List[AddWithSuffixInfo] = Field([], description="前置信息")
     suffix_info: List[AddWithSuffixInfo] = Field([], description="后缀信息")
     assert_info: List[AddWithAssertInfo] = Field([], description="断言信息")
 
