@@ -52,5 +52,5 @@ class EnvService:
         if not check:
             raise CustomException(ENV_NOT_EXISTS)
         await EnvCrud.update_env_form(env_id, data, operator)
-        # await WsService.ws_notify_update_env_list([operator])
-        # return C137Response().success()
+        await WsService.ws_notify_update_env_list([operator])
+        return C137Response().success()

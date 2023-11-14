@@ -29,20 +29,8 @@ async def add_project_dir(data: DirectoryNew, user_info=Depends(Permission())):
     return C137Response.success(data={"directory_id": directory_id})
 
 
-@directory.delete("/delete/{directory_id}", summary="删除项目目录", response_model=CommonResponse)
-async def deleted_dir_new(directory_id: int, user_info=Depends(Permission())):
-    await DirectoryService.delete_directory_new(directory_id, user_info["user_id"])
-    return C137Response.success(message="删除成功")
-
-
-@directory.put("/update", summary="更新目录名", response_model=CommonResponse)
-async def update_directory_name(data: DirectoryUpdate, user=Depends(Permission())):
-    await DirectoryService.update_project_dir_name(data.project_id, data.directory_id, data.name, user["user_id"])
-    return C137Response.success(message="更新成功")
-
-
-@directory.get("/tree", summary="获取项目目录树", response_model=ResponseDirectoryList)
-async def get_project_dir_tree(project_id: int = Query(..., description="项目ID")):
+@directory.get("/{project_id}/tree", summary="获取项目目录树", response_model=ResponseDirectoryList)
+async def get_project_dir_tree(project_id: int):
     result = await DirectoryService.get_project_directory_tree(project_id)
     return C137Response.success(data=result)
 
@@ -51,3 +39,15 @@ async def get_project_dir_tree(project_id: int = Query(..., description="项目I
 async def get_case_list_in_directory(directory_id: int):
     case_list = await DirectoryService.get_case_list_in_directory(directory_id)
     return C137Response.success(data=case_list)
+
+
+@directory.put("/{directory_id}/update", summary="更新目录名", response_model=CommonResponse)
+async def update_directory_name(directory_id: int, data: DirectoryUpdate, user=Depends(Permission())):
+    await DirectoryService.update_project_dir_name(data.project_id, directory_id, data.name, user["user_id"])
+    return C137Response.success(message="更新成功")
+
+
+@directory.delete("/{directory_id}/delete", summary="删除项目目录", response_model=CommonResponse)
+async def deleted_dir_new(directory_id: int, user_info=Depends(Permission())):
+    await DirectoryService.delete_directory_new(directory_id, user_info["user_id"])
+    return C137Response.success(message="删除成功")

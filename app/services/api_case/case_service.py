@@ -16,6 +16,7 @@ from app.exceptions.exp_480_case import *
 from app.handler.case.case_handler_new import CaseHandler
 from app.handler.case.schemas import AsyncResponseSchema
 from app.handler.redis.api_redis_new import ApiRedis
+from app.handler.serializer.response_serializer import C137Response
 from app.services.api_case.api_result.crud.report_curd import ApiReportCrud
 from app.services.api_case.api_result.crud.result_crud import ApiResultCrud
 from app.services.api_case.api_result.schema.report.new import UpdateReportData
@@ -237,3 +238,21 @@ class CaseService:
             case_id=case_form.case_id, response=response, case_log=case_log, assert_result=final_assert_result
         )
         return result
+
+    @staticmethod
+    async def get_case_list(
+        directory_id: int,
+        page: int,
+        page_size: int,
+        filter_user: int = None,
+        filter_status: int = None,
+        filter_priority: str = None,
+        filter_name: str = None,
+    ):
+        exists = await DirectoryCrud.pd_is_exists(directory_id)
+        if not exists:
+            raise CustomException(PD_NOT_EXISTS)
+        result, count = await ApiCaseCrud.get_case_list(
+            directory_id, page, page_size, filter_user, filter_status, filter_priority, filter_name
+        )
+        return result, count

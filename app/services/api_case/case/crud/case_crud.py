@@ -295,3 +295,28 @@ class ApiCaseCrud:
             except Exception as e:
                 logger.error(f"查询用例失败: {e}")
                 yield None
+
+    @staticmethod
+    async def get_case_list(
+        directory_id: int,
+        page: int,
+        page_size: int,
+        filter_user: int,
+        filter_status: int,
+        filter_priority: str,
+        filter_name: str,
+    ):
+        offset = (page - 1) * page_size
+        async with async_session() as session:
+            smtm_list = [ApiCaseModel.deleted_at == 0, ApiCaseModel.directory_id == directory_id]
+            if filter_user:
+                smtm_list.append(ApiCaseModel.create_user == filter_user)
+            if filter_status:
+                smtm_list.append(ApiCaseModel.status == filter_status)
+            if filter_priority:
+                smtm_list.append(ApiCaseModel.priority == filter_priority)
+            if filter_name:
+                smtm_list.append(ApiCaseModel.name.like(f"%{filter_name}%"))
+            count = await session.execute(select(func.count(ApiCaseModel.case_id)).where(*smtm_list))
+            execute = await session.execute(select(ApiCaseModel).where(*smtm_list).offset(offset).limit(page_size))
+            return execute.scalars().all(), count.scalars().first()

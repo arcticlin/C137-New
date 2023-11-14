@@ -26,6 +26,7 @@ class DirectoryService:
                     "name": name,
                     "parent_id": parent_id,
                     "has_case": has_case,
+                    "project_id": project_id,
                 }
             )
 

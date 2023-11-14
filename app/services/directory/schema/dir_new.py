@@ -19,7 +19,6 @@ class DirectoryNew(BaseModel):
 
 
 class DirectoryUpdate(BaseModel):
-    directory_id: int = Field(..., description="目录ID")
     project_id: int = Field(..., description="关联项目ID")
     name: str = Field(..., description="目录名")
 
@@ -30,6 +29,7 @@ class DirectoryNewOut(BaseModel):
 
 class DirectoryOut(BaseModel):
     directory_id: int = Field(..., description="目录ID")
+    project_id: int = Field(..., description="项目ID")
     name: str = Field(..., description="目录名")
     parent_id: int = None
     has_case: int = Field(..., description="是否存在子目录")
