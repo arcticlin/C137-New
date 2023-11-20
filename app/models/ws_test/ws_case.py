@@ -1,0 +1,25 @@
+# coding=utf-8
+"""
+File: ws_case.py
+Author: bot
+Created: 2023/11/20
+Description:
+"""
+from app.core.db_connector import Base, BaseMixin
+from sqlalchemy import Column, Integer, TEXT, ForeignKey
+
+
+class WsCase(Base, BaseMixin):
+    __tablename__ = "ws_case"
+
+    case_id = Column(Integer, primary_key=True)
+    ws_id = Column(Integer, ForeignKey("ws.ws_id"), nullable=False)
+    case_desc = Column(TEXT, nullable=False)
+    case_status = Column(Integer, nullable=False, comment="1: 正常 2: 废弃")
+
+    def __init__(self, ws_id: int, case_desc: str, create_user: int, status: int = 1):
+        self.ws_id = ws_id
+        self.case_desc = case_desc
+        self.case_status = status
+        self.create_user = create_user
+        self.update_user = create_user
