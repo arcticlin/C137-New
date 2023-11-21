@@ -9,7 +9,7 @@ from app.core.db_connector import Base, BaseMixin
 from sqlalchemy import Column, Integer, String, ForeignKey
 
 
-class WsCode(Base, BaseMixin):
+class WsCodeModel(Base, BaseMixin):
     __tablename__ = "ws_code"
 
     ws_id = Column(Integer, primary_key=True)

@@ -9,11 +9,11 @@ from app.core.db_connector import Base, BaseMixin
 from sqlalchemy import Column, Integer, TEXT, ForeignKey
 
 
-class WsCase(Base, BaseMixin):
+class WsCaseModel(Base, BaseMixin):
     __tablename__ = "ws_case"
 
     case_id = Column(Integer, primary_key=True)
-    ws_id = Column(Integer, ForeignKey("ws.ws_id"), nullable=False)
+    ws_id = Column(Integer, ForeignKey("ws_code.ws_id"), nullable=False)
     case_desc = Column(TEXT, nullable=False)
     case_status = Column(Integer, nullable=False, comment="1: 正常 2: 废弃")
 

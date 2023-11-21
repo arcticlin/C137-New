@@ -27,6 +27,9 @@ from app.models.project.project import ProjectModel
 from app.models.project.project_member import ProjectMemberModel
 from app.models.project.project_directory import PDirectoryModel
 
+from app.models.ws_test.ws_code import WsCodeModel
+from app.models.ws_test.ws_case import WsCaseModel
+from app.models.ws_test.ws_plan import WsPlanModel
+from app.models.ws_test.ws_result import WsResultModel
+
 # 加载所需模块
-
-

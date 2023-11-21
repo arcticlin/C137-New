@@ -22,6 +22,7 @@ from app.router.common_config.redis.redis_router import rds_router
 from app.router.common_config.sql.sql_router import sql_router
 from app.router.common_config.script.script_router import script_router
 from app.router.api_case.api_case import cases
+from app.router.ws_test.ws_test import wst
 
 
 def register_router(app: FastAPI):
@@ -33,6 +34,7 @@ def register_router(app: FastAPI):
     app.include_router(project, prefix="/project", tags=["项目"])
     app.include_router(directory, prefix="/directory", tags=["目录"])
     app.include_router(cases, prefix="/api_case", tags=["接口测试"])
+    app.include_router(wst, prefix="/ws_test", tags=["WebSocket测试"])
     app.include_router(envs, prefix="/config", tags=["配置信息"])
     app.include_router(rds_router, prefix="/config", tags=["配置信息"])
     app.include_router(sql_router, prefix="/config", tags=["配置信息"])
