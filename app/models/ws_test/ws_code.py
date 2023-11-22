@@ -14,12 +14,11 @@ class WsCodeModel(Base, BaseMixin):
 
     ws_id = Column(Integer, primary_key=True)
     project_id = Column(Integer, ForeignKey("project.project_id"), nullable=False)
-    code_value = Column(Integer, nullable=False)
+    code_value = Column(Integer, nullable=False, index=True)
     desc = Column(String(32), nullable=False)
-    status = Column(Integer, nullable=False, comment="1: 正常 2: 调试 3: 废弃")
+    status = Column(Integer, nullable=False, comment="1: 正常 2: 调试 3: 废弃", index=True, default=2)
 
-    def __init__(self, ws_id: int, project_id: int, code_value: int, desc: str, create_user: int, status: int = 2):
-        self.ws_id = ws_id
+    def __init__(self, project_id: int, code_value: int, desc: str, create_user: int, status: int = 2):
         self.project_id = project_id
         self.code_value = code_value
         self.desc = desc

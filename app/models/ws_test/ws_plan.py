@@ -17,8 +17,8 @@ class WsPlanModel(Base, BaseMixin):
     plan_desc = Column(TEXT, nullable=False)
     plan_status = Column(Integer, nullable=False, comment="1: 进行中 2: 已完成 3: 已废弃 4: 待开始")
 
-    # 关联WsCase表，用relationship建立关系
-    cases = relationship("WsCaseModel", backref="ws_plan", lazy="dynamic")
+    # # 关联WsCase表，用relationship建立关系
+    # cases = relationship("WsCaseModel", backref="ws_plan", lazy="dynamic")
 
     def __init__(self, plan_desc: str, create_user: int, status: int = 4):
         self.plan_desc = plan_desc

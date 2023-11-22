@@ -18,8 +18,8 @@ class WsResultModel(Base, BaseMixin):
     result_desc = Column(TEXT(collation="utf8mb4_bin"), nullable=False, comment="Markdown格式的描述")
     result_status = Column(Integer, nullable=False, comment="1: 通过 2: 失败 3: 忽略 4: 未执行")
 
-    # 关联WsCase表，用relationship建立关系
-    case = relationship("WsCaseModel", backref="ws_result", lazy="dynamic")
+    # # 关联WsCase表，用relationship建立关系
+    # case = relationship("WsCaseModel", backref="ws_result", lazy="dynamic")
 
     def __init__(self, case_id: int, result_desc: str, create_user: int, status: int = 4):
         self.case_id = case_id

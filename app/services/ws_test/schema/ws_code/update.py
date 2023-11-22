@@ -10,8 +10,6 @@ from pydantic import BaseModel, Field
 
 
 class RequestUpdateWsCode(BaseModel):
-    ws_id: int
-    project_id: int
-    code_value: int
-    desc: str
-    status: int
+    code_value: int = None
+    desc: str = None
+    status: int = None
