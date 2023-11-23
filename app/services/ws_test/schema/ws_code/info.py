@@ -25,6 +25,7 @@ class OutWsCodeBasicInfoSimply(BaseModel):
     project_id: int
     code_value: int
     status: int
+    desc: str = None
 
 
 class ResponseWsCodeList(CommonResponse):

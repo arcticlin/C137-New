@@ -16,10 +16,22 @@ class WsCaseModel(Base, BaseMixin):
     ws_id = Column(Integer, ForeignKey("ws_code.ws_id"), nullable=False)
     case_desc = Column(TEXT, nullable=False)
     case_status = Column(Integer, nullable=False, comment="1: 正常 2: 废弃", index=True, default=1)
+    json_exp = Column(TEXT, nullable=False, comment="json格式的期望值")
+    expected = Column(TEXT, nullable=False, comment="期望值")
 
-    def __init__(self, ws_id: int, case_desc: str, create_user: int, case_status: int = 1):
+    def __init__(
+        self,
+        ws_id: int,
+        case_desc: str,
+        create_user: int,
+        case_status: int = 1,
+        json_exp: str = None,
+        expected: str = None,
+    ):
         self.ws_id = ws_id
         self.case_desc = case_desc
         self.case_status = case_status
         self.create_user = create_user
         self.update_user = create_user
+        self.json_exp = json_exp
+        self.expected = expected

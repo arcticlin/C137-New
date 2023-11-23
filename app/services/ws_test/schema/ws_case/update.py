@@ -13,3 +13,5 @@ class RequestUpdateWsCase(BaseModel):
     case_id: int
     case_desc: str
     case_status: int
+    json_exp: str = Field(None, description="json格式的期望值")
+    expected: str = Field(None, description="期望值")

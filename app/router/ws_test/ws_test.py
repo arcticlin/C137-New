@@ -5,9 +5,12 @@ Author: bot
 Created: 2023/11/20
 Description:
 """
+import asyncio
+
 from fastapi import APIRouter, Query, Depends
 
 from app.core.basic_schema import CommonResponse
+from app.handler.serializer.response_serializer import C137Response
 from app.middleware.access_permission import Permission
 from app.services.ws_test.schema.ws_case.new import RequestAddWsCase
 from app.services.ws_test.schema.ws_case.update import RequestUpdateWsCase
@@ -21,8 +24,11 @@ from app.services.ws_test.schema.ws_result.info import RequestMarkCase
 from app.services.ws_test.schema.ws_result.response import ResponseStatisResult, ResponseWsCaseResult
 from app.services.ws_test.services.ws_case_services import WsCaseService
 from app.services.ws_test.services.ws_code_services import WsCodeService
+from app.services.ws_test.ws_test_services import WsTestService
 
 wst = APIRouter()
+
+w_object = []
 
 
 @wst.get("/code/list", summary="获取项目的WS_CODE列表", response_model=ResponseWsCodeList)
@@ -33,7 +39,7 @@ async def query_code_list(project_id: int = Query(..., description="项目ID")):
     :return:
     """
     result, total = await WsCodeService.query_code_list(project_id)
-    return result
+    return C137Response.success(data=result, total=total)
 
 
 @wst.post("/code/add", summary="添加WS_CODE", response_model=ResponseAddWsCode)
@@ -44,7 +50,8 @@ async def add_ws_code(data: RequestAddWsCode, user=Depends(Permission())):
     :return:
     """
     # return await WsCodeService.add_ws_code(data
-    pass
+    ws_id = await WsCodeService.add_code_in_project(data, user["user_id"])
+    return C137Response.success(data={"ws_id": ws_id})
 
 
 @wst.get("/code/{ws_id}/detail", summary="获取WS_CODE详情", response_model=ResponseWsCodeDetail)
@@ -54,8 +61,8 @@ async def query_code_detail(ws_id: int, user=Depends(Permission())):
     :param ws_id: WS_CODE ID
     :return:
     """
-    # return await WsCodeService.query_code_detail(ws_id)
-    pass
+    result = await WsCodeService.query_code_detail(ws_id)
+    return C137Response.success(data=result)
 
 
 @wst.put("/code/{ws_id}/update", summary="修改WS_CODE详情", response_model=CommonResponse)
@@ -65,8 +72,8 @@ async def update_code_detail(ws_id: int, data: RequestUpdateWsCode, user=Depends
     :param ws_id: WS_CODE ID
     :return:
     """
-    # return await WsCodeService.query_code_detail(ws_id)
-    pass
+    await WsCodeService.update_code_detail(ws_id, data, user["user_id"])
+    return C137Response.success()
 
 
 @wst.delete("/code/{ws_id}/delete", summary="删除WS_CODE", response_model=CommonResponse)
@@ -76,8 +83,8 @@ async def delete_ws_code(ws_id: int, user=Depends(Permission())):
     :param ws_id: WS_CODE ID
     :return:
     """
-    # return await WsCodeService.delete_ws_code(ws_id)
-    pass
+    await WsCodeService.remove_code(ws_id, user["user_id"])
+    return C137Response.success()
 
 
 @wst.post("/case/add", summary="添加WS_CODE下的用例", response_model=CommonResponse)
@@ -155,3 +162,18 @@ async def mark_ws_plan_result(plan_id: int, data: RequestMarkCase, user=Depends(
 @wst.post("/plan/{plan_id}/result/done", summary="提交测试计划", response_model=CommonResponse)
 async def done_ws_plan_result(plan_id: int, user=Depends(Permission())):
     pass
+
+
+@wst.get("/test/connect")
+async def test_connect():
+    w = WsTestService(
+        ws_url=r"wss://api-test.flyele.vip/intime/v2/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDA3MzkyMjcsImlhdCI6MTcwMDczMDg1OCwiaXNzIjoiYXBpLmZseWVsZS5uZXQiLCJVc2VySUQiOiIyODAzMDY3MDA5MzY4MzUwIiwiRGV2aWNlSUQiOiI4Y2MwNzExMWZlZmQ1OGZlNmVkZTcxNzJkN2ZlYTQ4ZmMyMDhiMDUyZjQyZjgxMzAzODAzMGI3NTk3OGFmNDA3IiwiUGxhdGZvcm0iOiJwYyIsIkNsaWVudFZlcnNpb24iOiIyLjkuMjUiLCJQaG9uZSI6IiIsIk5pY2tOYW1lIjoiIiwiQXZhdGFyIjoiIn0.CXjRae4_-NXhc7AtXgyenrMYvaEkXGiSKZwyMDfPQ-c",
+        operator=2,
+    )
+    asyncio.create_task(w.start_listener())
+    w_object.append(w)
+
+
+@wst.get("/test/run_case")
+async def test_run_case():
+    w_object[0].add_case({"case_id": 1, "ws_code": 32, "json_exp": "$.message_type", "expected": 10})

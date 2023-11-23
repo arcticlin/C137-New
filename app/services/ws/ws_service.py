@@ -26,6 +26,7 @@ from loguru import logger
 1001: 更新用户列表
 1002: 更新项目列表
 1003: 更新环境列表
+1004: WebSocket测试
 """
 
 
@@ -73,3 +74,9 @@ class WsService:
         for uid in user_id:
             if str(uid) in connected_clients:
                 await connected_clients[str(uid)].send_json({"code": 1003})
+
+    @staticmethod
+    async def ws_notify_ws_test(user_id: List[int], msg_data: dict):
+        for uid in user_id:
+            if str(uid) in connected_clients:
+                await connected_clients[str(uid)].send_json({"code": 1004, "msg": msg_data})
