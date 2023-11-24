@@ -76,7 +76,7 @@ class WsService:
                 await connected_clients[str(uid)].send_json({"code": 1003})
 
     @staticmethod
-    async def ws_notify_ws_test(user_id: List[int], msg_data: dict):
+    async def ws_notify_ws_test(user_id: List[int], msg_data: dict, is_success: bool = False):
         for uid in user_id:
             if str(uid) in connected_clients:
-                await connected_clients[str(uid)].send_json({"code": 1004, "msg": msg_data})
+                await connected_clients[str(uid)].send_json({"code": 1004, "msg": msg_data, "is_success": is_success})

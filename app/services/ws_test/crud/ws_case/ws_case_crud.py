@@ -65,3 +65,22 @@ class WsCaseCrud:
                     )
                 )
                 DatabaseBulk.delete_model(smtm.scalars().first())
+
+    @staticmethod
+    async def query_case_as_dict(case_id: int):
+        async with async_session() as session:
+            smtm = await session.execute(
+                select(WsCaseModel).where(and_(WsCaseModel.case_id == case_id, WsCaseModel.deleted_at == 0))
+            )
+            result = smtm.scalars().first()
+            ws_id = result.ws_id
+            smtm_code = await session.execute(
+                text("""select code_value from ws_code where ws_id = :ws_id and deleted_at = 0"""), {"ws_id": ws_id}
+            )
+            code = smtm_code.scalars().all()
+            return {
+                "case_id": result.case_id,
+                "ws_code": code,
+                "json_exp": result.json_exp,
+                "expected": result.expected,
+            }

@@ -74,6 +74,13 @@ class C137Response:
         return response
 
     @staticmethod
+    def failed(message: str = None):
+        response = dict()
+        response.__setitem__("code", 40000)
+        response.__setitem__("error_msg", "操作失败" if message is None else message)
+        return response
+
+    @staticmethod
     def join_username_to_model(obj: Any, user_name: str, addition_key_name: str):
         model_dict = C137Response.orm_to_dict(obj)
         model_dict[addition_key_name] = user_name

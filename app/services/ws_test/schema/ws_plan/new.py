@@ -18,3 +18,11 @@ class RequestAddWsPlan(BaseModel):
 
 class OutAddWsPlan(BaseModel):
     plan_id: int = Field(..., description="计划ID")
+
+
+class RequestTestConnect(BaseModel):
+    ws_url: str = Field(..., description="WS URL")
+
+
+class RequestTestRunCase(BaseModel):
+    case_id: int

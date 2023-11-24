@@ -6,6 +6,7 @@ Created: 2023/11/20
 Description:
 """
 import asyncio
+from typing import Dict
 
 from fastapi import APIRouter, Query, Depends
 
@@ -17,7 +18,7 @@ from app.services.ws_test.schema.ws_case.update import RequestUpdateWsCase
 from app.services.ws_test.schema.ws_code.info import ResponseWsCodeList, ResponseWsCodeDetail
 from app.services.ws_test.schema.ws_code.new import ResponseAddWsCode, RequestAddWsCode
 from app.services.ws_test.schema.ws_code.update import RequestUpdateWsCode
-from app.services.ws_test.schema.ws_plan.new import RequestAddWsPlan
+from app.services.ws_test.schema.ws_plan.new import RequestAddWsPlan, RequestTestConnect, RequestTestRunCase
 from app.services.ws_test.schema.ws_plan.response import ResponsePlanAdd, ResponsePlanList
 from app.services.ws_test.schema.ws_plan.update import RequestUpdatePlan, RequestRemovePlanCase, RequestAddPlanCase
 from app.services.ws_test.schema.ws_result.info import RequestMarkCase
@@ -28,7 +29,7 @@ from app.services.ws_test.ws_test_services import WsTestService
 
 wst = APIRouter()
 
-w_object = []
+ws_plan: Dict[str, WsTestService] = dict()
 
 
 @wst.get("/code/list", summary="获取项目的WS_CODE列表", response_model=ResponseWsCodeList)
@@ -164,16 +165,40 @@ async def done_ws_plan_result(plan_id: int, user=Depends(Permission())):
     pass
 
 
-@wst.get("/test/connect")
-async def test_connect():
+@wst.post(
+    "/plan/{plan_id}/test/connect",
+)
+async def test_connect(plan_id: int, form: RequestTestConnect, user=Depends(Permission())):
     w = WsTestService(
-        ws_url=r"wss://api-test.flyele.vip/intime/v2/ws?token=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDA3MzkyMjcsImlhdCI6MTcwMDczMDg1OCwiaXNzIjoiYXBpLmZseWVsZS5uZXQiLCJVc2VySUQiOiIyODAzMDY3MDA5MzY4MzUwIiwiRGV2aWNlSUQiOiI4Y2MwNzExMWZlZmQ1OGZlNmVkZTcxNzJkN2ZlYTQ4ZmMyMDhiMDUyZjQyZjgxMzAzODAzMGI3NTk3OGFmNDA3IiwiUGxhdGZvcm0iOiJwYyIsIkNsaWVudFZlcnNpb24iOiIyLjkuMjUiLCJQaG9uZSI6IiIsIk5pY2tOYW1lIjoiIiwiQXZhdGFyIjoiIn0.CXjRae4_-NXhc7AtXgyenrMYvaEkXGiSKZwyMDfPQ-c",
-        operator=2,
+        ws_url=form.ws_url,
+        operator=user["user_id"],
     )
     asyncio.create_task(w.start_listener())
-    w_object.append(w)
+    ws_plan[str(plan_id)] = w
+    if w.current_ws_obj[w.ws_url[-5:]]["status"]:
+        return C137Response.success(data={"status": 1})
+    else:
+        return C137Response.failed("连接失败")
 
 
-@wst.get("/test/run_case")
-async def test_run_case():
-    w_object[0].add_case({"case_id": 1, "ws_code": 32, "json_exp": "$.message_type", "expected": 10})
+@wst.get(
+    "/plan/{plan_id}/test/disconnect",
+)
+async def test_disconnect(plan_id: int, user=Depends(Permission())):
+    w = ws_plan.get(str(plan_id))
+    if w:
+        await ws_plan[str(plan_id)].disconnect()
+        if w.current_ws_obj[w.ws_url[-5:]]["status"]:
+            return C137Response.failed("断开失败")
+        del ws_plan[str(plan_id)]
+        return C137Response.success()
+
+
+@wst.post("/plan/{plan_id}/test/run_case")
+async def test_run_case(plan_id: int, form: RequestTestRunCase, user=Depends(Permission())):
+    w = ws_plan.get(str(plan_id))
+    if w:
+        await ws_plan[str(plan_id)].add_case(form.case_id)
+        return C137Response.success()
+    else:
+        return C137Response.failed("未连接")
