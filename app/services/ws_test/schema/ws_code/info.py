@@ -18,6 +18,7 @@ class OutWsCodeBasicInfo(BaseModel):
     code_value: int
     desc: str
     status: int
+    create_user: int
 
 
 class OutWsCodeBasicInfoSimply(BaseModel):
@@ -26,6 +27,7 @@ class OutWsCodeBasicInfoSimply(BaseModel):
     code_value: int
     status: int
     desc: str = None
+    create_user: int
 
 
 class ResponseWsCodeList(CommonResponse):
