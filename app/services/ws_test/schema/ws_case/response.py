@@ -14,7 +14,11 @@ from app.services.ws_test.schema.ws_case.new import OutAddWsCase
 
 class ResponseWsCaseList(CommonResponse):
     data: list[OutWsCaseBasicInfo] = Field(..., description="WS_CASE列表")
-    total = Field(0, description="总数")
+    # total = Field(0, description="总数")
+
+
+class ResponseWsCaseDetail(CommonResponse):
+    data: OutWsCaseBasicInfo = Field(..., description="WS_CASE详情")
 
 
 class ResponseAddWsCase(CommonResponse):

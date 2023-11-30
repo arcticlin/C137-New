@@ -19,6 +19,16 @@ from app.handler.db_tool.db_bulk import DatabaseBulk
 
 class WsCaseCrud:
     @staticmethod
+    async def query_case_exists(ws_id: int, case_id: int):
+        async with async_session() as session:
+            smtm = await session.execute(
+                select(WsCaseModel).where(
+                    and_(WsCaseModel.ws_id == ws_id, WsCaseModel.case_id == case_id, WsCaseModel.deleted_at == 0)
+                )
+            )
+            return smtm.scalars().first()
+
+    @staticmethod
     async def query_case_list(ws_id: int):
         async with async_session() as session:
             smtm = await session.execute(
@@ -27,12 +37,22 @@ class WsCaseCrud:
             return smtm.scalars().all()
 
     @staticmethod
+    async def query_case_detail(case_id: int):
+        async with async_session() as session:
+            smtm = await session.execute(
+                select(WsCaseModel).where(and_(WsCaseModel.case_id == case_id, WsCaseModel.deleted_at == 0))
+            )
+            return smtm.scalars().first()
+
+    @staticmethod
     async def add_case(form: RequestAddWsCase, create_user: int):
         async with async_session() as session:
             async with session.begin():
                 case = WsCaseModel(
                     ws_id=form.ws_id,
                     case_desc=form.case_desc,
+                    json_exp=form.json_exp,
+                    expected=form.expected,
                     case_status=1,
                     create_user=create_user,
                 )
@@ -42,7 +62,7 @@ class WsCaseCrud:
                 return case.case_id
 
     @staticmethod
-    async def update_case(ws_id: int, form: RequestUpdateWsCase):
+    async def update_case(ws_id: int, form: RequestUpdateWsCase, operator: int):
         async with async_session() as session:
             async with session.begin():
                 smtm = await session.execute(
@@ -52,11 +72,10 @@ class WsCaseCrud:
                         )
                     )
                 )
-                data = {"case_desc": form.case_desc, "case_status": form.case_status}
-                DatabaseBulk.update_model(smtm.scalars().first(), data)
+                DatabaseBulk.update_model(smtm.scalars().first(), form.dict(), operator)
 
     @staticmethod
-    async def remove_case(ws_id: int, case_id: int):
+    async def remove_case(ws_id: int, case_id: int, operator):
         async with async_session() as session:
             async with session.begin():
                 smtm = await session.execute(
@@ -64,7 +83,7 @@ class WsCaseCrud:
                         and_(WsCaseModel.ws_id == ws_id, WsCaseModel.case_id == case_id, WsCaseModel.deleted_at == 0)
                     )
                 )
-                DatabaseBulk.delete_model(smtm.scalars().first())
+                DatabaseBulk.delete_model(smtm.scalars().first(), operator)
 
     @staticmethod
     async def query_case_as_dict(case_id: int):

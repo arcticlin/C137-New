@@ -14,6 +14,7 @@ from app.core.basic_schema import CommonResponse
 from app.handler.serializer.response_serializer import C137Response
 from app.middleware.access_permission import Permission
 from app.services.ws_test.schema.ws_case.new import RequestAddWsCase
+from app.services.ws_test.schema.ws_case.response import ResponseWsCaseList, ResponseWsCaseDetail
 from app.services.ws_test.schema.ws_case.update import RequestUpdateWsCase
 from app.services.ws_test.schema.ws_code.info import ResponseWsCodeList, ResponseWsCodeDetail
 from app.services.ws_test.schema.ws_code.new import ResponseAddWsCode, RequestAddWsCode
@@ -88,24 +89,35 @@ async def delete_ws_code(ws_id: int, user=Depends(Permission())):
     return C137Response.success()
 
 
-@wst.post("/case/add", summary="添加WS_CODE下的用例", response_model=CommonResponse)
+@wst.post("/case/{ws_id}/add", summary="添加WS_CODE下的用例", response_model=CommonResponse)
 async def add_ws_case(ws_id: int, data: RequestAddWsCase, user=Depends(Permission())):
-    pass
+    data.__setattr__("ws_id", ws_id)
+    case_id = await WsCaseService.add_case_in_ws(data, user["user_id"])
+    return C137Response.success(data={"case_id": case_id})
 
 
-@wst.get("/case/{ws_id}/list", summary="获取WS_CODE下的用例列表", response_model=CommonResponse)
+@wst.get("/case/{ws_id}/list", summary="获取WS_CODE下的用例列表", response_model=ResponseWsCaseList)
 async def get_ws_cases(ws_id: int, user=Depends(Permission())):
-    pass
+    result = await WsCaseService.query_case_list(ws_id)
+    return C137Response.success(data=result)
+
+
+@wst.get("/case/{ws_id}/detail/{case_id}", summary="获取WS用例详情", response_model=ResponseWsCaseDetail)
+async def get_ws_case_detail(ws_id: int, case_id: int, user=Depends(Permission())):
+    result = await WsCaseService.query_case_detail(ws_id, case_id)
+    return C137Response.success(data=result)
 
 
 @wst.put("/case/{ws_id}/update", summary="修改WS_CODE下的用例", response_model=CommonResponse)
-async def update_ws_case(data: RequestUpdateWsCase, user=Depends(Permission())):
-    pass
+async def update_ws_case(ws_id: int, data: RequestUpdateWsCase, user=Depends(Permission())):
+    await WsCaseService.update_case_detail(ws_id, data, user["user_id"])
+    return C137Response.success()
 
 
-@wst.post("/case/{ws_id}/delete/{case_id}", summary="删除WS_CODE下的用例", response_model=CommonResponse)
-async def delete_ws_case(ws_id: int, user=Depends(Permission())):
-    pass
+@wst.delete("/case/{ws_id}/delete/{case_id}", summary="删除WS_CODE下的用例", response_model=CommonResponse)
+async def delete_ws_case(ws_id: int, case_id: int, user=Depends(Permission())):
+    await WsCaseService.remove_case(ws_id, case_id, user["user_id"])
+    return C137Response.success()
 
 
 @wst.post("/plan/add", summary="添加测试计划", response_model=ResponsePlanAdd)
