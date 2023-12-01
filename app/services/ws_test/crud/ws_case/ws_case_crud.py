@@ -53,7 +53,7 @@ class WsCaseCrud:
                     case_desc=form.case_desc,
                     json_exp=form.json_exp,
                     expected=form.expected,
-                    case_status=1,
+                    case_status=form.case_status,
                     create_user=create_user,
                 )
                 session.add(case)

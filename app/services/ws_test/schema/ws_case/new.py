@@ -15,6 +15,7 @@ class RequestAddWsCase(BaseModel):
     case_desc: str
     json_exp: str = Field(None, description="json格式的期望值")
     expected: str = Field(None, description="期望值")
+    case_status: int = Field(..., description="用例状态")
 
 
 class OutAddWsCase(BaseModel):
