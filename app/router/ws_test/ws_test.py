@@ -6,7 +6,7 @@ Created: 2023/11/20
 Description:
 """
 import asyncio
-from typing import Dict
+from typing import Dict, List
 
 from fastapi import APIRouter, Query, Depends
 
@@ -26,6 +26,7 @@ from app.services.ws_test.schema.ws_result.info import RequestMarkCase
 from app.services.ws_test.schema.ws_result.response import ResponseStatisResult, ResponseWsCaseResult
 from app.services.ws_test.services.ws_case_services import WsCaseService
 from app.services.ws_test.services.ws_code_services import WsCodeService
+from app.services.ws_test.services.ws_plan_services import WsPlanService
 from app.services.ws_test.ws_test_services import WsTestService
 
 wst = APIRouter()
@@ -125,16 +126,20 @@ async def add_ws_plan(data: RequestAddWsPlan, user=Depends(Permission())):
     pass
 
 
-@wst.post("/plan/list", summary="获取测试计划列表", response_model=ResponsePlanList)
+@wst.get("/plan/list", summary="获取测试计划列表", response_model=ResponsePlanList)
 async def get_ws_plan_list(
     page: int = Query(1),
     page_size: int = Query(20),
-    filter_user: int = Query(None),
+    filter_user: List[int] = Query(None),
     filter_name: str = Query(None),
-    filter_status: int = Query(None),
+    filter_status: List[int] = Query(None),
+    filter_project: List[int] = Query(None),
     user=Depends(Permission()),
 ):
-    pass
+    result, total = await WsPlanService.get_plan_list(
+        page, page_size, filter_user, filter_name, filter_status, filter_project
+    )
+    return C137Response.success(data=result, total=total)
 
 
 @wst.put("/plan/update", summary="修改测试计划", response_model=CommonResponse)

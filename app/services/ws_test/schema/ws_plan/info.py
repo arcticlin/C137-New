@@ -16,3 +16,7 @@ class OutPlanBasicInfo(BaseModel):
     case_count: int = Field(..., description="用例数量")
     created_at: int = Field(..., description="创建时间")
     create_user: str = Field(..., description="创建人")
+
+
+class RequestQueryPlanList(BaseModel):
+    page: int = Field(1, description="")
