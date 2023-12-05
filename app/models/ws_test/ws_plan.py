@@ -19,9 +19,11 @@ class WsPlanModel(Base, BaseMixin):
 
     # # 关联WsCase表，用relationship建立关系
     # cases = relationship("WsCaseModel", backref="ws_plan", lazy="dynamic")
+    project_id = Column(Integer, nullable=False, comment="关联项目ID")
 
-    def __init__(self, plan_desc: str, create_user: int, status: int = 4):
+    def __init__(self, plan_desc: str, create_user: int, project_id: int, status: int = 4):
         self.plan_desc = plan_desc
         self.plan_status = status
+        self.project_id = project_id
         self.create_user = create_user
         self.update_user = create_user

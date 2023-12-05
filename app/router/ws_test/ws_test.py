@@ -19,6 +19,7 @@ from app.services.ws_test.schema.ws_case.update import RequestUpdateWsCase
 from app.services.ws_test.schema.ws_code.info import ResponseWsCodeList, ResponseWsCodeDetail
 from app.services.ws_test.schema.ws_code.new import ResponseAddWsCode, RequestAddWsCode
 from app.services.ws_test.schema.ws_code.update import RequestUpdateWsCode
+from app.services.ws_test.schema.ws_plan.info import RequestQueryPlanList
 from app.services.ws_test.schema.ws_plan.new import RequestAddWsPlan, RequestTestConnect, RequestTestRunCase
 from app.services.ws_test.schema.ws_plan.response import ResponsePlanAdd, ResponsePlanList
 from app.services.ws_test.schema.ws_plan.update import RequestUpdatePlan, RequestRemovePlanCase, RequestAddPlanCase
@@ -126,18 +127,13 @@ async def add_ws_plan(data: RequestAddWsPlan, user=Depends(Permission())):
     pass
 
 
-@wst.get("/plan/list", summary="获取测试计划列表", response_model=ResponsePlanList)
+@wst.post("/plan/list", summary="获取测试计划列表", response_model=ResponsePlanList)
 async def get_ws_plan_list(
-    page: int = Query(1),
-    page_size: int = Query(20),
-    filter_user: List[int] = Query(None),
-    filter_name: str = Query(None),
-    filter_status: List[int] = Query(None),
-    filter_project: List[int] = Query(None),
+    form: RequestQueryPlanList,
     user=Depends(Permission()),
 ):
     result, total = await WsPlanService.get_plan_list(
-        page, page_size, filter_user, filter_name, filter_status, filter_project
+        form.page, form.page_size, form.filter_user, form.filter_name, form.filter_status, form.filter_project
     )
     return C137Response.success(data=result, total=total)
 

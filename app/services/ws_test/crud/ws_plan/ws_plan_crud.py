@@ -27,13 +27,14 @@ class WsPlanCrud:
             if filter_user:
                 _list.append(WsPlanModel.create_user.in_(filter_user))
             if filter_name:
-                _list.append(WsPlanModel.name.like(f"%{filter_name}%"))
+                _list.append(WsPlanModel.plan_desc.like(f"%{filter_name}%"))
             if filter_status:
-                _list.append(WsPlanModel.status.in_(filter_status))
+                _list.append(WsPlanModel.plan_status.in_(filter_status))
             if filter_project:
                 _list.append(WsPlanModel.project_id.in_(filter_project))
-            plan_count = await session.execute(select(func.count(WsPlanModel.plan_id)).where(*_list))
+            plan_count = await session.execute(select(func.count(WsPlanModel.plan_id)).where((and_(*_list))))
             count = plan_count.scalars().first()
+            print(count)
             smtm = await session.execute(select(WsPlanModel).where(*_list).offset(offset).limit(page_size))
             result = smtm.scalars().all()
             return result, count
