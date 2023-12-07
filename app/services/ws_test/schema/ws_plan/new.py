@@ -11,9 +11,17 @@ from pydantic import BaseModel, Field
 
 
 class RequestAddWsPlan(BaseModel):
+    ...
+
+
+class RequestAddWsPlanCase(BaseModel):
     ws_id: int = Field(..., description="WS ID")
-    plan_desc: str = Field(..., description="计划描述")
     case_list: List[int] = Field(..., description="用例列表")
+
+
+class RequestNewWsPlan(BaseModel):
+    plan_desc: str = Field(..., description="计划描述")
+    suites: List[RequestAddWsPlanCase] = Field(..., description="套件列表")
 
 
 class OutAddWsPlan(BaseModel):

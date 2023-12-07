@@ -153,6 +153,11 @@ async def remove_ws_plan_case_add(data: RequestAddPlanCase, user=Depends(Permiss
     pass
 
 
+@wst.post("/plan/{project_id}/add", summary="添加测试用例", response_model=CommonResponse)
+async def remove_ws_plan_case_add(data: RequestAddPlanCase, user=Depends(Permission())):
+    pass
+
+
 @wst.delete("/plan/{plan_id}/delete", summary="删除测试计划", response_model=CommonResponse)
 async def delete_ws_plan(plan_id: int, user=Depends(Permission())):
     pass
